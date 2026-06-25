@@ -316,11 +316,6 @@ function SuspensionWarningModal({ isOpen, onClose }: { isOpen: boolean; onClose:
             <p className="text-sm text-[#64748B] leading-relaxed font-medium">
               You are still able to log in, but all transaction and banking operations have been locked.
             </p>
-            <div className="bg-slate-50 border border-light p-3 rounded-xl text-xs text-[#0A1628] font-mono space-y-1 mt-2 text-left">
-              <p className="font-semibold text-[#D31111]">Please contact support to verify identity:</p>
-              <p>📞 Phone: 0800 123 4567</p>
-              <p>✉️ Email: security@nbb.co.uk</p>
-            </div>
           </div>
           <button
             onClick={onClose}
