@@ -71,14 +71,14 @@ function HeroSection() {
   return (
     <section className="min-h-screen pt-16 relative overflow-hidden bg-white">
       {/* Background City Skyline Image */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 select-none pointer-events-none">
         <img 
           src="/images/hero-bg.jpg" 
           alt="City Skyline" 
-          className="w-full h-full object-cover object-center opacity-[0.15] transition-opacity duration-700" 
+          className="w-full h-full object-cover object-center opacity-90 transition-opacity duration-700" 
         />
-        {/* Soft pink/slate gradient overlay to match existing design and ensure contrast */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#FEF2F2]/50 via-white/80 to-white" />
+        {/* Soft bottom-fade gradient overlay to blend into the next white section */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/20 to-white" />
       </div>
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, #0A1628 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
