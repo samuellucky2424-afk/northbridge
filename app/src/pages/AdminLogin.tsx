@@ -47,7 +47,7 @@ export default function AdminLogin() {
       <main className="pt-16 min-h-screen flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <div className="bg-[#D31111] px-8 py-6">
+            <div className="bg-[#610C04] px-8 py-6">
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
                   <ShieldAlert size={24} className="text-white" />
@@ -73,7 +73,7 @@ export default function AdminLogin() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] placeholder:text-[#64748B]/60 focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] transition-all"
+                    className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] placeholder:text-[#64748B]/60 focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all"
                     placeholder="admin@northbridgebank.co.uk"
                     required
                   />
@@ -86,7 +86,7 @@ export default function AdminLogin() {
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-4 py-3 pr-12 rounded-xl border border-light bg-white text-[#0A1628] placeholder:text-[#64748B]/60 focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] transition-all"
+                      className="w-full px-4 py-3 pr-12 rounded-xl border border-light bg-white text-[#0A1628] placeholder:text-[#64748B]/60 focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all"
                       placeholder="Enter admin password"
                       required
                     />
@@ -119,7 +119,7 @@ export default function AdminLogin() {
 
               <p className="mt-6 text-center text-sm text-[#64748B]">
                 Not an admin?{' '}
-                <Link to="/login" className="text-[#D31111] font-medium hover:underline">
+                <Link to="/login" className="text-[#610C04] font-medium hover:underline">
                   Customer login
                 </Link>
               </p>

@@ -44,7 +44,7 @@ export default function Login() {
         <div className="hidden lg:flex lg:w-1/2 bg-[#0A1628] relative overflow-hidden items-center justify-center">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(211,17,17,0.15)_0%,_transparent_70%)]" />
           <div className="relative z-10 max-w-md px-12">
-            <div className="w-16 h-16 rounded-2xl bg-[#D31111] flex items-center justify-center mb-8">
+            <div className="w-16 h-16 rounded-2xl bg-[#610C04] flex items-center justify-center mb-8">
               <Shield size={32} className="text-white" />
             </div>
             <h2 className="font-display text-4xl text-white mb-4">Welcome back</h2>
@@ -54,8 +54,8 @@ export default function Login() {
             <div className="mt-12 space-y-4">
               {['Real-time balance updates', 'Instant payment notifications', 'Secure biometric login'].map((item, i) => (
                 <div key={i} className="flex items-center space-x-3">
-                  <div className="w-5 h-5 rounded-full bg-[#D31111]/20 flex items-center justify-center flex-shrink-0">
-                    <div className="w-2 h-2 rounded-full bg-[#D31111]" />
+                  <div className="w-5 h-5 rounded-full bg-[#610C04]/20 flex items-center justify-center flex-shrink-0">
+                    <div className="w-2 h-2 rounded-full bg-[#610C04]" />
                   </div>
                   <span className="text-sm text-white/80">{item}</span>
                 </div>
@@ -85,7 +85,7 @@ export default function Login() {
                   type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] placeholder:text-[#64748B]/60 focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] placeholder:text-[#64748B]/60 focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all"
                   placeholder="e.g. 12345678 or you@example.com"
                   required
                 />
@@ -98,7 +98,7 @@ export default function Login() {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 pr-12 rounded-xl border border-light bg-white text-[#0A1628] placeholder:text-[#64748B]/60 focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] transition-all"
+                    className="w-full px-4 py-3 pr-12 rounded-xl border border-light bg-white text-[#0A1628] placeholder:text-[#64748B]/60 focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all"
                     placeholder="Enter your password"
                     required
                   />
@@ -114,10 +114,10 @@ export default function Login() {
 
               <div className="flex items-center justify-between">
                 <label className="flex items-center space-x-2 cursor-pointer">
-                  <input type="checkbox" className="w-4 h-4 rounded border-light text-[#D31111] focus:ring-[#D31111]" />
+                  <input type="checkbox" className="w-4 h-4 rounded border-light text-[#610C04] focus:ring-[#610C04]" />
                   <span className="text-sm text-[#64748B]">Remember me</span>
                 </label>
-                <span className="text-sm text-[#D31111] hover:underline cursor-pointer">Forgot password?</span>
+                <span className="text-sm text-[#610C04] hover:underline cursor-pointer">Forgot password?</span>
               </div>
 
               <button
@@ -139,12 +139,12 @@ export default function Login() {
             <p className="mt-8 text-center text-sm text-[#64748B] flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
               <span>
                 Don&apos;t have an account?{' '}
-                <Link to="/register" className="text-[#D31111] font-medium hover:underline">
+                <Link to="/register" className="text-[#610C04] font-medium hover:underline">
                   Get started
                 </Link>
               </span>
               <span className="hidden sm:inline text-slate-300">|</span>
-              <Link to="/admin/login" className="text-[#64748B] hover:text-[#D31111] hover:underline font-medium">
+              <Link to="/admin/login" className="text-[#64748B] hover:text-[#610C04] hover:underline font-medium">
                 Admin Portal
               </Link>
             </p>

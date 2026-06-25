@@ -88,8 +88,8 @@ function HeroSection() {
           {/* Left - Text */}
           <div>
             <div className="inline-flex items-center space-x-2 px-4 py-2 bg-[#FEE2E2] rounded-full mb-6">
-              <span className="w-2 h-2 rounded-full bg-[#D31111] animate-pulse" />
-              <span className="text-xs font-medium text-[#D31111] uppercase tracking-wider">FCA Regulated UK Bank</span>
+              <span className="w-2 h-2 rounded-full bg-[#610C04] animate-pulse" />
+              <span className="text-xs font-medium text-[#610C04] uppercase tracking-wider">FCA Regulated UK Bank</span>
             </div>
             <h1 ref={headingRef} className="font-display text-7xl sm:text-8xl lg:text-[96px] text-[#0A1628] leading-none mb-6 opacity-0">
               BANKING
@@ -117,7 +117,7 @@ function HeroSection() {
                 { icon: Award, label: 'Award Winning' },
               ].map((badge, i) => (
                 <div key={i} className="flex items-center space-x-2">
-                  <badge.icon size={16} className="text-[#D31111]" />
+                  <badge.icon size={16} className="text-[#610C04]" />
                   <span className="text-xs text-[#64748B] font-medium">{badge.label}</span>
                 </div>
               ))}
@@ -129,14 +129,14 @@ function HeroSection() {
             {heroCards.map((card, i) => (
               <div
                 key={i}
-                className={`hero-card relative overflow-hidden rounded-2xl shadow-soft opacity-0 group cursor-pointer ${i % 2 === 1 ? 'translate-y-8' : ''} ${card.borderAccent ? 'border-l-4 border-[#D31111]' : ''}`}
+                className={`hero-card relative overflow-hidden rounded-2xl shadow-soft opacity-0 group cursor-pointer ${i % 2 === 1 ? 'translate-y-8' : ''} ${card.borderAccent ? 'border-l-4 border-[#610C04]' : ''}`}
               >
                 <div className="relative aspect-[4/3] overflow-hidden">
                   <img src={card.img} alt={card.label} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading={i < 2 ? 'eager' : 'lazy'} />
                   {card.tint && <div className={`absolute inset-0 ${card.tint}`} />}
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm px-4 py-3">
-                  <span className="label-ui text-[#D31111] block mb-0.5">{card.label}</span>
+                  <span className="label-ui text-[#610C04] block mb-0.5">{card.label}</span>
                   <span className="text-xs text-[#64748B]">{card.desc}</span>
                 </div>
               </div>
@@ -216,7 +216,7 @@ function WhySection() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16">
-          <span className="label-ui text-[#D31111] mb-3 block font-semibold tracking-wider">WHY NORTH BRIDGE BANK</span>
+          <span className="label-ui text-[#610C04] mb-3 block font-semibold tracking-wider">WHY NORTH BRIDGE BANK</span>
           <h2 className="font-display text-4xl sm:text-5xl text-white mb-6">Banking Built on Absolute Trust</h2>
           <p className="text-slate-300 max-w-3xl mx-auto text-base sm:text-lg leading-relaxed">
             At North Bridge Bank, we believe trust is the cornerstone of every financial relationship. 
@@ -226,9 +226,9 @@ function WhySection() {
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((f, i) => (
-            <div key={i} className="why-card group p-8 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 hover:border-[#D31111]/50 hover:bg-white/10 hover:-translate-y-1 transition-all duration-300">
-              <div className="w-12 h-12 rounded-xl bg-[#D31111]/10 flex items-center justify-center mb-5 group-hover:bg-[#D31111] transition-colors duration-300">
-                <f.icon size={22} className="text-[#D31111] group-hover:text-white transition-colors duration-300" />
+            <div key={i} className="why-card group p-8 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 hover:border-[#610C04]/50 hover:bg-white/10 hover:-translate-y-1 transition-all duration-300">
+              <div className="w-12 h-12 rounded-xl bg-[#610C04]/10 flex items-center justify-center mb-5 group-hover:bg-[#610C04] transition-colors duration-300">
+                <f.icon size={22} className="text-[#610C04] group-hover:text-white transition-colors duration-300" />
               </div>
               <h3 className="font-display text-xl text-white mb-3">{f.title}</h3>
               <p className="text-sm text-slate-300 leading-relaxed">{f.desc}</p>
@@ -264,20 +264,20 @@ function HowItWorks() {
     <section ref={sectionRef} className="py-24 bg-[#F1F5F9]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <span className="label-ui text-[#D31111] mb-3 block">GET STARTED</span>
+          <span className="label-ui text-[#610C04] mb-3 block">GET STARTED</span>
           <h2 className="font-display text-4xl text-[#0A1628] mb-4">Open an account in minutes</h2>
           <p className="text-[#64748B] max-w-xl mx-auto">No branch visits. No paperwork. Just your phone and a few minutes.</p>
         </div>
         <div className="grid md:grid-cols-3 gap-8">
           {steps.map((s, i) => (
             <div key={i} className="step-card relative bg-white rounded-2xl p-8 text-center">
-              <div className="w-16 h-16 rounded-full bg-[#D31111] flex items-center justify-center mx-auto mb-6">
+              <div className="w-16 h-16 rounded-full bg-[#610C04] flex items-center justify-center mx-auto mb-6">
                 <span className="text-white font-display text-xl">{s.step}</span>
               </div>
               <h3 className="font-display text-xl text-[#0A1628] mb-3">{s.title}</h3>
               <p className="text-sm text-[#64748B] leading-relaxed">{s.desc}</p>
               {i < 2 && (
-                <div className="hidden md:block absolute top-1/2 -right-4 w-8 h-px bg-[#D31111]" />
+                <div className="hidden md:block absolute top-1/2 -right-4 w-8 h-px bg-[#610C04]" />
               )}
             </div>
           ))}
@@ -303,7 +303,7 @@ function CounterSection() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(30,41,59,0.5)_0%,_transparent_70%)]" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center mb-16">
-          <span className="label-ui text-[#D31111] mb-3 block">TRUSTED BY THOUSANDS</span>
+          <span className="label-ui text-[#610C04] mb-3 block">TRUSTED BY THOUSANDS</span>
           <h2 className="font-display text-4xl text-white mb-4">Assets Under Management</h2>
           <p className="text-lg text-[#64748B] font-light max-w-xl mx-auto">
             North Bridge Bank manages portfolios with precision and care. Our growth reflects the trust our customers place in us every single day.
@@ -315,7 +315,7 @@ function CounterSection() {
               <div className="text-5xl lg:text-6xl font-light text-white mb-2">
                 <NumberTicker value={stat.value} prefix={stat.prefix} suffix={stat.suffix} decimals={stat.decimals} duration={2000} />
               </div>
-              <div className="w-10 h-0.5 bg-[#D31111] mx-auto mb-3" />
+              <div className="w-10 h-0.5 bg-[#610C04] mx-auto mb-3" />
               <span className="label-ui text-[#64748B]">{stat.label}</span>
             </div>
           ))}
@@ -344,13 +344,13 @@ function VideoAdvert() {
   return (
     <section className="py-24 bg-[#0A1628] text-white relative overflow-hidden">
       <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, #FFFFFF 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#D31111]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#610C04]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid lg:grid-cols-12 gap-12 items-center">
           {/* Left - Text descriptions with image */}
           <div className="lg:col-span-5 space-y-6">
-            <span className="label-ui text-[#D31111]">NBB IN ACTION</span>
+            <span className="label-ui text-[#610C04]">NBB IN ACTION</span>
             <h2 className="font-display text-4xl sm:text-5xl text-white leading-tight">
               Watch How We're Redefining Modern Banking
             </h2>
@@ -397,7 +397,7 @@ function VideoAdvert() {
               <div className={`absolute inset-0 bg-black/40 flex flex-col justify-between p-6 transition-opacity duration-300 ${isPlaying ? 'opacity-0 hover:opacity-100' : 'opacity-100'}`}>
                 {/* Top indicator */}
                 <div className="flex items-center justify-between">
-                  <span className="px-3 py-1 bg-[#D31111] text-xs font-semibold uppercase tracking-wider rounded-md">LIVE DEMO</span>
+                  <span className="px-3 py-1 bg-[#610C04] text-xs font-semibold uppercase tracking-wider rounded-md">LIVE DEMO</span>
                   <span className="text-xs text-white/60 font-mono">0:15 Loop</span>
                 </div>
 
@@ -406,7 +406,7 @@ function VideoAdvert() {
                   <button 
                     type="button"
                     onClick={handlePlayToggle}
-                    className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:scale-110 hover:bg-[#D31111] hover:border-[#D31111] transition-all duration-300 cursor-pointer shadow-lg"
+                    className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:scale-110 hover:bg-[#610C04] hover:border-[#610C04] transition-all duration-300 cursor-pointer shadow-lg"
                   >
                     {isPlaying ? (
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="14" y="4" width="4" height="16" rx="1" /><rect x="6" y="4" width="4" height="16" rx="1" /></svg>
@@ -516,7 +516,7 @@ function CardCarousel() {
     <section className="py-32 bg-[#F1F5F9]" id="accounts">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <span className="label-ui text-[#D31111] mb-3 block">OUR PRODUCTS</span>
+          <span className="label-ui text-[#610C04] mb-3 block">OUR PRODUCTS</span>
           <h2 className="font-display text-4xl text-[#0A1628] mb-4">Built for Every Stage</h2>
           <p className="text-[#64748B] max-w-xl mx-auto">From your first current account to complex business portfolios, we have an account that fits your life.</p>
         </div>
@@ -537,7 +537,7 @@ function CardCarousel() {
                         <img src={card.promoImage} alt={card.title} className="w-full h-full object-cover transition-transform duration-500 hover:scale-110" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#FEE2E2] to-[#FEF2F2]">
-                          <CardIcon size={64} className="text-[#D31111]/20" />
+                          <CardIcon size={64} className="text-[#610C04]/20" />
                         </div>
                       )}
                     </div>
@@ -546,7 +546,7 @@ function CardCarousel() {
                         <h3 className="font-display text-xl text-[#0A1628] mb-2">{card.title}</h3>
                         <p className="text-sm text-[#64748B] leading-relaxed">{card.desc}</p>
                       </div>
-                      <Link to="/current-account" className="inline-flex items-center text-sm font-medium text-[#D31111] group">
+                      <Link to="/current-account" className="inline-flex items-center text-sm font-medium text-[#610C04] group">
                         Learn more <ArrowRight size={16} className="ml-1 transition-transform group-hover:translate-x-1" />
                       </Link>
                     </div>
@@ -589,7 +589,7 @@ function Testimonials() {
     <section ref={sectionRef} className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <span className="label-ui text-[#D31111] mb-3 block">TESTIMONIALS</span>
+          <span className="label-ui text-[#610C04] mb-3 block">TESTIMONIALS</span>
           <h2 className="font-display text-4xl text-[#0A1628] mb-4">Loved by 142,000 customers</h2>
           <p className="text-[#64748B] max-w-xl mx-auto">Do not just take our word for it. Here is what our customers have to say about banking with North Bridge Bank.</p>
         </div>
@@ -603,8 +603,8 @@ function Testimonials() {
               </div>
               <p className="text-sm text-[#0A1628] leading-relaxed flex-1 mb-6">&ldquo;{t.text}&rdquo;</p>
               <div className="flex items-center space-x-3 pt-4 border-t border-light">
-                <div className="w-10 h-10 rounded-full bg-[#D31111]/10 flex items-center justify-center">
-                  <span className="text-sm font-medium text-[#D31111]">{t.name.split(' ').map(n => n[0]).join('')}</span>
+                <div className="w-10 h-10 rounded-full bg-[#610C04]/10 flex items-center justify-center">
+                  <span className="text-sm font-medium text-[#610C04]">{t.name.split(' ').map(n => n[0]).join('')}</span>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-[#0A1628]">{t.name}</p>
@@ -637,7 +637,7 @@ function BentoGrid() {
     <section className="py-24 bg-white" id="security">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <span className="label-ui text-[#D31111] mb-3 block">SECURITY</span>
+          <span className="label-ui text-[#610C04] mb-3 block">SECURITY</span>
           <h2 className="font-display text-4xl text-[#0A1628] mb-4">Your Security, Our Priority</h2>
           <p className="text-[#64748B] max-w-xl mx-auto">Bank-grade protection that never sleeps. We employ the most advanced security measures to keep your money and data safe.</p>
         </div>
@@ -656,7 +656,7 @@ function BentoGrid() {
           </div>
           <div className="bento-card bg-[#F1F5F9] rounded-2xl p-8 flex flex-col items-center justify-center text-center hover:-translate-y-1 hover:shadow-soft transition-all duration-300 cursor-pointer">
             <div className="w-16 h-16 rounded-full bg-[#FEE2E2] flex items-center justify-center mb-4">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#D31111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></svg>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#610C04" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></svg>
             </div>
             <h3 className="font-display text-xl text-[#0A1628] mb-1">FCA Regulated</h3>
             <p className="text-sm text-[#64748B]">Fully authorised and regulated by the Financial Conduct Authority</p>
@@ -683,7 +683,7 @@ function BentoGrid() {
           {/* Row 3 */}
           {[
             { title: 'Instant Freeze', desc: 'Freeze cards instantly from your app', icon: (<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0A1628" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20" /><path d="M7 15h0" /></svg>) },
-            { title: 'Real-time Alerts', desc: 'Instant notifications for every transaction', icon: (<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D31111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>) },
+            { title: 'Real-time Alerts', desc: 'Instant notifications for every transaction', icon: (<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#610C04" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>) },
             { title: '24/7 Support', desc: 'Always here when you need us', icon: (<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0A1628" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6" /><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" /></svg>) },
           ].map((item, i) => (
             <div key={i} className="bento-card bg-[#F1F5F9] rounded-2xl p-8 flex flex-col items-center justify-center text-center hover:-translate-y-1 hover:shadow-soft transition-all duration-300 cursor-pointer">
@@ -701,7 +701,7 @@ function BentoGrid() {
 /* ─── CTA Section ─── */
 function CTASection() {
   return (
-    <section className="py-32 bg-[#D31111] relative overflow-hidden">
+    <section className="py-32 bg-[#610C04] relative overflow-hidden">
       <div className="absolute inset-0">
         <div className="absolute top-1/4 left-0 right-0 h-px bg-white/10" />
         <div className="absolute top-1/2 left-0 right-0 h-px bg-white/10" />
@@ -715,7 +715,7 @@ function CTASection() {
           Join 142,000 customers who trust North Bridge Bank with their financial future. Open your account in under 5 minutes.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link to="/register" className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-white text-[#D31111] font-medium text-sm tracking-wide hover:bg-[#0A1628] hover:text-white transition-all duration-200">
+          <Link to="/register" className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-white text-[#610C04] font-medium text-sm tracking-wide hover:bg-[#0A1628] hover:text-white transition-all duration-200">
             Open an account
           </Link>
           <Link to="/contact" className="text-white hover:underline text-sm font-medium transition-all">

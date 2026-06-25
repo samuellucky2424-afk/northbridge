@@ -6,12 +6,12 @@
 
 @layer base {
   :root {
-    --royal-red: #D31111;
+    --royal-red: #610C04;
     --pure-white: #FFFFFF;
     --deep-navy: #0A1628;
     --slate: #64748B;
     --cloud-grey: #F1F5F9;
-    --soft-red: #FEE2E2;
+    --soft-red: #FCE8E6;
     --border-light: #E2E8F0;
     --border-dark: #1E293B;
     --success-green: #10B981;
@@ -23,7 +23,7 @@
     --card-foreground: 220 43% 9%;
     --popover: 0 0% 100%;
     --popover-foreground: 220 43% 9%;
-    --primary: 0 85% 45%;
+    --primary: 5 92% 20%;
     --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 220 43% 9%;
@@ -35,7 +35,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 0 85% 45%;
+    --ring: 5 92% 20%;
     --radius: 0.75rem;
   }
 
@@ -111,7 +111,7 @@
   }
 
   .shadow-focus {
-    box-shadow: 0 0 0 2px rgba(211, 17, 17, 0.2);
+    box-shadow: 0 0 0 2px rgba(97, 12, 4, 0.2);
   }
 
   .btn-primary {

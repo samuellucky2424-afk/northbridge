@@ -44,7 +44,7 @@ function DashboardNav({ onSettings, onNotifications, onMenuToggle, menuOpen }: {
               {menuOpen ? <X size={22} className="text-[#0A1628]" /> : <Menu size={22} className="text-[#0A1628]" />}
             </button>
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-lg bg-[#D31111] flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-[#610C04] flex items-center justify-center">
                 <span className="text-white font-display text-[10px]">NBB</span>
               </div>
               <span className="font-display text-lg text-[#0A1628] hidden sm:block">North Bridge Bank</span>
@@ -56,7 +56,7 @@ function DashboardNav({ onSettings, onNotifications, onMenuToggle, menuOpen }: {
             </button>
             <button onClick={onNotifications} className="relative p-2 rounded-lg hover:bg-[#F1F5F9] transition-colors" title="Notifications">
               <Bell size={20} className="text-[#64748B]" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-[#D31111] rounded-full" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-[#610C04] rounded-full" />
             </button>
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 rounded-full bg-[#0A1628] flex items-center justify-center">
@@ -108,7 +108,7 @@ function MobileMenu({ onSettings, onClose }: { onSettings: () => void; onClose: 
           </Link>
         ))}
         <div className="border-t border-light pt-3 mt-3">
-          <button onClick={logout} className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-[#D31111] hover:bg-[#FEE2E2] transition-all text-left">
+          <button onClick={logout} className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-[#610C04] hover:bg-[#FEE2E2] transition-all text-left">
             <X size={20} /><span className="text-sm font-medium">Logout</span>
           </button>
         </div>
@@ -246,7 +246,7 @@ function Overview() {
       {/* Greeting Header */}
       <div className="flex items-center justify-between pb-2 border-b border-light">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full bg-[#D31111] flex items-center justify-center text-white text-base font-bold">
+          <div className="w-10 h-10 rounded-full bg-[#610C04] flex items-center justify-center text-white text-base font-bold">
             {(userName || 'C').charAt(0).toUpperCase()}
           </div>
           <div>
@@ -257,7 +257,7 @@ function Overview() {
           {/* Chat Icon */}
           <Link
             to="/dashboard/support"
-            className="p-2 rounded-xl bg-slate-100 hover:bg-[#FEE2E2] hover:text-[#D31111] text-[#64748B] transition-all"
+            className="p-2 rounded-xl bg-slate-100 hover:bg-[#FEE2E2] hover:text-[#610C04] text-[#64748B] transition-all"
             title="Start live chat"
           >
             <HelpCircle size={20} />
@@ -266,7 +266,7 @@ function Overview() {
       </div>
 
       {/* Available Balance Card — Styled in Brand Red & White */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#D31111] to-[#990B0B] p-6 text-white shadow-md">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#610C04] to-[#3D0702] p-6 text-white shadow-md">
         {/* Abstract pattern overlay */}
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, #FFFFFF 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
         
@@ -300,34 +300,34 @@ function Overview() {
           {/* Domestic */}
           <button
             onClick={() => { if (checkSuspension()) return; setTransferTypeToOpen('domestic'); setShowTransfer(true); }}
-            className="flex flex-col items-center justify-center p-5 bg-white border border-light rounded-2xl hover:bg-[#FEE2E2]/30 hover:border-[#D31111] transition-all group shadow-soft"
+            className="flex flex-col items-center justify-center p-5 bg-white border border-light rounded-2xl hover:bg-[#FEE2E2]/30 hover:border-[#610C04] transition-all group shadow-soft"
           >
             <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-[#FEE2E2] transition-colors">
-              <Send size={22} className="text-[#D31111]" />
+              <Send size={22} className="text-[#610C04]" />
             </div>
-            <span className="text-xs font-semibold text-[#0A1628] group-hover:text-[#D31111] transition-colors">Domestic</span>
+            <span className="text-xs font-semibold text-[#0A1628] group-hover:text-[#610C04] transition-colors">Domestic</span>
           </button>
 
           {/* International */}
           <button
             onClick={() => { if (checkSuspension()) return; setTransferTypeToOpen('international'); setShowTransfer(true); }}
-            className="flex flex-col items-center justify-center p-5 bg-white border border-light rounded-2xl hover:bg-[#FEE2E2]/30 hover:border-[#D31111] transition-all group shadow-soft"
+            className="flex flex-col items-center justify-center p-5 bg-white border border-light rounded-2xl hover:bg-[#FEE2E2]/30 hover:border-[#610C04] transition-all group shadow-soft"
           >
             <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-[#FEE2E2] transition-colors">
-              <Globe size={22} className="text-[#D31111]" />
+              <Globe size={22} className="text-[#610C04]" />
             </div>
-            <span className="text-xs font-semibold text-[#0A1628] group-hover:text-[#D31111] transition-colors">International</span>
+            <span className="text-xs font-semibold text-[#0A1628] group-hover:text-[#610C04] transition-colors">International</span>
           </button>
 
           {/* Deposit */}
           <button
             onClick={() => { if (checkSuspension()) return; setShowAddMoney(true); }}
-            className="flex flex-col items-center justify-center p-5 bg-white border border-light rounded-2xl hover:bg-[#FEE2E2]/30 hover:border-[#D31111] transition-all group shadow-soft"
+            className="flex flex-col items-center justify-center p-5 bg-white border border-light rounded-2xl hover:bg-[#FEE2E2]/30 hover:border-[#610C04] transition-all group shadow-soft"
           >
             <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-[#FEE2E2] transition-colors">
-              <Plus size={22} className="text-[#D31111]" />
+              <Plus size={22} className="text-[#610C04]" />
             </div>
-            <span className="text-xs font-semibold text-[#0A1628] group-hover:text-[#D31111] transition-colors">Deposit</span>
+            <span className="text-xs font-semibold text-[#0A1628] group-hover:text-[#610C04] transition-colors">Deposit</span>
           </button>
 
           {/* History */}
@@ -337,25 +337,25 @@ function Overview() {
               window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
               showToast('Scrolled to Transaction History');
             }}
-            className="flex flex-col items-center justify-center p-5 bg-white border border-light rounded-2xl hover:bg-[#FEE2E2]/30 hover:border-[#D31111] transition-all group shadow-soft"
+            className="flex flex-col items-center justify-center p-5 bg-white border border-light rounded-2xl hover:bg-[#FEE2E2]/30 hover:border-[#610C04] transition-all group shadow-soft"
           >
             <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-[#FEE2E2] transition-colors">
-              <Clock size={22} className="text-[#D31111]" />
+              <Clock size={22} className="text-[#610C04]" />
             </div>
-            <span className="text-xs font-semibold text-[#0A1628] group-hover:text-[#D31111] transition-colors">History</span>
+            <span className="text-xs font-semibold text-[#0A1628] group-hover:text-[#610C04] transition-colors">History</span>
           </button>
         </div>
       </div>
 
       {/* Freeze card banner */}
       {cardFrozen && (
-        <div className="bg-[#FEE2E2] border border-[#D31111]/20 rounded-2xl p-4 flex items-center space-x-3">
-          <Snowflake size={20} className="text-[#D31111] flex-shrink-0" />
+        <div className="bg-[#FEE2E2] border border-[#610C04]/20 rounded-2xl p-4 flex items-center space-x-3">
+          <Snowflake size={20} className="text-[#610C04] flex-shrink-0" />
           <div className="flex-1">
             <p className="text-sm font-medium text-[#0A1628]">Your card is currently frozen</p>
             <p className="text-xs text-[#64748B]">All card transactions are blocked. Toggle status to restore.</p>
           </div>
-          <button onClick={() => { setCardFrozen(false); showToast('Card unfrozen successfully'); }} className="px-4 py-2 bg-[#D31111] text-white rounded-xl text-xs font-medium hover:bg-[#0A1628] transition-colors">
+          <button onClick={() => { setCardFrozen(false); showToast('Card unfrozen successfully'); }} className="px-4 py-2 bg-[#610C04] text-white rounded-xl text-xs font-medium hover:bg-[#0A1628] transition-colors">
             Unfreeze
           </button>
         </div>
@@ -365,7 +365,7 @@ function Overview() {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-bold text-[#0A1628] uppercase tracking-wider">Recent Transactions</h3>
-          <Link to="/dashboard/accounts" className="text-xs sm:text-sm text-[#D31111] hover:underline font-semibold">View All</Link>
+          <Link to="/dashboard/accounts" className="text-xs sm:text-sm text-[#610C04] hover:underline font-semibold">View All</Link>
         </div>
 
         <div className="space-y-3">
@@ -383,7 +383,7 @@ function Overview() {
                   className="flex items-center justify-between p-4 bg-white border border-light rounded-2xl hover:shadow-soft transition-all duration-200 cursor-pointer group"
                 >
                   <div className="flex items-center space-x-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isCredit ? 'bg-green-50 text-green-600' : 'bg-red-50 text-[#D31111]'}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isCredit ? 'bg-green-50 text-green-600' : 'bg-red-50 text-[#610C04]'}`}>
                       {isCredit ? (
                         <ArrowUpRight className="rotate-180" size={18} />
                       ) : (
@@ -391,7 +391,7 @@ function Overview() {
                       )}
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-[#0A1628] group-hover:text-[#D31111] transition-colors">{t.desc}</p>
+                      <p className="text-sm font-bold text-[#0A1628] group-hover:text-[#610C04] transition-colors">{t.desc}</p>
                       <p className="text-xs text-[#64748B] mt-0.5">{t.date} &middot; <span className="font-semibold text-slate-400">{t.cat || 'Transfer'}</span></p>
                     </div>
                   </div>
@@ -478,7 +478,7 @@ function AccountsPage() {
           <button onClick={() => setExpandedAccount(expandedAccount === i ? null : i)} className="w-full flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 text-left hover:bg-[#F1F5F9]/50 transition-colors">
             <div className="flex items-center space-x-3 sm:space-x-4">
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#F1F5F9] flex items-center justify-center flex-shrink-0">
-                <Wallet size={18} className="text-[#D31111]" />
+                <Wallet size={18} className="text-[#610C04]" />
               </div>
               <div>
                 <p className="font-medium text-[#0A1628] text-sm sm:text-base">{acc.name}</p>
@@ -527,7 +527,7 @@ function AccountsPage() {
           )}
         </div>
       ))}
-      <button onClick={() => { if (checkSuspension()) return; }} className="w-full py-3 sm:py-4 rounded-2xl border-2 border-dashed border-light text-[#D31111] font-medium text-sm hover:bg-[#FEE2E2] hover:border-[#D31111] transition-all flex items-center justify-center space-x-2">
+      <button onClick={() => { if (checkSuspension()) return; }} className="w-full py-3 sm:py-4 rounded-2xl border-2 border-dashed border-light text-[#610C04] font-medium text-sm hover:bg-[#FEE2E2] hover:border-[#610C04] transition-all flex items-center justify-center space-x-2">
         <Plus size={18} /><span>Add new account</span>
       </button>
       {selectedTxn && <TransactionReceiptModal txn={selectedTxn} onClose={() => setSelectedTxn(null)} currencySymbol={cs} />}
@@ -558,7 +558,7 @@ function PaymentsPage() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-4 sm:mb-6">
           <div className="flex-1 relative">
             <Wallet size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748B]" />
-            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-3 rounded-xl border border-light text-sm text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="Search payees..." />
+            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-3 rounded-xl border border-light text-sm text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="Search payees..." />
           </div>
           <button onClick={() => { if (checkSuspension()) return; setShowTransfer(true); }} className="btn-primary py-3 px-4 sm:px-5 text-sm flex items-center justify-center space-x-2">
             <Send size={14} /><span>New payment</span>
@@ -603,13 +603,13 @@ function CardsPage() {
         <p className="text-[#64748B] mt-1 text-sm">Manage your cards and settings</p>
       </div>
       {frozen && (
-        <div className="bg-[#FEE2E2] border border-[#D31111]/20 rounded-2xl p-4 flex items-center space-x-3">
-          <Snowflake size={20} className="text-[#D31111] flex-shrink-0" />
+        <div className="bg-[#FEE2E2] border border-[#610C04]/20 rounded-2xl p-4 flex items-center space-x-3">
+          <Snowflake size={20} className="text-[#610C04] flex-shrink-0" />
           <div className="flex-1">
             <p className="text-sm font-medium text-[#0A1628]">Your card is currently frozen</p>
             <p className="text-xs text-[#64748B]">All card transactions are blocked.</p>
           </div>
-          <button onClick={() => { if (checkSuspension()) return; setFrozen(false); showToast('Card unfrozen successfully'); }} className="px-4 py-2 bg-[#D31111] text-white rounded-xl text-xs font-medium hover:bg-[#0A1628] transition-colors">
+          <button onClick={() => { if (checkSuspension()) return; setFrozen(false); showToast('Card unfrozen successfully'); }} className="px-4 py-2 bg-[#610C04] text-white rounded-xl text-xs font-medium hover:bg-[#0A1628] transition-colors">
             Unfreeze
           </button>
         </div>
@@ -619,12 +619,12 @@ function CardsPage() {
           <div className={`relative w-full aspect-[1.586/1] rounded-2xl p-4 sm:p-6 flex flex-col justify-between overflow-hidden transition-all duration-500 ${frozen ? 'opacity-60' : ''}`}>
             <div className="absolute inset-0 bg-[#0A1628]" />
             <div className="absolute inset-0 opacity-20">
-              <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-[#D31111]" />
-              <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-[#D31111]" />
+              <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-[#610C04]" />
+              <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-[#610C04]" />
             </div>
             <div className="relative z-10 flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#D31111] flex items-center justify-center">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#610C04] flex items-center justify-center">
                   <span className="text-white font-display text-[8px] sm:text-[10px]">NBB</span>
                 </div>
                 <span className="text-white/80 font-display text-xs sm:text-sm">North Bridge Bank</span>
@@ -652,10 +652,10 @@ function CardsPage() {
             )}
           </div>
           <div className="grid grid-cols-2 gap-2 sm:gap-3 mt-4 sm:mt-6">
-            <button onClick={() => { if (checkSuspension()) return; setFrozen(!frozen); showToast(frozen ? 'Card unfrozen successfully' : 'Card frozen successfully'); }} className={`flex items-center justify-center space-x-1 sm:space-x-2 py-2.5 sm:py-3 rounded-xl border transition-all text-xs sm:text-sm ${frozen ? 'border-[#10B981] text-[#10B981] hover:bg-[#10B981]/5' : 'border-light text-[#64748B] hover:border-[#D31111] hover:text-[#D31111]'}`}>
+            <button onClick={() => { if (checkSuspension()) return; setFrozen(!frozen); showToast(frozen ? 'Card unfrozen successfully' : 'Card frozen successfully'); }} className={`flex items-center justify-center space-x-1 sm:space-x-2 py-2.5 sm:py-3 rounded-xl border transition-all text-xs sm:text-sm ${frozen ? 'border-[#10B981] text-[#10B981] hover:bg-[#10B981]/5' : 'border-light text-[#64748B] hover:border-[#610C04] hover:text-[#610C04]'}`}>
               <Snowflake size={14} /><span>{frozen ? 'Unfreeze' : 'Freeze'}</span>
             </button>
-            <button onClick={() => { if (checkSuspension()) return; }} className="flex items-center justify-center space-x-1 sm:space-x-2 py-2.5 sm:py-3 rounded-xl border border-light text-[#64748B] hover:border-[#D31111] hover:text-[#D31111] transition-all text-xs sm:text-sm">
+            <button onClick={() => { if (checkSuspension()) return; }} className="flex items-center justify-center space-x-1 sm:space-x-2 py-2.5 sm:py-3 rounded-xl border border-light text-[#64748B] hover:border-[#610C04] hover:text-[#610C04] transition-all text-xs sm:text-sm">
               <RefreshCw size={14} /><span>Replace</span>
             </button>
           </div>
@@ -664,7 +664,7 @@ function CardsPage() {
           {[{ icon: Lock, label: 'Change PIN', desc: 'Update your card PIN' }, { icon: ShieldCheck, label: 'Report lost or stolen', desc: 'Get a replacement card' }, { icon: TrendingUp, label: 'Spending limits', desc: 'Set daily transaction limits' }, { icon: Eye, label: 'Online purchases', desc: 'Toggle online payments' }].map((action, i) => (
             <button key={i} onClick={() => { if (checkSuspension()) return; }} className="w-full flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 bg-white border border-light rounded-2xl hover:shadow-soft transition-all text-left">
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#F1F5F9] flex items-center justify-center flex-shrink-0">
-                <action.icon size={16} className="text-[#D31111]" />
+                <action.icon size={16} className="text-[#610C04]" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs sm:text-sm font-medium text-[#0A1628]">{action.label}</p>
@@ -703,7 +703,7 @@ function SupportPage() {
         {[{ icon: Phone, label: 'Call us', value: '0800 123 4567' }, { icon: Mail, label: 'Email us', value: 'support@northbridgebank.co.uk' }, { icon: MapPin, label: 'Find a branch', value: '24 locations' }, { icon: Clock, label: 'Branch Hours', value: 'Mon-Fri 9-5' }].map((c, i) => (
           <div key={i} className="bg-white border border-light rounded-2xl p-4 sm:p-6 flex flex-col items-center text-center">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#FEE2E2] flex items-center justify-center mb-2 sm:mb-3">
-              <c.icon size={18} className="text-[#D31111]" />
+              <c.icon size={18} className="text-[#610C04]" />
             </div>
             <p className="text-xs sm:text-sm font-medium text-[#0A1628]">{c.label}</p>
             <p className="text-[10px] sm:text-xs text-[#64748B]">{c.value}</p>
@@ -724,7 +724,7 @@ function SupportPage() {
           </div>
           <div className="bg-[#F1F5F9] rounded-xl p-3 sm:p-4 mb-3 sm:mb-4"><p className="text-xs sm:text-sm text-[#64748B]">Hello! How can I help you today?</p></div>
           <div className="flex space-x-2">
-            <input type="text" value={chatText} onChange={(e) => setChatText(e.target.value)} className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-light text-sm text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="Type your message..." />
+            <input type="text" value={chatText} onChange={(e) => setChatText(e.target.value)} className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-light text-sm text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="Type your message..." />
             <button onClick={() => { if (checkSuspension()) return; setChatText(''); }} className="btn-primary px-3 sm:px-4"><Send size={16} /></button>
           </div>
         </div>
@@ -777,7 +777,7 @@ function BottomNav({ onSettings }: { onSettings: () => void }) {
                 if (checkSuspension()) return
                 item.action?.()
               }}
-              className="flex flex-col items-center justify-center space-y-1 text-[#64748B] hover:text-[#D31111]"
+              className="flex flex-col items-center justify-center space-y-1 text-[#64748B] hover:text-[#610C04]"
             >
               <Icon size={20} />
               <span className="text-[10px] font-medium">{item.label}</span>
@@ -795,10 +795,10 @@ function BottomNav({ onSettings }: { onSettings: () => void }) {
               }
             }}
             className={`flex flex-col items-center justify-center space-y-1 ${
-              isActive ? 'text-[#D31111]' : 'text-[#64748B] hover:text-[#D31111]'
+              isActive ? 'text-[#610C04]' : 'text-[#64748B] hover:text-[#610C04]'
             }`}
           >
-            <Icon size={20} className={isActive ? 'text-[#D31111]' : 'text-[#64748B]'} />
+            <Icon size={20} className={isActive ? 'text-[#610C04]' : 'text-[#64748B]'} />
             <span className="text-[10px] font-medium">{item.label}</span>
           </Link>
         )

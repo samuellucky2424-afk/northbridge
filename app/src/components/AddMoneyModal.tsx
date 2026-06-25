@@ -42,7 +42,7 @@ export default function AddMoneyModal({ onClose, currencySymbol }: AddMoneyModal
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 rounded-xl border border-light text-3xl font-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]"
+                className="w-full pl-12 pr-4 py-4 rounded-xl border border-light text-3xl font-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]"
                 placeholder="0.00"
                 autoFocus
               />
@@ -52,7 +52,7 @@ export default function AddMoneyModal({ onClose, currencySymbol }: AddMoneyModal
                 <button
                   key={preset}
                   onClick={() => setAmount(preset)}
-                  className="px-4 py-2 rounded-lg border border-light text-sm text-[#64748B] hover:border-[#D31111] hover:text-[#D31111] transition-all"
+                  className="px-4 py-2 rounded-lg border border-light text-sm text-[#64748B] hover:border-[#610C04] hover:text-[#610C04] transition-all"
                 >
                   {currencySymbol}{preset}
                 </button>
@@ -75,10 +75,10 @@ export default function AddMoneyModal({ onClose, currencySymbol }: AddMoneyModal
               <button
                 key={m.id}
                 onClick={() => { setMethod(m.id); setStep('confirm'); }}
-                className="w-full flex items-center space-x-4 p-4 rounded-xl border border-light hover:border-[#D31111] hover:bg-[#FEE2E2]/20 transition-all text-left"
+                className="w-full flex items-center space-x-4 p-4 rounded-xl border border-light hover:border-[#610C04] hover:bg-[#FEE2E2]/20 transition-all text-left"
               >
                 <div className="w-12 h-12 rounded-xl bg-[#F1F5F9] flex items-center justify-center flex-shrink-0">
-                  <m.icon size={22} className="text-[#D31111]" />
+                  <m.icon size={22} className="text-[#610C04]" />
                 </div>
                 <div>
                   <p className="font-medium text-[#0A1628]">{m.label}</p>

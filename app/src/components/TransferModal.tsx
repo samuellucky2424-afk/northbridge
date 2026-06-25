@@ -208,10 +208,10 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
             {/* Transfer Type Toggle */}
             {!initialType && (
               <div className="flex rounded-xl bg-[#F1F5F9] p-1">
-                <button onClick={() => setTransferType('domestic')} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${transferType === 'domestic' ? 'bg-[#D31111] text-white shadow-sm' : 'text-[#64748B] hover:text-[#0A1628]'}`}>
+                <button onClick={() => setTransferType('domestic')} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${transferType === 'domestic' ? 'bg-[#610C04] text-white shadow-sm' : 'text-[#64748B] hover:text-[#0A1628]'}`}>
                   Domestic Transfer
                 </button>
-                <button onClick={() => setTransferType('international')} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${transferType === 'international' ? 'bg-[#D31111] text-white shadow-sm' : 'text-[#64748B] hover:text-[#0A1628]'}`}>
+                <button onClick={() => setTransferType('international')} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${transferType === 'international' ? 'bg-[#610C04] text-white shadow-sm' : 'text-[#64748B] hover:text-[#0A1628]'}`}>
                   International Transfer
                 </button>
               </div>
@@ -221,27 +221,27 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
             {transferType === 'domestic' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Account Holder Name <span className="text-[#D31111]">*</span></label>
-                  <input type="text" value={domestic.accountHolder} onChange={(e) => handleFieldChange('accountHolder', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="Full name on account" />
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Account Holder Name <span className="text-[#610C04]">*</span></label>
+                  <input type="text" value={domestic.accountHolder} onChange={(e) => handleFieldChange('accountHolder', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="Full name on account" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Bank Name <span className="text-[#D31111]">*</span></label>
-                  <select value={domestic.bankName} onChange={(e) => handleFieldChange('bankName', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] bg-white">
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Bank Name <span className="text-[#610C04]">*</span></label>
+                  <select value={domestic.bankName} onChange={(e) => handleFieldChange('bankName', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] bg-white">
                     <option value="">Select bank</option>
                     {banks.map(b => <option key={b} value={b}>{b}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Account Number / IBAN <span className="text-[#D31111]">*</span></label>
-                  <input type="text" value={domestic.accountNumber} onChange={(e) => handleFieldChange('accountNumber', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="8 digit account number" maxLength={24} />
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Account Number / IBAN <span className="text-[#610C04]">*</span></label>
+                  <input type="text" value={domestic.accountNumber} onChange={(e) => handleFieldChange('accountNumber', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="8 digit account number" maxLength={24} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Amount (&pound;) <span className="text-[#D31111]">*</span></label>
-                  <input type="number" value={domestic.amount} onChange={(e) => handleFieldChange('amount', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="0.00" />
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Amount (&pound;) <span className="text-[#610C04]">*</span></label>
+                  <input type="number" value={domestic.amount} onChange={(e) => handleFieldChange('amount', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="0.00" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Purpose of Transfer <span className="text-[#D31111]">*</span></label>
-                  <select value={domestic.purpose} onChange={(e) => handleFieldChange('purpose', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] bg-white">
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Purpose of Transfer <span className="text-[#610C04]">*</span></label>
+                  <select value={domestic.purpose} onChange={(e) => handleFieldChange('purpose', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] bg-white">
                     <option value="">Select purpose</option>
                     {purposes.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
@@ -253,39 +253,39 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
             {transferType === 'international' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-1">
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Receiver Name <span className="text-[#D31111]">*</span></label>
-                  <input type="text" value={international.receiverName} onChange={(e) => handleFieldChange('receiverName', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="Full legal name" />
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Receiver Name <span className="text-[#610C04]">*</span></label>
+                  <input type="text" value={international.receiverName} onChange={(e) => handleFieldChange('receiverName', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="Full legal name" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Phone Number <span className="text-[#D31111]">*</span></label>
-                  <input type="tel" value={international.phone} onChange={(e) => handleFieldChange('phone', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="+1 234 567 8900" />
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Phone Number <span className="text-[#610C04]">*</span></label>
+                  <input type="tel" value={international.phone} onChange={(e) => handleFieldChange('phone', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="+1 234 567 8900" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Email Address <span className="text-[#D31111]">*</span></label>
-                  <input type="email" value={international.email} onChange={(e) => handleFieldChange('email', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="receiver@email.com" />
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Email Address <span className="text-[#610C04]">*</span></label>
+                  <input type="email" value={international.email} onChange={(e) => handleFieldChange('email', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="receiver@email.com" />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Address <span className="text-[#D31111]">*</span></label>
-                  <input type="text" value={international.address} onChange={(e) => handleFieldChange('address', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="Street address, City, Country" />
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Address <span className="text-[#610C04]">*</span></label>
+                  <input type="text" value={international.address} onChange={(e) => handleFieldChange('address', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="Street address, City, Country" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Country <span className="text-[#D31111]">*</span></label>
-                  <select value={international.country} onChange={(e) => handleFieldChange('country', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] bg-white">
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Country <span className="text-[#610C04]">*</span></label>
+                  <select value={international.country} onChange={(e) => handleFieldChange('country', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] bg-white">
                     <option value="">Select country</option>
                     {countries.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">SWIFT / IBAN / Routing Number <span className="text-[#D31111]">*</span></label>
-                  <input type="text" value={international.swiftIban} onChange={(e) => handleFieldChange('swiftIban', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="e.g. CHASUS33 or GB29NWBK..." />
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">SWIFT / IBAN / Routing Number <span className="text-[#610C04]">*</span></label>
+                  <input type="text" value={international.swiftIban} onChange={(e) => handleFieldChange('swiftIban', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="e.g. CHASUS33 or GB29NWBK..." />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Amount (&pound;) <span className="text-[#D31111]">*</span></label>
-                  <input type="number" value={international.amount} onChange={(e) => handleFieldChange('amount', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="0.00" />
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Amount (&pound;) <span className="text-[#610C04]">*</span></label>
+                  <input type="number" value={international.amount} onChange={(e) => handleFieldChange('amount', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="0.00" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Purpose of Transfer <span className="text-[#D31111]">*</span></label>
-                  <select value={international.purpose} onChange={(e) => handleFieldChange('purpose', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] bg-white">
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Purpose of Transfer <span className="text-[#610C04]">*</span></label>
+                  <select value={international.purpose} onChange={(e) => handleFieldChange('purpose', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] bg-white">
                     <option value="">Select purpose</option>
                     {purposes.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
@@ -303,7 +303,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
         {step === 'preview' && (
           <div className="p-6 space-y-4">
             <div className="flex items-center space-x-2 mb-2">
-              <Send size={18} className="text-[#D31111]" />
+              <Send size={18} className="text-[#610C04]" />
               <span className="text-sm font-medium text-[#0A1628] capitalize">{transferType} Transfer</span>
             </div>
 
@@ -334,7 +334,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
 
               <div className="flex justify-between items-center pt-2">
                 <span className="text-sm text-[#64748B]">Amount</span>
-                <span className="text-xl font-light text-[#D31111]">&pound;{parseFloat((transferType === 'domestic' ? domestic.amount : international.amount) || '0').toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span className="text-xl font-light text-[#610C04]">&pound;{parseFloat((transferType === 'domestic' ? domestic.amount : international.amount) || '0').toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
 
               {transferType === 'international' && (
@@ -346,7 +346,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
             </div>
 
             <div className="bg-[#FEE2E2] rounded-xl p-4 flex items-start space-x-3">
-              <Shield size={18} className="text-[#D31111] flex-shrink-0 mt-0.5" />
+              <Shield size={18} className="text-[#610C04] flex-shrink-0 mt-0.5" />
               <p className="text-xs text-[#0A1628]">You will receive a 6-digit OTP code to verify this transfer. Please ensure all details are correct before confirming.</p>
             </div>
 
@@ -365,13 +365,13 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
           <div className="p-6 space-y-6">
             <div className="text-center">
               <div className="w-16 h-16 rounded-full bg-[#FEE2E2] flex items-center justify-center mx-auto mb-4">
-                <Shield size={32} className="text-[#D31111]" />
+                <Shield size={32} className="text-[#610C04]" />
               </div>
               <h3 className="font-display text-xl text-[#0A1628] mb-2">Verify with OTP</h3>
               <p className="text-sm text-[#64748B]">A 6-digit verification code has been sent to your email. Enter it below to complete the transfer.</p>
               
               {visibleOtp && (
-                <div className="bg-slate-50 border border-[#D31111]/20 text-[#D31111] text-xs font-mono py-1 px-3 rounded-lg inline-block mt-3">
+                <div className="bg-slate-50 border border-[#610C04]/20 text-[#610C04] text-xs font-mono py-1 px-3 rounded-lg inline-block mt-3">
                   Demo OTP Code: <span className="font-bold text-sm tracking-wide">{visibleOtp}</span>
                 </div>
               )}
@@ -393,7 +393,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
                   value={digit}
                   onChange={(e) => handleOtpChange(i, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(i, e)}
-                  className="w-10 h-12 text-center text-lg font-medium text-[#0A1628] border border-light rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] bg-[#F8FAFC]"
+                  className="w-10 h-12 text-center text-lg font-medium text-[#0A1628] border border-light rounded-xl focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] bg-[#F8FAFC]"
                 />
               ))}
             </div>
@@ -407,7 +407,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
             </button>
 
             <p className="text-center text-xs text-[#64748B]">
-              Did not receive it? <span onClick={handleConfirm} className="text-[#D31111] hover:underline cursor-pointer">Resend code</span>
+              Did not receive it? <span onClick={handleConfirm} className="text-[#610C04] hover:underline cursor-pointer">Resend code</span>
             </p>
           </div>
         )}

@@ -200,7 +200,7 @@ export default function Register() {
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-full bg-[#D31111] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-[#610C04] flex items-center justify-center">
                   <Crown size={16} className="text-white" />
                 </div>
                 <span className="font-display text-lg text-[#0A1628]">North Bridge Bank</span>
@@ -208,12 +208,12 @@ export default function Register() {
               <span className="text-sm text-[#64748B]">Step {step} of 4</span>
             </div>
             <div className="h-1.5 bg-white rounded-full overflow-hidden">
-              <div className="h-full bg-[#D31111] transition-all duration-500 rounded-full" style={{ width: `${(step / 4) * 100}%` }} />
+              <div className="h-full bg-[#610C04] transition-all duration-500 rounded-full" style={{ width: `${(step / 4) * 100}%` }} />
             </div>
             {/* Step labels */}
             <div className="flex justify-between mt-2">
               {['Personal', 'Address', 'Details', 'Security'].map((label, i) => (
-                <span key={i} className={`text-xs ${step >= i + 1 ? 'text-[#D31111] font-medium' : 'text-[#64748B]'}`}>{label}</span>
+                <span key={i} className={`text-xs ${step >= i + 1 ? 'text-[#610C04] font-medium' : 'text-[#64748B]'}`}>{label}</span>
               ))}
             </div>
           </div>
@@ -245,25 +245,25 @@ export default function Register() {
               <div className="space-y-5">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#0A1628] mb-2">First name <span className="text-[#D31111]">*</span></label>
+                    <label className="block text-sm font-medium text-[#0A1628] mb-2">First name <span className="text-[#610C04]">*</span></label>
                     <input type="text" value={form.firstName} onChange={(e) => updateForm('firstName', e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] transition-all" placeholder="John" />
+                      className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all" placeholder="John" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#0A1628] mb-2">Last name <span className="text-[#D31111]">*</span></label>
+                    <label className="block text-sm font-medium text-[#0A1628] mb-2">Last name <span className="text-[#610C04]">*</span></label>
                     <input type="text" value={form.lastName} onChange={(e) => updateForm('lastName', e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] transition-all" placeholder="Smith" />
+                      className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all" placeholder="Smith" />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-2">Email address <span className="text-[#D31111]">*</span></label>
+                  <label className="block text-sm font-medium text-[#0A1628] mb-2">Email address <span className="text-[#610C04]">*</span></label>
                   <input type="email" value={form.email} onChange={(e) => updateForm('email', e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] transition-all" placeholder="john.smith@example.com" />
+                    className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all" placeholder="john.smith@example.com" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-2">Phone number <span className="text-[#D31111]">*</span></label>
+                  <label className="block text-sm font-medium text-[#0A1628] mb-2">Phone number <span className="text-[#610C04]">*</span></label>
                   <input type="tel" value={form.phone} onChange={(e) => updateForm('phone', e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] transition-all" placeholder="+44 7700 900000" />
+                    className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all" placeholder="+44 7700 900000" />
                 </div>
                 <button onClick={handleNext} className="w-full btn-primary py-3.5 flex items-center justify-center space-x-2">
                   <span>Continue</span><ArrowRight size={18} />
@@ -275,27 +275,27 @@ export default function Register() {
             {step === 2 && (
               <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-2">House address <span className="text-[#D31111]">*</span></label>
+                  <label className="block text-sm font-medium text-[#0A1628] mb-2">House address <span className="text-[#610C04]">*</span></label>
                   <input type="text" value={form.houseAddress} onChange={(e) => updateForm('houseAddress', e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] transition-all" placeholder="42 Baker Street" />
+                    className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all" placeholder="42 Baker Street" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#0A1628] mb-2">City <span className="text-[#D31111]">*</span></label>
+                    <label className="block text-sm font-medium text-[#0A1628] mb-2">City <span className="text-[#610C04]">*</span></label>
                     <input type="text" value={form.city} onChange={(e) => updateForm('city', e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] transition-all" placeholder="London" />
+                      className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all" placeholder="London" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#0A1628] mb-2">Postcode <span className="text-[#D31111]">*</span></label>
+                    <label className="block text-sm font-medium text-[#0A1628] mb-2">Postcode <span className="text-[#610C04]">*</span></label>
                     <input type="text" value={form.postcode} onChange={(e) => updateForm('postcode', e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] transition-all" placeholder="NW1 6XE" />
+                      className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all" placeholder="NW1 6XE" />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-2">Country <span className="text-[#D31111]">*</span></label>
+                  <label className="block text-sm font-medium text-[#0A1628] mb-2">Country <span className="text-[#610C04]">*</span></label>
                   <div className="relative">
                     <select value={form.country} onChange={(e) => updateForm('country', e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] transition-all appearance-none">
+                      className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all appearance-none">
                       <option value="United Kingdom">United Kingdom</option>
                       <option value="United States">United States</option>
                       <option value="Canada">Canada</option>
@@ -323,9 +323,9 @@ export default function Register() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-2">Date of birth <span className="text-[#D31111]">*</span></label>
+                  <label className="block text-sm font-medium text-[#0A1628] mb-2">Date of birth <span className="text-[#610C04]">*</span></label>
                   <input type="date" value={form.dateOfBirth} onChange={(e) => updateForm('dateOfBirth', e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] transition-all" />
+                    className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all" />
                 </div>
                 <div className="flex space-x-3">
                   <button onClick={handleBack} className="flex-1 py-3.5 rounded-xl border border-light text-[#64748B] font-medium text-sm hover:bg-[#F1F5F9] transition-colors flex items-center justify-center space-x-2">
@@ -342,20 +342,20 @@ export default function Register() {
             {step === 3 && (
               <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-2">National Insurance Number (SSN) <span className="text-[#D31111]">*</span></label>
+                  <label className="block text-sm font-medium text-[#0A1628] mb-2">National Insurance Number (SSN) <span className="text-[#610C04]">*</span></label>
                   <input type="text" value={form.ssn} onChange={(e) => updateForm('ssn', e.target.value.toUpperCase())}
-                    className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] transition-all uppercase" placeholder="AB123456C" />
+                    className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all uppercase" placeholder="AB123456C" />
                   <p className="text-xs text-[#64748B] mt-1.5">This is required for identity verification and regulatory compliance.</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-2">Occupation <span className="text-[#D31111]">*</span></label>
+                  <label className="block text-sm font-medium text-[#0A1628] mb-2">Occupation <span className="text-[#610C04]">*</span></label>
                   <input type="text" value={form.occupation} onChange={(e) => updateForm('occupation', e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] transition-all" placeholder="Software Engineer" />
+                    className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all" placeholder="Software Engineer" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-2">Source of income <span className="text-[#D31111]">*</span></label>
+                  <label className="block text-sm font-medium text-[#0A1628] mb-2">Source of income <span className="text-[#610C04]">*</span></label>
                   <select value={form.incomeSource} onChange={(e) => updateForm('incomeSource', e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] transition-all appearance-none">
+                    className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all appearance-none">
                     <option value="">Select your source of income</option>
                     {incomeOptions.map((opt) => (
                       <option key={opt} value={opt}>{opt}</option>
@@ -377,19 +377,19 @@ export default function Register() {
             {step === 4 && (
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-2">Password <span className="text-[#D31111]">*</span></label>
+                  <label className="block text-sm font-medium text-[#0A1628] mb-2">Password <span className="text-[#610C04]">*</span></label>
                   <div className="relative">
                     <input type={showPassword ? 'text' : 'password'} value={form.password} onChange={(e) => updateForm('password', e.target.value)}
-                      className="w-full px-4 py-3 pr-12 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] transition-all" placeholder="Min 8 characters" />
+                      className="w-full px-4 py-3 pr-12 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all" placeholder="Min 8 characters" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748B]">
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-2">Confirm password <span className="text-[#D31111]">*</span></label>
+                  <label className="block text-sm font-medium text-[#0A1628] mb-2">Confirm password <span className="text-[#610C04]">*</span></label>
                   <input type="password" value={form.confirmPassword} onChange={(e) => updateForm('confirmPassword', e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] transition-all" placeholder="Repeat your password" />
+                    className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all" placeholder="Repeat your password" />
                 </div>
                 <div className="space-y-2">
                   {passwordRules.map((rule, i) => (
@@ -403,7 +403,7 @@ export default function Register() {
                 </div>
                 <div className="p-4 bg-[#F1F5F9] rounded-xl">
                   <p className="text-xs text-[#64748B] leading-relaxed">
-                    By opening an account, you agree to our <span className="text-[#D31111] hover:underline cursor-pointer">Terms of Service</span> and <span className="text-[#D31111] hover:underline cursor-pointer">Privacy Policy</span>. North Bridge Bank is authorised by the Prudential Regulation Authority and regulated by the Financial Conduct Authority.
+                    By opening an account, you agree to our <span className="text-[#610C04] hover:underline cursor-pointer">Terms of Service</span> and <span className="text-[#610C04] hover:underline cursor-pointer">Privacy Policy</span>. North Bridge Bank is authorised by the Prudential Regulation Authority and regulated by the Financial Conduct Authority.
                   </p>
                 </div>
                 <div className="flex space-x-3">
@@ -424,7 +424,7 @@ export default function Register() {
         </div>
         <p className="mt-6 text-center text-sm text-[#64748B]">
           Already have an account?{' '}
-          <Link to="/login" className="text-[#D31111] font-medium hover:underline">Sign in</Link>
+          <Link to="/login" className="text-[#610C04] font-medium hover:underline">Sign in</Link>
         </p>
       </main>
     </div>

@@ -53,11 +53,11 @@ function AdminNav() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link to="/admin" className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg bg-[#D31111] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-[#610C04] flex items-center justify-center">
               <span className="text-white font-display text-[10px]">NBB</span>
             </div>
             <span className="font-display text-xl text-[#0A1628]">North Bridge Bank</span>
-            <span className="ml-2 px-2 py-0.5 bg-[#FEE2E2] text-[#D31111] text-xs font-medium rounded-md">Admin</span>
+            <span className="ml-2 px-2 py-0.5 bg-[#FEE2E2] text-[#610C04] text-xs font-medium rounded-md">Admin</span>
           </Link>
 
           <div className="hidden md:flex items-center space-x-1">
@@ -69,7 +69,7 @@ function AdminNav() {
                   to={item.path}
                   className={`relative flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     isActive
-                      ? 'text-[#D31111] bg-[#FEE2E2]'
+                      ? 'text-[#610C04] bg-[#FEE2E2]'
                       : 'text-[#64748B] hover:text-[#0A1628] hover:bg-[#F1F5F9]'
                   }`}
                 >
@@ -83,7 +83,7 @@ function AdminNav() {
           <div className="flex items-center space-x-4">
             <button className="relative p-2 rounded-lg hover:bg-[#F1F5F9] transition-colors">
               <Bell size={20} className="text-[#64748B]" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-[#D31111] rounded-full" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-[#610C04] rounded-full" />
             </button>
             <button
               onClick={logout}
@@ -176,8 +176,8 @@ function AdminOverview() {
   const stats = [
     { label: 'Total Registered Users', value: userCount, change: 'Live', icon: Users, color: '#0A1628' },
     { label: 'Active Users', value: activeToday, change: 'Live', icon: UserCheck, color: '#10B981' },
-    { label: 'Suspended Accounts', value: pendingKyc, change: 'Live', icon: Clock, color: '#F59E0B' },
-    { label: 'Pending Approvals', value: latestTxns.filter(t => t.status === 'Pending').length, change: 'Live', icon: AlertTriangle, color: '#D31111' },
+    { label: 'Suspended Accounts', value: pendingKyc, change: 'Live', icon: Clock, color: '#F53D0702' },
+    { label: 'Pending Approvals', value: latestTxns.filter(t => t.status === 'Pending').length, change: 'Live', icon: AlertTriangle, color: '#610C04' },
   ]
 
   const dailyUsers = [Math.round(activeToday * 0.5), Math.round(activeToday * 0.6), Math.round(activeToday * 0.7), Math.round(activeToday * 0.8), Math.round(activeToday * 0.9), activeToday, activeToday]
@@ -231,7 +231,7 @@ function AdminOverview() {
                     className="w-8 rounded-t-lg transition-all duration-500"
                     style={{
                       height: `${(val / chartMax) * 160}px`,
-                      backgroundColor: i === dailyUsers.length - 1 ? '#D31111' : '#E2E8F0',
+                      backgroundColor: i === dailyUsers.length - 1 ? '#610C04' : '#E2E8F0',
                     }}
                   />
                 </div>
@@ -249,7 +249,7 @@ function AdminOverview() {
               <div key={i} className="flex-1 flex flex-col items-center">
                 <div className="w-full flex justify-center">
                   <div
-                    className="w-12 rounded-t-lg bg-[#D31111] transition-all duration-500"
+                    className="w-12 rounded-t-lg bg-[#610C04] transition-all duration-500"
                     style={{ height: `${(val / Math.max(...newSignups, 1)) * 160}px` }}
                   />
                 </div>
@@ -264,7 +264,7 @@ function AdminOverview() {
       <div className="bg-white border border-light rounded-2xl overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-light bg-slate-50/50">
           <h3 className="font-display text-lg text-[#0A1628]">Recent Transactions</h3>
-          <Link to="/admin/transactions" className="text-sm text-[#D31111] hover:underline font-medium">View all</Link>
+          <Link to="/admin/transactions" className="text-sm text-[#610C04] hover:underline font-medium">View all</Link>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[600px]">
@@ -290,7 +290,7 @@ function AdminOverview() {
                     <span className={`inline-block px-2.5 py-1 text-xs font-medium rounded-md ${
                       t.status === 'Completed' ? 'bg-[#10B981]/10 text-[#10B981]' :
                       t.status === 'Pending' ? 'bg-[#FEF3C7] text-[#D97706]' :
-                      t.status === 'Flagged' ? 'bg-[#FEE2E2] text-[#D31111]' :
+                      t.status === 'Flagged' ? 'bg-[#FEE2E2] text-[#610C04]' :
                       'bg-[#F1F5F9] text-[#64748B]'
                     }`}>
                       {t.status}
@@ -609,7 +609,7 @@ function UsersPage() {
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="w-full pl-10 pr-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]"
+            className="w-full pl-10 pr-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]"
             placeholder="Search name, email, or account number..."
           />
         </div>
@@ -620,8 +620,8 @@ function UsersPage() {
               onClick={() => { setStatusFilter(s); setPage(1); }}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 statusFilter === s
-                  ? 'bg-[#D31111] text-white'
-                  : 'bg-white border border-light text-[#64748B] hover:border-[#D31111]'
+                  ? 'bg-[#610C04] text-white'
+                  : 'bg-white border border-light text-[#64748B] hover:border-[#610C04]'
               }`}
             >
               {s}
@@ -637,7 +637,7 @@ function UsersPage() {
               setFundSuccess('');
               setFundAmount('');
             }}
-            className="px-4 py-2 rounded-xl text-sm font-medium bg-[#0A1628] text-white hover:bg-[#D31111] transition-all flex items-center space-x-2"
+            className="px-4 py-2 rounded-xl text-sm font-medium bg-[#0A1628] text-white hover:bg-[#610C04] transition-all flex items-center space-x-2"
           >
             <Plus size={16} />
             <span>Manual Deposit</span>
@@ -675,7 +675,7 @@ function UsersPage() {
                   </td>
                   <td className="px-6 py-4">
                     <span className={`inline-block px-2.5 py-1 text-xs font-medium rounded-md ${
-                      u.status === 'Active' ? 'bg-[#10B981]/10 text-[#10B981]' : 'bg-[#FEE2E2] text-[#D31111]'
+                      u.status === 'Active' ? 'bg-[#10B981]/10 text-[#10B981]' : 'bg-[#FEE2E2] text-[#610C04]'
                     }`}>
                       {u.status}
                     </span>
@@ -699,7 +699,7 @@ function UsersPage() {
                           setFundSuccess('');
                           setFundAmount('');
                         }}
-                        className="p-1.5 hover:bg-[#FEE2E2] text-[#D31111] rounded-lg transition-colors flex items-center space-x-1"
+                        className="p-1.5 hover:bg-[#FEE2E2] text-[#610C04] rounded-lg transition-colors flex items-center space-x-1"
                         title="Add Money"
                       >
                         <Plus size={16} /> <span className="text-xs font-medium">Add Money</span>
@@ -775,7 +775,7 @@ function UsersPage() {
                     type="text"
                     value={targetAccountNumber}
                     onChange={(e) => setTargetAccountNumber(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-light text-sm text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]"
+                    className="w-full px-4 py-3 rounded-xl border border-light text-sm text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]"
                     placeholder="Enter 8-digit account number"
                     maxLength={8}
                     required
@@ -799,8 +799,8 @@ function UsersPage() {
                     onClick={() => setTargetWallet('current')}
                     className={`py-3 rounded-xl border text-sm font-medium transition-all ${
                       targetWallet === 'current'
-                        ? 'border-[#D31111] bg-[#FEE2E2] text-[#D31111]'
-                        : 'border-light bg-white text-[#64748B] hover:border-[#D31111]'
+                        ? 'border-[#610C04] bg-[#FEE2E2] text-[#610C04]'
+                        : 'border-light bg-white text-[#64748B] hover:border-[#610C04]'
                     }`}
                   >
                     Current Account
@@ -810,8 +810,8 @@ function UsersPage() {
                     onClick={() => setTargetWallet('savings')}
                     className={`py-3 rounded-xl border text-sm font-medium transition-all ${
                       targetWallet === 'savings'
-                        ? 'border-[#D31111] bg-[#FEE2E2] text-[#D31111]'
-                        : 'border-light bg-white text-[#64748B] hover:border-[#D31111]'
+                        ? 'border-[#610C04] bg-[#FEE2E2] text-[#610C04]'
+                        : 'border-light bg-white text-[#64748B] hover:border-[#610C04]'
                     }`}
                   >
                     Savings Account
@@ -825,7 +825,7 @@ function UsersPage() {
                   type="number"
                   value={fundAmount}
                   onChange={(e) => setFundAmount(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]"
+                  className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]"
                   placeholder="0.00"
                   required
                   autoFocus
@@ -838,7 +838,7 @@ function UsersPage() {
                   type="text"
                   value={fundDescription}
                   onChange={(e) => setFundDescription(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]"
+                  className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]"
                   placeholder="e.g. Salary Credit"
                   required
                 />
@@ -850,7 +850,7 @@ function UsersPage() {
                   type="datetime-local"
                   value={fundDate}
                   onChange={(e) => setFundDate(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]"
+                  className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]"
                   required
                 />
               </div>
@@ -894,7 +894,7 @@ function UsersPage() {
                     type="text"
                     value={editUserForm.firstName}
                     onChange={(e) => setEditUserForm({ ...editUserForm, firstName: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-light text-sm focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]"
+                    className="w-full px-3 py-2 rounded-lg border border-light text-sm focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]"
                     required
                   />
                 </div>
