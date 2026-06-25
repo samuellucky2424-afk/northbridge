@@ -85,29 +85,29 @@ export async function generateUniqueAccountNumber(): Promise<string> {
 }
 
 /**
- * Generates a 6-digit random code, saves it to public.otps_nbb, and logs it.
+ * Triggers a backend OTP generation by inserting the receiver/sender email into public.otps_nbb.
+ * The Supabase backend automatically generates the 8-digit code, sets expiry, and sends the email via webhook.
  */
-export async function generateAndSendOTP(email: string): Promise<string> {
-  const otpCode = Math.floor(100000 + Math.random() * 900000).toString()
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 minutes expiry
-
+export async function generateAndSendOTP(email: string): Promise<boolean> {
   if (isSupabaseConfigured()) {
     try {
       const { error } = await supabase
         .from('otps_nbb')
-        .insert([{ email, otp_code: otpCode, expires_at: expiresAt }])
+        .insert([{ email }])
       
       if (error) {
-        console.error('Error saving OTP to Supabase:', error)
+        console.error('Error triggering backend OTP in Supabase:', error)
+        return false
       }
+      return true
     } catch (err) {
-      console.error('Supabase OTP insert failed:', err)
+      console.error('Supabase OTP trigger exception:', err)
+      return false
     }
   }
 
-  // Console logging is required for developer easy testing
-  console.log(`%c[NBB OTP CODE] Code generated for ${email}: ${otpCode}`, 'background: #222; color: #bada55; font-size: 14px; padding: 4px;')
-  return otpCode
+  // Fallback for local demo mode without Supabase configuration
+  return true
 }
 
 /**
@@ -115,8 +115,8 @@ export async function generateAndSendOTP(email: string): Promise<string> {
  */
 export async function verifyOTP(email: string, otpCode: string): Promise<boolean> {
   if (!isSupabaseConfigured()) {
-    // Demo fallback: any matching 6-digit input works if not configured
-    return otpCode.length === 6
+    // Demo fallback: any matching 8-digit input works if not configured
+    return otpCode.length === 8
   }
 
   try {

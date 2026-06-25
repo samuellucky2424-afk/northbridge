@@ -15,11 +15,10 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
   const { userEmail, userId, refreshProfile } = useAuth()
   const [step, setStep] = useState<TransferStep>('form')
   const [transferType, setTransferType] = useState<TransferType>(initialType || 'domestic')
-  const [otp, setOtp] = useState(['', '', '', '', '', '']) // 6-digit OTP
+  const [otp, setOtp] = useState(['', '', '', '', '', '', '', '']) // 8-digit OTP
   const [otpError, setOtpError] = useState('')
   const [loadingOtp, setLoadingOtp] = useState(false)
   const [verifying, setVerifying] = useState(false)
-  const [visibleOtp, setVisibleOtp] = useState('') // For demo testing visibility
 
   // Domestic form
   const [domestic, setDomestic] = useState({
@@ -63,9 +62,12 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
     setOtpError('')
     try {
       const emailToSend = userEmail || 'demo.customer@nbb.co.uk'
-      const generatedCode = await generateAndSendOTP(emailToSend)
-      setVisibleOtp(generatedCode) // Set code so user can see it for easy testing
-      setStep('otp')
+      const success = await generateAndSendOTP(emailToSend)
+      if (success) {
+        setStep('otp')
+      } else {
+        setOtpError('Failed to request verification code.')
+      }
     } catch (err: any) {
       setOtpError('Failed to trigger OTP email.')
     } finally {
@@ -152,7 +154,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
     setOtp(newOtp)
     setOtpError('')
     // Auto-focus next input
-    if (value && index < 5) {
+    if (value && index < 7) {
       setTimeout(() => {
         const nextInput = document.getElementById(`otp-${index + 1}`)
         nextInput?.focus()
@@ -347,7 +349,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
 
             <div className="bg-[#FEE2E2] rounded-xl p-4 flex items-start space-x-3">
               <Shield size={18} className="text-[#610C04] flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-[#0A1628]">You will receive a 6-digit OTP code to verify this transfer. Please ensure all details are correct before confirming.</p>
+              <p className="text-xs text-[#0A1628]">You will receive an 8-digit OTP code to verify this transfer. Please ensure all details are correct before confirming.</p>
             </div>
 
             <button onClick={handleConfirm} disabled={loadingOtp} className="w-full btn-primary py-3.5 flex items-center justify-center space-x-2">
@@ -368,13 +370,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
                 <Shield size={32} className="text-[#610C04]" />
               </div>
               <h3 className="font-display text-xl text-[#0A1628] mb-2">Verify with OTP</h3>
-              <p className="text-sm text-[#64748B]">A 6-digit verification code has been sent to your email. Enter it below to complete the transfer.</p>
-              
-              {visibleOtp && (
-                <div className="bg-slate-50 border border-[#610C04]/20 text-[#610C04] text-xs font-mono py-1 px-3 rounded-lg inline-block mt-3">
-                  Demo OTP Code: <span className="font-bold text-sm tracking-wide">{visibleOtp}</span>
-                </div>
-              )}
+              <p className="text-sm text-[#64748B]">An 8-digit verification code has been sent to your email. Enter it below to complete the transfer.</p>
             </div>
 
             {otpError && (
@@ -383,7 +379,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
               </div>
             )}
 
-            <div className="flex justify-center gap-2">
+            <div className="flex justify-center gap-1.5 sm:gap-2 max-w-full px-1">
               {otp.map((digit, i) => (
                 <input
                   key={i}
@@ -393,7 +389,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
                   value={digit}
                   onChange={(e) => handleOtpChange(i, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(i, e)}
-                  className="w-10 h-12 text-center text-lg font-medium text-[#0A1628] border border-light rounded-xl focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] bg-[#F8FAFC]"
+                  className="w-7 h-10 sm:w-10 sm:h-12 text-center text-base sm:text-lg font-medium text-[#0A1628] border border-light rounded-xl focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] bg-[#F8FAFC]"
                 />
               ))}
             </div>
