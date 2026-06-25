@@ -169,45 +169,69 @@ function WhySection() {
   }, [])
 
   const features = [
-    { icon: Zap, title: 'Instant Notifications', desc: 'Get real-time alerts for every transaction, payment, and balance change directly to your phone or email.' },
-    { icon: Shield, title: 'A Trustworthy Shield', desc: 'Protected by the FSCS up to \u00A385,000 and fortified with advanced biometric authentication. Keeping your trust is our highest priority.' },
-    { icon: Smartphone, title: 'Mobile-First Design', desc: 'Manage your entire financial life from your pocket. Transfer, save, and spend on the go.' },
-    { icon: Clock, title: '24/7 Support', desc: 'Our UK-based support team is available around the clock via live chat, phone, or email.' },
-    { icon: Globe, title: 'Seamless Global Transfers', desc: 'Send money across the globe in seconds. Enjoy competitive exchange rates, zero hidden fees, and complete transaction reliability.' },
-    { icon: TrendingUp, title: 'Smart Savings', desc: 'Round up purchases, set savings goals, and earn 4.2% AER on your savings account.' },
+    { 
+      icon: Shield, 
+      title: 'Unwavering Financial Trust', 
+      desc: 'As a fully FCA-regulated UK bank, your deposits are protected up to \u00A385,000 under the FSCS. We implement military-grade encryption and biometric authentication to guarantee your funds and data remain completely secure.' 
+    },
+    { 
+      icon: Globe, 
+      title: 'Seamless Global Transfers', 
+      desc: 'Send and receive money internationally in seconds with real-time tracking, zero hidden charges, and competitive live exchange rates. Our optimized routing protocol ensures 99.9% seamless transaction completion.' 
+    },
+    { 
+      icon: Zap, 
+      title: 'Real-Time Transaction Control', 
+      desc: 'Track your spending and incoming funds instantly. Receive immediate, secure push notifications and emails for every payment, transfer, and account activity as it happens.' 
+    },
+    { 
+      icon: Smartphone, 
+      title: 'Intuitive Mobile Experience', 
+      desc: 'Manage your complete financial ecosystem from the palm of your hand. Open accounts, authorize international wire transfers, and monitor investments with a fluid, modern mobile interface.' 
+    },
+    { 
+      icon: Clock, 
+      title: '24/7 Premium Support', 
+      desc: 'Enjoy round-the-clock access to our professional, UK-based customer care team. Whether via phone, email, or secure in-app chat, we provide instant support when you need it most.' 
+    },
+    { 
+      icon: TrendingUp, 
+      title: 'Wealth Growth & Protection', 
+      desc: 'Grow your wealth with high-yield savings earning 4.2% AER, automated round-up portfolios, and professional wealth management strategies designed to safeguard your capital.' 
+    },
   ]
 
   return (
-    <section ref={sectionRef} className="py-24 relative overflow-hidden bg-white">
+    <section ref={sectionRef} className="py-24 relative overflow-hidden bg-[#0A1628] text-white">
       {/* Background Trust Image */}
       <div className="absolute inset-0 z-0 select-none pointer-events-none">
         <img 
           src="/images/trust-bg.png" 
           alt="Trust Background" 
-          className="w-full h-full object-cover object-center opacity-[0.15]" 
+          className="w-full h-full object-cover object-center opacity-45 mix-blend-overlay" 
         />
-        {/* Soft gradient to white */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/95 to-white" />
+        {/* Elegant dark gradient overlay to ensure text is fully legible and looks premium */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0A1628]/95 via-[#0A1628]/85 to-[#0A1628]" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16">
-          <span className="label-ui text-[#D31111] mb-3 block">WHY NORTH BRIDGE BANK</span>
-          <h2 className="font-display text-4xl text-[#0A1628] mb-4">Banking that puts you first</h2>
-          <p className="text-[#64748B] max-w-2xl mx-auto">
+          <span className="label-ui text-[#D31111] mb-3 block font-semibold tracking-wider">WHY NORTH BRIDGE BANK</span>
+          <h2 className="font-display text-4xl sm:text-5xl text-white mb-6">Banking Built on Absolute Trust</h2>
+          <p className="text-slate-300 max-w-3xl mx-auto text-base sm:text-lg leading-relaxed">
             At North Bridge Bank, we believe trust is the cornerstone of every financial relationship. 
-            We pair bank-grade security with lightning-fast execution, delivering a seamless banking experience. 
-            From instant domestic transfers to zero-fee global payments, your transactions are protected, transparent, and completely effortless.
+            We blend rigorous FCA-regulated security with lightning-fast transfer systems, delivering an unmatched banking experience. 
+            From instant domestic transfers to zero-fee global payments, your transactions are completely secure, transparent, and seamlessly executed.
           </p>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((f, i) => (
-            <div key={i} className="why-card group p-8 rounded-2xl border border-light hover:shadow-soft hover:-translate-y-1 transition-all duration-300">
-              <div className="w-12 h-12 rounded-xl bg-[#FEE2E2] flex items-center justify-center mb-5 group-hover:bg-[#D31111] transition-colors duration-300">
+            <div key={i} className="why-card group p-8 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 hover:border-[#D31111]/50 hover:bg-white/10 hover:-translate-y-1 transition-all duration-300">
+              <div className="w-12 h-12 rounded-xl bg-[#D31111]/10 flex items-center justify-center mb-5 group-hover:bg-[#D31111] transition-colors duration-300">
                 <f.icon size={22} className="text-[#D31111] group-hover:text-white transition-colors duration-300" />
               </div>
-              <h3 className="font-display text-xl text-[#0A1628] mb-3">{f.title}</h3>
-              <p className="text-sm text-[#64748B] leading-relaxed">{f.desc}</p>
+              <h3 className="font-display text-xl text-white mb-3">{f.title}</h3>
+              <p className="text-sm text-slate-300 leading-relaxed">{f.desc}</p>
             </div>
           ))}
         </div>
