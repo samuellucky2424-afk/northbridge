@@ -12,13 +12,14 @@ type TransferStep = 'form' | 'preview' | 'otp' | 'receipt'
 type TransferType = 'domestic' | 'international'
 
 export default function TransferModal({ onClose, initialType }: TransferModalProps) {
-  const { userEmail, userId, refreshProfile } = useAuth()
+  const { userEmail, userId, refreshProfile, userBalance, savingsBalance, currency } = useAuth()
   const [step, setStep] = useState<TransferStep>('form')
   const [transferType, setTransferType] = useState<TransferType>(initialType || 'domestic')
   const [otp, setOtp] = useState(['', '', '', '', '', '', '', '']) // 8-digit OTP
   const [otpError, setOtpError] = useState('')
   const [loadingOtp, setLoadingOtp] = useState(false)
   const [verifying, setVerifying] = useState(false)
+  const [payFrom, setPayFrom] = useState<'current' | 'savings'>('current')
 
   // Domestic form
   const [domestic, setDomestic] = useState({
@@ -88,14 +89,15 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
         const transferAmount = parseFloat(transferType === 'domestic' ? domestic.amount : international.amount)
 
         if (isSupabaseConfigured() && userId) {
-          // Fetch current profile balance
+          // Fetch current profile balance based on source account
+          const balanceColumn = payFrom === 'savings' ? 'savings_balance' : 'balance'
           const { data: profile } = await supabase
              .from('profiles_nbb')
-             .select('balance')
+             .select(balanceColumn)
              .eq('id', userId)
              .single()
 
-          const currentBal = parseFloat(profile?.balance || '0')
+          const currentBal = parseFloat((profile as any)?.[balanceColumn] || '0')
           if (currentBal < transferAmount) {
             setOtpError('Insufficient funds to complete this transfer.')
             setVerifying(false)
@@ -107,7 +109,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
           // 1. Deduct balance from profiles_nbb
           const { error: balanceError } = await supabase
             .from('profiles_nbb')
-            .update({ balance: newBal })
+            .update({ [balanceColumn]: newBal })
             .eq('id', userId)
 
           if (balanceError) {
@@ -122,8 +124,8 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
             .insert([{
               user_id: userId,
               description: transferType === 'domestic' 
-                ? `Transfer to ${domestic.accountHolder} (${domestic.bankName})`
-                : `Intl Transfer to ${international.receiverName}`,
+                ? `Transfer to ${domestic.accountHolder} (${domestic.bankName})${payFrom === 'savings' ? ' (from Savings)' : ''}`
+                : `Intl Transfer to ${international.receiverName}${payFrom === 'savings' ? ' (from Savings)' : ''}`,
               category: 'Transfers',
               amount: -transferAmount,
               status: 'Pending'
@@ -223,6 +225,13 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
             {transferType === 'domestic' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Pay From <span className="text-[#610C04]">*</span></label>
+                  <select value={payFrom} onChange={(e) => setPayFrom(e.target.value as 'current' | 'savings')} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] bg-white">
+                    <option value="current">Everyday Current Account ({currency.symbol}{userBalance.toLocaleString('en-GB', { minimumFractionDigits: 2 })})</option>
+                    <option value="savings">Premier Savings Account ({currency.symbol}{savingsBalance.toLocaleString('en-GB', { minimumFractionDigits: 2 })})</option>
+                  </select>
+                </div>
+                <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Account Holder Name <span className="text-[#610C04]">*</span></label>
                   <input type="text" value={domestic.accountHolder} onChange={(e) => handleFieldChange('accountHolder', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="Full name on account" />
                 </div>
@@ -254,6 +263,13 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
             {/* INTERNATIONAL FORM */}
             {transferType === 'international' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-1">
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Pay From <span className="text-[#610C04]">*</span></label>
+                  <select value={payFrom} onChange={(e) => setPayFrom(e.target.value as 'current' | 'savings')} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] bg-white">
+                    <option value="current">Everyday Current Account ({currency.symbol}{userBalance.toLocaleString('en-GB', { minimumFractionDigits: 2 })})</option>
+                    <option value="savings">Premier Savings Account ({currency.symbol}{savingsBalance.toLocaleString('en-GB', { minimumFractionDigits: 2 })})</option>
+                  </select>
+                </div>
                 <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Receiver Name <span className="text-[#610C04]">*</span></label>
                   <input type="text" value={international.receiverName} onChange={(e) => handleFieldChange('receiverName', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="Full legal name" />
