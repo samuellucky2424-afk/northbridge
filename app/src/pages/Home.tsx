@@ -69,11 +69,19 @@ function HeroSection() {
   ]
 
   return (
-    <section className="min-h-screen pt-16 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #FEF2F2 0%, #FFFFFF 40%, #F1F5F9 100%)' }}>
+    <section className="min-h-screen pt-16 relative overflow-hidden bg-white">
+      {/* Background City Skyline Image */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="/images/hero-bg.jpg" 
+          alt="City Skyline" 
+          className="w-full h-full object-cover object-center opacity-[0.15] transition-opacity duration-700" 
+        />
+        {/* Soft pink/slate gradient overlay to match existing design and ensure contrast */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#FEF2F2]/50 via-white/80 to-white" />
+      </div>
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, #0A1628 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#D31111]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#0A1628]/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center min-h-[calc(100vh-64px)] py-12">
