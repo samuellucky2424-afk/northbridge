@@ -278,13 +278,118 @@ function CounterSection() {
   )
 }
 
+/* ─── Video Advert ─── */
+function VideoAdvert() {
+  const [isPlaying, setIsPlaying] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  const handlePlayToggle = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause()
+      } else {
+        videoRef.current.play().catch(err => console.log('Video play error:', err))
+      }
+      setIsPlaying(!isPlaying)
+    }
+  }
+
+  return (
+    <section className="py-24 bg-[#0A1628] text-white relative overflow-hidden">
+      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, #FFFFFF 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#D31111]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="grid lg:grid-cols-12 gap-12 items-center">
+          {/* Left - Text descriptions with image */}
+          <div className="lg:col-span-5 space-y-6">
+            <span className="label-ui text-[#D31111]">NBB IN ACTION</span>
+            <h2 className="font-display text-4xl sm:text-5xl text-white leading-tight">
+              Watch How We're Redefining Modern Banking
+            </h2>
+            <p className="text-[#64748B] text-base leading-relaxed">
+              Explore a quick preview of our award-winning digital platform. See how seamless it is to execute global transfers, track your AUM, and manage multi-currency accounts instantly.
+            </p>
+            
+            {/* Website descriptions with images list */}
+            <div className="space-y-4 pt-4">
+              <div className="flex items-start space-x-4">
+                <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-white/10">
+                  <img src="/images/current-account-promo.png" alt="Current App" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-white text-sm">Everyday Account Dashboard</h4>
+                  <p className="text-xs text-[#64748B] mt-0.5">Real-time alerts, instant card freeze, and biometric security protections.</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-4">
+                <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-white/10">
+                  <img src="/images/business-account-promo.png" alt="Business Dash" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-white text-sm">Professional Analytics Tools</h4>
+                  <p className="text-xs text-[#64748B] mt-0.5">Automated accounting integrations, invoicing registers, and smart charts.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right - Video Advert Frame */}
+          <div className="lg:col-span-7">
+            <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-black/40 group aspect-video">
+              <video
+                ref={videoRef}
+                className="w-full h-full object-cover"
+                src="https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-graphs-and-data-31908-large.mp4"
+                loop
+                muted
+                playsInline
+              />
+              
+              {/* Custom controls overlay */}
+              <div className={`absolute inset-0 bg-black/40 flex flex-col justify-between p-6 transition-opacity duration-300 ${isPlaying ? 'opacity-0 hover:opacity-100' : 'opacity-100'}`}>
+                {/* Top indicator */}
+                <div className="flex items-center justify-between">
+                  <span className="px-3 py-1 bg-[#D31111] text-xs font-semibold uppercase tracking-wider rounded-md">LIVE DEMO</span>
+                  <span className="text-xs text-white/60 font-mono">0:15 Loop</span>
+                </div>
+
+                {/* Center play button */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <button 
+                    type="button"
+                    onClick={handlePlayToggle}
+                    className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:scale-110 hover:bg-[#D31111] hover:border-[#D31111] transition-all duration-300 cursor-pointer shadow-lg"
+                  >
+                    {isPlaying ? (
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="14" y="4" width="4" height="16" rx="1" /><rect x="6" y="4" width="4" height="16" rx="1" /></svg>
+                    ) : (
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="ml-1"><path d="M8 5v14l11-7z"/></svg>
+                    )}
+                  </button>
+                </div>
+
+                {/* Bottom title */}
+                <div className="text-left">
+                  <p className="text-sm font-medium text-white">North Bridge Bank Platform Overview</p>
+                  <p className="text-xs text-white/60">Experience the difference of a digital first bank built around your lifestyle.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 /* ─── 3D Card Carousel ─── */
 const accountCards = [
-  { title: 'Everyday Current', desc: 'Fee-free banking with instant notifications and built-in savings tools.', icon: Landmark },
-  { title: 'Premier Savings', desc: 'Competitive rates from 4.2% AER with instant access and no penalties.', icon: PiggyBank },
-  { title: 'Business Pro', desc: 'Multi-user access, integrated invoicing, and dedicated relationship manager.', icon: Briefcase },
-  { title: 'Wealth Management', desc: 'Bespoke investment portfolios curated by our City-based advisory team.', icon: TrendingUp },
-  { title: 'Student Starter', desc: 'Zero fees through university, exclusive perks, and graduate overdraft buffer.', icon: User },
+  { title: 'Everyday Current', desc: 'Fee-free banking with instant notifications and built-in savings tools.', icon: Landmark, promoImage: '/images/current-account-promo.png' },
+  { title: 'Premier Savings', desc: 'Competitive rates from 4.2% AER with instant access and no penalties.', icon: PiggyBank, promoImage: '/images/savings-account-promo.png' },
+  { title: 'Business Pro', desc: 'Multi-user access, integrated invoicing, and dedicated relationship manager.', icon: Briefcase, promoImage: '/images/business-account-promo.png' },
+  { title: 'Wealth Management', desc: 'Bespoke investment portfolios curated by our City-based advisory team.', icon: TrendingUp, promoImage: '/images/wealth-management-promo.png' },
+  { title: 'Student Starter', desc: 'Zero fees through university, exclusive perks, and graduate overdraft buffer.', icon: User, promoImage: '/images/hero-card-2.jpg' },
 ]
 
 const cardTransforms = [
@@ -380,10 +485,14 @@ function CardCarousel() {
                 return (
                   <div key={i} className="carousel-card absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] h-[420px] bg-white rounded-2xl border border-light shadow-soft overflow-hidden"
                     style={{ transform: `translate3d(${cardTransforms[i].translateX}, 0, ${cardTransforms[i].translateZ}) rotateY(${cardTransforms[i].rotateY})`, opacity: cardTransforms[i].opacity }}>
-                    <div className="h-[55%] relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${i % 2 === 0 ? '#FEE2E2' : '#F1F5F9'} 0%, ${i % 2 === 0 ? '#FEF2F2' : '#E2E8F0'} 100%)` }}>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <CardIcon size={64} className="text-[#D31111]/20" />
-                      </div>
+                    <div className="h-[55%] relative overflow-hidden">
+                      {card.promoImage ? (
+                        <img src={card.promoImage} alt={card.title} className="w-full h-full object-cover transition-transform duration-500 hover:scale-110" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#FEE2E2] to-[#FEF2F2]">
+                          <CardIcon size={64} className="text-[#D31111]/20" />
+                        </div>
+                      )}
                     </div>
                     <div className="h-[45%] p-6 flex flex-col justify-between">
                       <div>
@@ -582,6 +691,7 @@ export default function Home() {
         <WhySection />
         <HowItWorks />
         <CounterSection />
+        <VideoAdvert />
         <CardCarousel />
         <Testimonials />
         <BentoGrid />

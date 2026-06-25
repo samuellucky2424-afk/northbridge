@@ -9,6 +9,33 @@ import {
 } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
+const countryToCurrency: Record<string, { symbol: string; code: string }> = {
+  'United Kingdom': { symbol: '\u00A3', code: 'GBP' },
+  'United States': { symbol: '$', code: 'USD' },
+  'Canada': { symbol: 'C$', code: 'CAD' },
+  'Germany': { symbol: '\u20AC', code: 'EUR' },
+  'France': { symbol: '\u20AC', code: 'EUR' },
+  'Spain': { symbol: '\u20AC', code: 'EUR' },
+  'Netherlands': { symbol: '\u20AC', code: 'EUR' },
+  'Italy': { symbol: '\u20AC', code: 'EUR' },
+  'Ireland': { symbol: '\u20AC', code: 'EUR' },
+  'Australia': { symbol: 'A$', code: 'AUD' },
+  'Nigeria': { symbol: '\u20A6', code: 'NGN' },
+  'India': { symbol: '\u20B9', code: 'INR' },
+  'China': { symbol: '\u00A5', code: 'CNY' },
+  'Japan': { symbol: '\u00A5', code: 'JPY' },
+  'Brazil': { symbol: 'R$', code: 'BRL' },
+  'South Africa': { symbol: 'R', code: 'ZAR' },
+  'UAE': { symbol: '\u062F.\u0625', code: 'AED' },
+  'Switzerland': { symbol: 'CHF', code: 'CHF' },
+  'Sweden': { symbol: 'kr', code: 'SEK' },
+  'Norway': { symbol: 'kr', code: 'NOK' },
+}
+
+function getCurrency(country: string) {
+  return countryToCurrency[country] || { symbol: '\u00A3', code: 'GBP' }
+}
+
 /* ─── Admin Nav ─── */
 function AdminNav() {
   const { logout } = useAuth()
@@ -72,22 +99,7 @@ function AdminNav() {
   )
 }
 
-/* ─── Mock Data Fallbacks ─── */
-const mockUsers = [
-  { id: '1', name: 'Sarah Miller', email: 'sarah.m@email.com', status: 'Active', balance: 24562.80, savingsBalance: 1250.00, joined: '2024-01-15', kyc: 'Verified', account_number: '12345678' },
-  { id: '2', name: 'James Wilson', email: 'j.wilson@email.com', status: 'Active', balance: 18234.50, savingsBalance: 400.00, joined: '2024-02-20', kyc: 'Verified', account_number: '87654321' },
-  { id: '3', name: 'Emma Thompson', email: 'emma.t@email.com', status: 'Pending', balance: 0.00, savingsBalance: 0.00, joined: '2025-06-20', kyc: 'Pending', account_number: '56781234' },
-  { id: '4', name: 'Oliver Brown', email: 'o.brown@email.com', status: 'Active', balance: 56789.20, savingsBalance: 3200.00, joined: '2023-08-10', kyc: 'Verified', account_number: '23456789' },
-  { id: '5', name: 'Sophia Davis', email: 'sophia.d@email.com', status: 'Suspended', balance: 120.00, savingsBalance: 0.00, joined: '2024-05-05', kyc: 'Verified', account_number: '34567890' },
-]
 
-const mockTransactions = [
-  { id: 'TXN001', user: 'Sarah Miller', desc: 'Tesco Superstore', amount: -47.32, status: 'Completed', date: '2025-06-25 09:23', category: 'Groceries' },
-  { id: 'TXN002', user: 'James Wilson', desc: 'Salary Credit', amount: 3250.00, status: 'Completed', date: '2025-06-25 08:00', category: 'Income' },
-  { id: 'TXN003', user: 'Oliver Brown', desc: 'Wire Transfer Out', amount: -15000.00, status: 'Flagged', date: '2025-06-24 16:45', category: 'Transfers' },
-  { id: 'TXN004', user: 'Emma Thompson', desc: 'Initial Deposit', amount: 100.00, status: 'Pending', date: '2025-06-24 14:30', category: 'Income' },
-  { id: 'TXN005', user: 'William Clark', desc: 'Netflix Subscription', amount: -10.99, status: 'Completed', date: '2025-06-24 11:15', category: 'Entertainment' },
-]
 
 /* ─── Admin Overview ─── */
 function AdminOverview() {
@@ -96,57 +108,65 @@ function AdminOverview() {
   const [pendingKyc, setPendingKyc] = useState(0)
   const [latestTxns, setLatestTxns] = useState<any[]>([])
   const [signupData, setSignupData] = useState<number[]>([0, 0, 0, 0, 0, 0, 0])
+  const [errorMsg, setErrorMsg] = useState('')
 
   useEffect(() => {
-    if (!isSupabaseConfigured()) {
-      setUserCount(mockUsers.length)
-      setActiveToday(mockUsers.filter(u => u.status === 'Active').length)
-      setPendingKyc(mockUsers.filter(u => u.status === 'Suspended').length)
-      setLatestTxns(mockTransactions.slice(0, 5))
-      setSignupData([3, 5, 2, 4, 6, 8, 5])
-      return
-    }
-
     async function loadStats() {
-      // Get profiles count and active/suspended counts
-      const { data: profiles, error: pError } = await supabase
-        .from('profiles_nbb')
-        .select('created_at, status')
-      
-      if (profiles && !pError) {
-        setUserCount(profiles.length)
-        setActiveToday(profiles.filter(p => p.status === 'active' || p.status === 'Active').length)
-        setPendingKyc(profiles.filter(p => p.status === 'suspended' || p.status === 'Suspended').length)
-
-        // Calculate signups for each day of the week (Mon-Sun)
-        const daySignups = [0, 0, 0, 0, 0, 0, 0]
-        profiles.forEach(p => {
-          const date = new Date(p.created_at || Date.now())
-          let dayIndex = date.getDay() - 1 // 0 = Mon, 6 = Sun
-          if (dayIndex < 0) dayIndex = 6 // Sunday
-          if (dayIndex >= 0 && dayIndex < 7) {
-            daySignups[dayIndex]++
-          }
-        })
-        setSignupData(daySignups)
+      setErrorMsg('')
+      if (!isSupabaseConfigured()) {
+        setErrorMsg('Supabase is not configured. Please check your environment variables (VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY).')
+        return
       }
 
-      // Get latest transactions
-      const { data } = await supabase
-        .from('transactions_nbb')
-        .select('id, description, category, amount, status, date, profiles_nbb(first_name, last_name)')
-        .order('date', { ascending: false })
-        .limit(5)
-      
-      if (data) {
-        setLatestTxns(data.map((t: any) => ({
-          id: t.id.slice(0, 8).toUpperCase(),
-          user: t.profiles_nbb ? `${t.profiles_nbb.first_name} ${t.profiles_nbb.last_name}` : 'NBB Customer',
-          desc: t.description,
-          amount: parseFloat(t.amount),
-          status: t.status,
-          date: new Date(t.date).toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })
-        })))
+      try {
+        // Get profiles count and active/suspended counts
+        const { data: profiles, error: pError } = await supabase
+          .from('profiles_nbb')
+          .select('created_at, status')
+        
+        if (pError) throw pError
+        
+        if (profiles) {
+          setUserCount(profiles.length)
+          setActiveToday(profiles.filter(p => p.status === 'active' || p.status === 'Active').length)
+          setPendingKyc(profiles.filter(p => p.status === 'suspended' || p.status === 'Suspended').length)
+
+          // Calculate signups for each day of the week (Mon-Sun)
+          const daySignups = [0, 0, 0, 0, 0, 0, 0]
+          profiles.forEach(p => {
+            const date = new Date(p.created_at || Date.now())
+            let dayIndex = date.getDay() - 1 // 0 = Mon, 6 = Sun
+            if (dayIndex < 0) dayIndex = 6 // Sunday
+            if (dayIndex >= 0 && dayIndex < 7) {
+              daySignups[dayIndex]++
+            }
+          })
+          setSignupData(daySignups)
+        }
+
+        // Get latest transactions
+        const { data, error: tError } = await supabase
+          .from('transactions_nbb')
+          .select('id, description, category, amount, status, date, profiles_nbb(first_name, last_name, country)')
+          .order('date', { ascending: false })
+          .limit(5)
+        
+        if (tError) throw tError
+        
+        if (data) {
+          setLatestTxns(data.map((t: any) => ({
+            id: t.id.slice(0, 8).toUpperCase(),
+            user: t.profiles_nbb ? `${t.profiles_nbb.first_name} ${t.profiles_nbb.last_name}` : 'NBB Customer',
+            desc: t.description,
+            amount: parseFloat(t.amount),
+            status: t.status,
+            currencySymbol: t.profiles_nbb ? getCurrency(t.profiles_nbb.country || 'United Kingdom').symbol : '\u00A3',
+            date: new Date(t.date).toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })
+          })))
+        }
+      } catch (err: any) {
+        console.error('Error loading stats:', err)
+        setErrorMsg(`Failed to load database stats: ${err.message}`)
       }
     }
 
@@ -171,6 +191,12 @@ function AdminOverview() {
         <h1 className="font-display text-3xl text-[#0A1628]">Dashboard Overview</h1>
         <p className="text-[#64748B] mt-1">Real-time system metrics</p>
       </div>
+
+      {errorMsg && (
+        <div className="p-4 rounded-xl bg-red-50 border border-red-100 text-sm text-[#EF4444] mb-6">
+          {errorMsg}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -258,7 +284,7 @@ function AdminOverview() {
                   <td className="px-6 py-4 text-sm text-[#0A1628] font-medium">{t.user}</td>
                   <td className="px-6 py-4 text-sm text-[#64748B]">{t.desc}</td>
                   <td className={`px-6 py-4 text-sm font-semibold text-right ${t.amount > 0 ? 'text-[#10B981]' : 'text-[#0A1628]'}`}>
-                    {t.amount > 0 ? '+' : ''}\u00A3{Math.abs(t.amount).toLocaleString('en-GB', { minimumFractionDigits: 2 })}
+                    {t.amount > 0 ? '+' : ''}{t.currencySymbol || '\u00A3'}{Math.abs(t.amount).toLocaleString('en-GB', { minimumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4">
                     <span className={`inline-block px-2.5 py-1 text-xs font-medium rounded-md ${
@@ -314,20 +340,12 @@ function UsersPage() {
   const [savingUser, setSavingUser] = useState(false)
   const [editUserSuccess, setEditUserSuccess] = useState('')
 
+  const [errorMsg, setErrorMsg] = useState('')
+
   const loadUsers = async () => {
+    setErrorMsg('')
     if (!isSupabaseConfigured()) {
-      setUsers(mockUsers.map(u => ({
-        ...u,
-        firstName: u.name.split(' ')[0],
-        lastName: u.name.split(' ')[1] || '',
-        phone: '+44 7700 900077',
-        houseAddress: '10 Downing Street',
-        city: 'London',
-        country: 'United Kingdom',
-        postcode: 'SW1A 2AA',
-        occupation: 'Software Engineer',
-        incomeSource: 'Employment'
-      })))
+      setErrorMsg('Supabase is not configured. Please check your environment variables.')
       return
     }
 
@@ -337,7 +355,9 @@ function UsersPage() {
         .select('*')
         .order('first_name', { ascending: true })
 
-      if (data && !error) {
+      if (error) throw error
+
+      if (data) {
         setUsers(data.map(u => ({
           id: u.id,
           firstName: u.first_name,
@@ -359,8 +379,9 @@ function UsersPage() {
           account_number: u.account_number
         })))
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching users from Supabase:', err)
+      setErrorMsg(`Failed to load users from Supabase: ${err.message}`)
     }
   }
 
@@ -443,41 +464,43 @@ function UsersPage() {
   }, [])
 
   const handleToggleSuspend = async (user: any) => {
-    const nextStatus = user.status === 'Suspended' ? 'active' : 'suspended'
-    
-    if (isSupabaseConfigured()) {
-      const { error } = await supabase
-        .from('profiles_nbb')
-        .update({ status: nextStatus })
-        .eq('id', user.id)
+    if (!isSupabaseConfigured()) {
+      alert('Error: Supabase is not configured.')
+      return
+    }
 
-      if (error) {
-        console.error('Error suspending user:', error.message)
-        return
-      }
-    } else {
-      // Mock update
-      setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: nextStatus === 'suspended' ? 'Suspended' : 'Active' } : u))
+    const nextStatus = user.status === 'Suspended' ? 'active' : 'suspended'
+    const { error } = await supabase
+      .from('profiles_nbb')
+      .update({ status: nextStatus })
+      .eq('id', user.id)
+
+    if (error) {
+      console.error('Error suspending user:', error.message)
+      alert(`Error: ${error.message}`)
+      return
     }
 
     loadUsers()
   }
 
   const handleDeleteUser = async (userId: string) => {
+    if (!isSupabaseConfigured()) {
+      alert('Error: Supabase is not configured.')
+      return
+    }
+
     if (!window.confirm('Are you sure you want to delete this user profile?')) return
 
-    if (isSupabaseConfigured()) {
-      const { error } = await supabase
-        .from('profiles_nbb')
-        .delete()
-        .eq('id', userId)
+    const { error } = await supabase
+      .from('profiles_nbb')
+      .delete()
+      .eq('id', userId)
 
-      if (error) {
-        console.error('Error deleting profile:', error.message)
-        return
-      }
-    } else {
-      setUsers(prev => prev.filter(u => u.id !== userId))
+    if (error) {
+      console.error('Error deleting profile:', error.message)
+      alert(`Error: ${error.message}`)
+      return
     }
 
     loadUsers()
@@ -485,6 +508,11 @@ function UsersPage() {
 
   const handleAddFundsSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!isSupabaseConfigured()) {
+      alert('Error: Supabase is not configured.')
+      return
+    }
+
     if (!targetAccountNumber || !fundAmount || parseFloat(fundAmount) <= 0) return
     setFunding(true)
     setFundSuccess('')
@@ -493,83 +521,58 @@ function UsersPage() {
     const isSavings = targetWallet === 'savings'
     const formattedIsoDate = new Date(fundDate).toISOString()
 
-    if (isSupabaseConfigured()) {
-      try {
-        // Look up profile by account number
-        const { data: profile, error: lookupError } = await supabase
-          .from('profiles_nbb')
-          .select('*')
-          .eq('account_number', targetAccountNumber)
-          .maybeSingle()
+    try {
+      // Look up profile by account number
+      const { data: profile, error: lookupError } = await supabase
+        .from('profiles_nbb')
+        .select('*')
+        .eq('account_number', targetAccountNumber)
+        .maybeSingle()
 
-        if (lookupError || !profile) {
-          throw new Error('Account number not found in database')
-        }
-
-        const currentVal = parseFloat(isSavings ? (profile.savings_balance || 0) : (profile.balance || 0))
-        const newBal = currentVal + amount
-
-        const updatePayload = isSavings 
-          ? { savings_balance: newBal } 
-          : { balance: newBal }
-
-        // Update balance
-        const { error: balanceError } = await supabase
-          .from('profiles_nbb')
-          .update(updatePayload)
-          .eq('id', profile.id)
-
-        if (balanceError) throw balanceError
-
-        // Log transaction
-        const { error: txnError } = await supabase
-          .from('transactions_nbb')
-          .insert([{
-            user_id: profile.id,
-            description: fundDescription || `Fund Credit (Admin Deposit - ${isSavings ? 'Savings' : 'Current'})`,
-            category: 'Income',
-            amount: amount,
-            status: 'Completed',
-            date: formattedIsoDate
-          }])
-
-        if (txnError) console.error('Error logging transaction:', txnError)
-
-        setFundSuccess(`Successfully credited \u00A3${amount.toFixed(2)} to ${profile.first_name} ${profile.last_name || ''}'s ${isSavings ? 'Savings' : 'Current'} wallet`)
-        setFundAmount('')
-        setFundDescription('Deposit Funds')
-        setTimeout(() => setSelectedUser(null), 1500)
-      } catch (err: any) {
-        console.error('Funding failed:', err.message)
-        setFundSuccess(`Error: ${err.message}`)
-      } finally {
-        setFunding(false)
-        loadUsers()
+      if (lookupError || !profile) {
+        throw new Error('Account number not found in database')
       }
-    } else {
-      // Local fallback
-      let userFound = false
-      setUsers(prev => prev.map(u => {
-        if (u.account_number === targetAccountNumber) {
-          userFound = true
-          const currentVal = isSavings ? (u.savingsBalance || 0) : u.balance
-          const newBal = currentVal + amount
-          return isSavings 
-            ? { ...u, savingsBalance: newBal }
-            : { ...u, balance: newBal }
-        }
-        return u
-      }))
 
-      if (userFound) {
-        setFundSuccess(`Simulated Credit of \u00A3${amount.toFixed(2)} to ${isSavings ? 'Savings' : 'Current'} wallet successful!`)
-        setFundAmount('')
-        setFundDescription('Deposit Funds')
-        setTimeout(() => setSelectedUser(null), 1500)
-      } else {
-        setFundSuccess(`Error: Account number ${targetAccountNumber} not found locally`)
-      }
+      const currentVal = parseFloat(isSavings ? (profile.savings_balance || 0) : (profile.balance || 0))
+      const newBal = currentVal + amount
+
+      const updatePayload = isSavings 
+        ? { savings_balance: newBal } 
+        : { balance: newBal }
+
+      // Update balance
+      const { error: balanceError } = await supabase
+        .from('profiles_nbb')
+        .update(updatePayload)
+        .eq('id', profile.id)
+
+      if (balanceError) throw balanceError
+
+      // Log transaction
+      const { error: txnError } = await supabase
+        .from('transactions_nbb')
+        .insert([{
+          user_id: profile.id,
+          description: fundDescription || `Fund Credit (Admin Deposit - ${isSavings ? 'Savings' : 'Current'})`,
+          category: 'Income',
+          amount: amount,
+          status: 'Completed',
+          date: formattedIsoDate
+        }])
+
+      if (txnError) console.error('Error logging transaction:', txnError)
+
+      const currencySymbol = getCurrency(profile.country || 'United Kingdom').symbol
+      setFundSuccess(`Successfully credited ${currencySymbol}${amount.toFixed(2)} to ${profile.first_name} ${profile.last_name || ''}'s ${isSavings ? 'Savings' : 'Current'} wallet`)
+      setFundAmount('')
+      setFundDescription('Deposit Funds')
+      setTimeout(() => setSelectedUser(null), 1500)
+    } catch (err: any) {
+      console.error('Funding failed:', err.message)
+      setFundSuccess(`Error: ${err.message}`)
+    } finally {
       setFunding(false)
+      loadUsers()
     }
   }
 
@@ -591,6 +594,12 @@ function UsersPage() {
         <h1 className="font-display text-3xl text-[#0A1628]">User Management</h1>
         <p className="text-[#64748B] mt-1">View and manage customer accounts</p>
       </div>
+
+      {errorMsg && (
+        <div className="p-4 rounded-xl bg-red-50 border border-red-100 text-sm text-[#EF4444]">
+          {errorMsg}
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
@@ -620,7 +629,7 @@ function UsersPage() {
           ))}
           <button
             onClick={() => {
-              setSelectedUser({ isManual: true, name: 'Manual Entry', balance: 0, savingsBalance: 0 });
+              setSelectedUser({ isManual: true, name: 'Manual Entry', balance: 0, savingsBalance: 0, country: 'United Kingdom' });
               setTargetAccountNumber('');
               setFundDescription('Salary Credit');
               setFundDate(new Date().toISOString().slice(0, 16));
@@ -672,10 +681,10 @@ function UsersPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm font-bold text-[#0A1628] text-right">
-                    \u00A3{u.balance.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
+                    {getCurrency(u.country).symbol}{u.balance.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4 text-sm font-semibold text-[#64748B] text-right">
-                    \u00A3{(u.savingsBalance || 0).toLocaleString('en-GB', { minimumFractionDigits: 2 })}
+                    {getCurrency(u.country).symbol}{(u.savingsBalance || 0).toLocaleString('en-GB', { minimumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4 text-sm text-[#64748B]">{u.joined}</td>
                   <td className="px-6 py-4">
@@ -777,8 +786,8 @@ function UsersPage() {
                   <p className="text-xs text-[#64748B]">Crediting user account:</p>
                   <p className="text-sm font-bold text-[#0A1628]">{selectedUser.name}</p>
                   <p className="text-xs text-[#64748B]">Account Number: <span className="font-mono">{selectedUser.account_number}</span></p>
-                  <p className="text-xs text-[#64748B]">Current Balance: <span className="font-semibold">\u00A3{selectedUser.balance.toFixed(2)}</span></p>
-                  <p className="text-xs text-[#64748B]">Savings Balance: <span className="font-semibold">\u00A3{(selectedUser.savingsBalance || 0).toFixed(2)}</span></p>
+                  <p className="text-xs text-[#64748B]">Current Balance: <span className="font-semibold">{getCurrency(selectedUser.country || 'United Kingdom').symbol}{selectedUser.balance.toFixed(2)}</span></p>
+                  <p className="text-xs text-[#64748B]">Savings Balance: <span className="font-semibold">{getCurrency(selectedUser.country || 'United Kingdom').symbol}{(selectedUser.savingsBalance || 0).toFixed(2)}</span></p>
                 </div>
               )}
 
@@ -1032,95 +1041,97 @@ function TransactionsPage() {
   const [editForm, setEditForm] = useState({ description: '', category: '', amount: '', status: '', date: '' })
   const [savingEdit, setSavingEdit] = useState(false)
   const [editSuccess, setEditSuccess] = useState('')
+  const [errorMsg, setErrorMsg] = useState('')
 
   const handleApproveTransaction = async (txn: any) => {
+    if (!isSupabaseConfigured()) {
+      alert('Error: Supabase is not configured.')
+      return
+    }
+
     if (!window.confirm('Are you sure you want to approve this transaction?')) return
 
-    if (isSupabaseConfigured()) {
-      try {
-        const { error } = await supabase
-          .from('transactions_nbb')
-          .update({ status: 'Completed' })
-          .eq('id', txn.id)
+    try {
+      const { error } = await supabase
+        .from('transactions_nbb')
+        .update({ status: 'Completed' })
+        .eq('id', txn.id)
 
-        if (error) throw error
+      if (error) throw error
 
-        alert('Transaction approved successfully!')
-      } catch (err: any) {
-        console.error('Approve failed:', err.message)
-        alert(`Error: ${err.message}`)
-      } finally {
-        loadTransactions()
-      }
-    } else {
-      // Local fallback
-      setTransactions(prev => prev.map(t => t.id === txn.id ? { ...t, status: 'Completed' } : t))
-      alert('Simulated approval successful!')
+      alert('Transaction approved successfully!')
+    } catch (err: any) {
+      console.error('Approve failed:', err.message)
+      alert(`Error: ${err.message}`)
+    } finally {
+      loadTransactions()
     }
   }
 
   const handleDeclineTransaction = async (txn: any) => {
+    if (!isSupabaseConfigured()) {
+      alert('Error: Supabase is not configured.')
+      return
+    }
+
     if (!window.confirm('Are you sure you want to decline and reverse this transaction?')) return
 
-    if (isSupabaseConfigured()) {
-      try {
-        // 1. Fetch user profile to get their current balance
-        const { data: profile, error: profileErr } = await supabase
-          .from('profiles_nbb')
-          .select('balance')
-          .eq('id', txn.userId)
-          .single()
+    try {
+      // 1. Fetch user profile to get their current balance
+      const { data: profile, error: profileErr } = await supabase
+        .from('profiles_nbb')
+        .select('balance')
+        .eq('id', txn.userId)
+        .single()
 
-        if (profileErr) throw profileErr
+      if (profileErr) throw profileErr
 
-        const currentBal = parseFloat(profile?.balance || '0')
-        // Amount is negative for transfers, so we refund by adding back the absolute value
-        const refundAmount = Math.abs(txn.amount)
-        const newBal = currentBal + refundAmount
+      const currentBal = parseFloat(profile?.balance || '0')
+      // Amount is negative for transfers, so we refund by adding back the absolute value
+      const refundAmount = Math.abs(txn.amount)
+      const newBal = currentBal + refundAmount
 
-        // 2. Refund balance
-        const { error: balanceErr } = await supabase
-          .from('profiles_nbb')
-          .update({ balance: newBal })
-          .eq('id', txn.userId)
+      // 2. Refund balance
+      const { error: balanceErr } = await supabase
+        .from('profiles_nbb')
+        .update({ balance: newBal })
+        .eq('id', txn.userId)
 
-        if (balanceErr) throw balanceErr
+      if (balanceErr) throw balanceErr
 
-        // 3. Mark transaction as Reversed
-        const { error: txnErr } = await supabase
-          .from('transactions_nbb')
-          .update({ status: 'Reversed' })
-          .eq('id', txn.id)
+      // 3. Mark transaction as Reversed
+      const { error: txnErr } = await supabase
+        .from('transactions_nbb')
+        .update({ status: 'Reversed' })
+        .eq('id', txn.id)
 
-        if (txnErr) throw txnErr
+      if (txnErr) throw txnErr
 
-        alert('Transaction declined. Funds have been refunded to the user.')
-      } catch (err: any) {
-        console.error('Decline/Reverse failed:', err.message)
-        alert(`Error: ${err.message}`)
-      } finally {
-        loadTransactions()
-      }
-    } else {
-      // Local fallback
-      setTransactions(prev => prev.map(t => t.id === txn.id ? { ...t, status: 'Reversed' } : t))
-      alert('Simulated decline and refund successful!')
+      alert('Transaction declined. Funds have been refunded to the user.')
+    } catch (err: any) {
+      console.error('Decline/Reverse failed:', err.message)
+      alert(`Error: ${err.message}`)
+    } finally {
+      loadTransactions()
     }
   }
 
   const loadTransactions = async () => {
+    setErrorMsg('')
     if (!isSupabaseConfigured()) {
-      setTransactions(mockTransactions)
+      setErrorMsg('Supabase is not configured. Please check your environment variables.')
       return
     }
 
     try {
       const { data, error } = await supabase
         .from('transactions_nbb')
-        .select('id, user_id, description, category, amount, status, date, profiles_nbb(first_name, last_name)')
+        .select('id, user_id, description, category, amount, status, date, profiles_nbb(first_name, last_name, country)')
         .order('date', { ascending: false })
 
-      if (data && !error) {
+      if (error) throw error
+
+      if (data) {
         setTransactions(data.map((t: any) => ({
           id: t.id,
           userId: t.user_id,
@@ -1128,12 +1139,14 @@ function TransactionsPage() {
           desc: t.description,
           amount: parseFloat(t.amount),
           status: t.status,
+          currencySymbol: t.profiles_nbb ? getCurrency(t.profiles_nbb.country || 'United Kingdom').symbol : '\u00A3',
           date: t.date,
           category: t.category
         })))
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching transactions:', err)
+      setErrorMsg(`Failed to load transactions: ${err.message}`)
     }
   }
 
@@ -1154,6 +1167,11 @@ function TransactionsPage() {
   }
 
   const handleEditSubmit = async (e: React.FormEvent) => {
+    if (!isSupabaseConfigured()) {
+      alert('Error: Supabase is not configured.')
+      return
+    }
+
     e.preventDefault()
     if (!selectedTxn) return
     setSavingEdit(true)
@@ -1161,42 +1179,28 @@ function TransactionsPage() {
 
     const updatedAmount = parseFloat(editForm.amount) * (selectedTxn.amount < 0 ? -1 : 1)
 
-    if (isSupabaseConfigured()) {
-      try {
-        const { error } = await supabase
-          .from('transactions_nbb')
-          .update({
-            description: editForm.description,
-            category: editForm.category,
-            amount: updatedAmount,
-            status: editForm.status,
-            date: new Date(editForm.date).toISOString()
-          })
-          .eq('id', selectedTxn.id)
+    try {
+      const { error } = await supabase
+        .from('transactions_nbb')
+        .update({
+          description: editForm.description,
+          category: editForm.category,
+          amount: updatedAmount,
+          status: editForm.status,
+          date: new Date(editForm.date).toISOString()
+        })
+        .eq('id', selectedTxn.id)
 
-        if (error) throw error
+      if (error) throw error
 
-        setEditSuccess('Transaction updated successfully!')
-        setTimeout(() => setSelectedTxn(null), 1500)
-      } catch (err: any) {
-        console.error('Update failed:', err.message)
-      } finally {
-        setSavingEdit(false)
-        loadTransactions()
-      }
-    } else {
-      // Local fallback
-      setTransactions(prev => prev.map(t => t.id === selectedTxn.id ? {
-        ...t,
-        desc: editForm.description,
-        category: editForm.category,
-        amount: updatedAmount,
-        status: editForm.status,
-        date: new Date(editForm.date).toLocaleString('en-GB')
-      } : t))
-      setEditSuccess('Simulated update successful!')
-      setSavingEdit(false)
+      setEditSuccess('Transaction updated successfully!')
       setTimeout(() => setSelectedTxn(null), 1500)
+    } catch (err: any) {
+      console.error('Update failed:', err.message)
+      setEditSuccess(`Error: ${err.message}`)
+    } finally {
+      setSavingEdit(false)
+      loadTransactions()
     }
   }
 
@@ -1216,6 +1220,12 @@ function TransactionsPage() {
           <span>Export CSV</span>
         </button>
       </div>
+
+      {errorMsg && (
+        <div className="p-4 rounded-xl bg-red-50 border border-red-100 text-sm text-[#EF4444]">
+          {errorMsg}
+        </div>
+      )}
 
       {/* Status Filters */}
       <div className="flex flex-wrap gap-2">
@@ -1257,7 +1267,7 @@ function TransactionsPage() {
                   <td className="px-6 py-4 text-sm text-[#0A1628] font-medium">{t.user}</td>
                   <td className="px-6 py-4 text-sm text-[#64748B]">{t.desc}</td>
                   <td className={`px-6 py-4 text-sm font-semibold text-right ${t.amount > 0 ? 'text-[#10B981]' : 'text-[#0A1628]'}`}>
-                    {t.amount > 0 ? '+' : ''}\u00A3{Math.abs(t.amount).toLocaleString('en-GB', { minimumFractionDigits: 2 })}
+                    {t.amount > 0 ? '+' : ''}{t.currencySymbol || '\u00A3'}{Math.abs(t.amount).toLocaleString('en-GB', { minimumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4">
                     <span className={`inline-block px-2.5 py-1 text-xs font-medium rounded-md ${
@@ -1405,17 +1415,20 @@ function AnalyticsPage() {
   const [accountDistribution, setAccountDistribution] = useState<any[]>([])
   const [totalAccounts, setTotalAccounts] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState('')
+  const [revenueData, setRevenueData] = useState<{ label: string; value: number }[]>([
+    { label: 'Jan', value: 0 },
+    { label: 'Feb', value: 0 },
+    { label: 'Mar', value: 0 },
+    { label: 'Apr', value: 0 },
+    { label: 'May', value: 0 },
+    { label: 'Jun', value: 0 },
+  ])
 
   useEffect(() => {
+    setErrorMsg('')
     if (!isSupabaseConfigured()) {
-      setTotalAum(125432.80)
-      setTotalDeposits(3350.00)
-      setTotalWithdrawals(15047.32)
-      setAccountDistribution([
-        { label: 'Current Account', value: 80, color: '#D31111' },
-        { label: 'Savings Account', value: 20, color: '#0A1628' },
-      ])
-      setTotalAccounts(mockUsers.length)
+      setErrorMsg('Supabase is not configured. Please check your environment variables.')
       setLoading(false)
       return
     }
@@ -1427,7 +1440,9 @@ function AnalyticsPage() {
           .from('profiles_nbb')
           .select('balance, savings_balance')
 
-        if (profiles && !pError) {
+        if (pError) throw pError
+
+        if (profiles) {
           let sumCurrent = 0
           let sumSavings = 0
           profiles.forEach(p => {
@@ -1462,7 +1477,9 @@ function AnalyticsPage() {
           .select('amount')
           .gte('date', startOfMonth.toISOString())
 
-        if (txns && !tError) {
+        if (tError) throw tError
+
+        if (txns) {
           let dep = 0
           let wit = 0
           txns.forEach(t => {
@@ -1476,8 +1493,37 @@ function AnalyticsPage() {
           setTotalDeposits(dep)
           setTotalWithdrawals(wit)
         }
-      } catch (err) {
+
+        // 3. Fetch monthly volumes for the last 6 months dynamically!
+        const monthsData: { label: string; value: number }[] = []
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date()
+          d.setMonth(d.getMonth() - i)
+          const monthLabel = d.toLocaleString('en-US', { month: 'short' })
+          
+          const start = new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0)
+          const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999)
+
+          const { data: mTxns, error: mError } = await supabase
+            .from('transactions_nbb')
+            .select('amount')
+            .gte('date', start.toISOString())
+            .lte('date', end.toISOString())
+            .eq('status', 'Completed')
+
+          let monthlyVol = 0
+          if (mTxns && !mError) {
+            mTxns.forEach(t => {
+              monthlyVol += Math.abs(parseFloat(t.amount || 0))
+            })
+          }
+          monthsData.push({ label: monthLabel, value: monthlyVol })
+        }
+        setRevenueData(monthsData)
+
+      } catch (err: any) {
         console.error('Error loading analytics:', err)
+        setErrorMsg(`Failed to load analytics: ${err.message}`)
       } finally {
         setLoading(false)
       }
@@ -1485,10 +1531,6 @@ function AnalyticsPage() {
 
     loadAnalytics()
   }, [])
-
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
-  const revenue = [2.1, 2.4, 2.8, 3.2, 3.8, 4.1]
-  const maxRev = Math.max(...revenue)
 
   if (loading) {
     return (
@@ -1504,6 +1546,12 @@ function AnalyticsPage() {
         <h1 className="font-display text-3xl text-[#0A1628]">Analytics</h1>
         <p className="text-[#64748B] mt-1">Performance and growth metrics</p>
       </div>
+
+      {errorMsg && (
+        <div className="p-4 rounded-xl bg-red-50 border border-red-100 text-sm text-[#EF4444]">
+          {errorMsg}
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid sm:grid-cols-3 gap-6">
@@ -1542,18 +1590,20 @@ function AnalyticsPage() {
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Revenue Chart */}
         <div className="bg-white border border-light rounded-2xl p-6 shadow-soft">
-          <h3 className="font-display text-lg text-[#0A1628] mb-6">Monthly Revenue (\u00A3M)</h3>
+          <h3 className="font-display text-lg text-[#0A1628] mb-6">Monthly Volume (&pound;)</h3>
           <div className="flex items-end justify-between h-56 gap-3">
-            {revenue.map((val, i) => (
+            {revenueData.map((item, i) => (
               <div key={i} className="flex-1 flex flex-col items-center">
-                <span className="text-xs text-[#64748B] mb-2">{val}M</span>
+                <span className="text-xs text-[#64748B] mb-2">
+                  &pound;{item.value >= 1000 ? `${(item.value / 1000).toFixed(1)}k` : item.value.toFixed(0)}
+                </span>
                 <div className="w-full flex justify-center">
                   <div
                     className="w-12 rounded-t-lg bg-[#D31111] transition-all duration-500"
-                    style={{ height: `${(val / maxRev) * 180}px` }}
+                    style={{ height: `${(item.value / Math.max(...revenueData.map(r => r.value), 1)) * 180}px` }}
                   />
                 </div>
-                <span className="text-xs text-[#64748B] mt-2">{months[i]}</span>
+                <span className="text-xs text-[#64748B] mt-2">{item.label}</span>
               </div>
             ))}
           </div>
@@ -1601,11 +1651,19 @@ function AnalyticsPage() {
 
 /* ─── Main Admin Dashboard ─── */
 export default function AdminDashboard() {
+  const configured = isSupabaseConfigured()
+
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       <AdminNav />
       <main className="pt-24 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
+          {!configured && (
+            <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm text-[#D97706] flex items-center space-x-2 font-medium">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              <span>Warning: Supabase is not configured. The dashboard is running in local mock data mode. Please configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY on your hosting provider (e.g. Vercel) to connect to your database.</span>
+            </div>
+          )}
           <Routes>
             <Route path="/" element={<AdminOverview />} />
             <Route path="users" element={<UsersPage />} />
