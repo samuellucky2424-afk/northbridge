@@ -85,23 +85,26 @@ export async function generateUniqueAccountNumber(): Promise<string> {
 }
 
 /**
- * Triggers a backend OTP generation by inserting the receiver/sender email into public.otps_nbb.
- * The Supabase backend automatically generates the 8-digit code, sets expiry, and sends the email via webhook.
+ * Triggers a backend OTP generation using Supabase Auth signInWithOtp.
+ * Supabase Auth handles the code generation, SMTP configuration, and sending.
  */
 export async function generateAndSendOTP(email: string): Promise<boolean> {
   if (isSupabaseConfigured()) {
     try {
-      const { error } = await supabase
-        .from('otps_nbb')
-        .insert([{ email }])
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: false // Do not create a new user; only send to registered emails
+        }
+      })
       
       if (error) {
-        console.error('Error triggering backend OTP in Supabase:', error)
+        console.error('Error triggering backend OTP in Supabase Auth:', error)
         return false
       }
       return true
     } catch (err) {
-      console.error('Supabase OTP trigger exception:', err)
+      console.error('Supabase Auth OTP trigger exception:', err)
       return false
     }
   }
@@ -111,7 +114,7 @@ export async function generateAndSendOTP(email: string): Promise<boolean> {
 }
 
 /**
- * Verifies if the OTP is correct and not expired.
+ * Verifies if the OTP is correct and valid using Supabase Auth verifyOtp.
  */
 export async function verifyOTP(email: string, otpCode: string): Promise<boolean> {
   if (!isSupabaseConfigured()) {
@@ -120,35 +123,20 @@ export async function verifyOTP(email: string, otpCode: string): Promise<boolean
   }
 
   try {
-    const { data, error } = await supabase
-      .from('otps_nbb')
-      .select('id, expires_at, verified')
-      .eq('email', email)
-      .eq('otp_code', otpCode)
-      .eq('verified', false)
-      .order('created_at', { ascending: false })
-      .limit(1)
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token: otpCode,
+      type: 'email'
+    })
 
-    if (error || !data || data.length === 0) {
-      console.error('Invalid OTP code or already verified')
+    if (error || !data.session) {
+      console.error('Supabase Auth OTP verification failed:', error)
       return false
     }
-
-    const record = data[0]
-    if (new Date(record.expires_at) < new Date()) {
-      console.error('OTP has expired')
-      return false
-    }
-
-    // Mark OTP as verified
-    await supabase
-      .from('otps_nbb')
-      .update({ verified: true })
-      .eq('id', record.id)
 
     return true
   } catch (err) {
-    console.error('OTP validation exception:', err)
+    console.error('Supabase Auth OTP verification exception:', err)
     return false
   }
 }
