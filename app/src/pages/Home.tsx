@@ -208,10 +208,10 @@ function WhySection() {
         <img 
           src="/images/trust-bg.png" 
           alt="Trust Background" 
-          className="w-full h-full object-cover object-center opacity-45 mix-blend-overlay" 
+          className="w-full h-full object-cover object-center opacity-80" 
         />
-        {/* Elegant dark gradient overlay to ensure text is fully legible and looks premium */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0A1628]/95 via-[#0A1628]/85 to-[#0A1628]" />
+        {/* Soft elegant overlay to guarantee text legibility while displaying the trust blocks clearly */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0A1628]/70 via-[#0A1628]/55 to-[#0A1628]/85" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">

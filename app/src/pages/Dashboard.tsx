@@ -261,15 +261,6 @@ function Overview() {
           >
             <HelpCircle size={20} />
           </Link>
-          {/* Notification bell */}
-          <button
-            onClick={() => showToast('No new notifications')}
-            className="relative p-2 rounded-xl bg-slate-100 hover:bg-[#FEE2E2] hover:text-[#D31111] text-[#64748B] transition-all"
-            title="Notifications"
-          >
-            <Bell size={20} />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-[#D31111] rounded-full" />
-          </button>
         </div>
       </div>
 
