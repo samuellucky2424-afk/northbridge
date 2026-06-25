@@ -5,15 +5,16 @@ import { supabase, isSupabaseConfigured, generateAndSendOTP, verifyOTP } from '.
 
 interface TransferModalProps {
   onClose: () => void
+  initialType?: 'domestic' | 'international'
 }
 
 type TransferStep = 'form' | 'preview' | 'otp' | 'receipt'
 type TransferType = 'domestic' | 'international'
 
-export default function TransferModal({ onClose }: TransferModalProps) {
+export default function TransferModal({ onClose, initialType }: TransferModalProps) {
   const { userEmail, userId, refreshProfile } = useAuth()
   const [step, setStep] = useState<TransferStep>('form')
-  const [transferType, setTransferType] = useState<TransferType>('domestic')
+  const [transferType, setTransferType] = useState<TransferType>(initialType || 'domestic')
   const [otp, setOtp] = useState(['', '', '', '', '', '']) // 6-digit OTP
   const [otpError, setOtpError] = useState('')
   const [loadingOtp, setLoadingOtp] = useState(false)
@@ -87,10 +88,10 @@ export default function TransferModal({ onClose }: TransferModalProps) {
         if (isSupabaseConfigured() && userId) {
           // Fetch current profile balance
           const { data: profile } = await supabase
-            .from('profiles_nbb')
-            .select('balance')
-            .eq('id', userId)
-            .single()
+             .from('profiles_nbb')
+             .select('balance')
+             .eq('id', userId)
+             .single()
 
           const currentBal = parseFloat(profile?.balance || '0')
           if (currentBal < transferAmount) {
@@ -180,7 +181,7 @@ export default function TransferModal({ onClose }: TransferModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto animate-in fade-in duration-300">
-      <div className="bg-white rounded-none sm:rounded-2xl shadow-xl w-full sm:max-w-lg overflow-hidden my-0 sm:my-8 min-h-screen sm:min-h-0 animate-in zoom-in-95 duration-200">
+      <div className="bg-white rounded-none sm:rounded-2xl shadow-xl w-full sm:max-w-xl overflow-hidden my-0 sm:my-8 min-h-screen sm:min-h-0 animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-light">
           <div className="flex items-center space-x-3">
@@ -190,7 +191,7 @@ export default function TransferModal({ onClose }: TransferModalProps) {
               </button>
             )}
             <h3 className="font-display text-lg text-[#0A1628]">
-              {step === 'form' && 'Send Money'}
+              {step === 'form' && (transferType === 'domestic' ? 'Domestic Transfer' : 'International Transfer')}
               {step === 'preview' && 'Confirm Transfer'}
               {step === 'otp' && 'Verify Transfer'}
               {step === 'receipt' && 'Transfer Receipt'}
@@ -205,18 +206,24 @@ export default function TransferModal({ onClose }: TransferModalProps) {
         {step === 'form' && (
           <div className="p-6 space-y-5">
             {/* Transfer Type Toggle */}
-            <div className="flex rounded-xl bg-[#F1F5F9] p-1">
-              <button onClick={() => setTransferType('domestic')} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${transferType === 'domestic' ? 'bg-[#D31111] text-white shadow-sm' : 'text-[#64748B] hover:text-[#0A1628]'}`}>
-                Domestic Transfer
-              </button>
-              <button onClick={() => setTransferType('international')} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${transferType === 'international' ? 'bg-[#D31111] text-white shadow-sm' : 'text-[#64748B] hover:text-[#0A1628]'}`}>
-                International Transfer
-              </button>
-            </div>
+            {!initialType && (
+              <div className="flex rounded-xl bg-[#F1F5F9] p-1">
+                <button onClick={() => setTransferType('domestic')} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${transferType === 'domestic' ? 'bg-[#D31111] text-white shadow-sm' : 'text-[#64748B] hover:text-[#0A1628]'}`}>
+                  Domestic Transfer
+                </button>
+                <button onClick={() => setTransferType('international')} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${transferType === 'international' ? 'bg-[#D31111] text-white shadow-sm' : 'text-[#64748B] hover:text-[#0A1628]'}`}>
+                  International Transfer
+                </button>
+              </div>
+            )}
 
             {/* DOMESTIC FORM */}
             {transferType === 'domestic' && (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Account Holder Name <span className="text-[#D31111]">*</span></label>
+                  <input type="text" value={domestic.accountHolder} onChange={(e) => handleFieldChange('accountHolder', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="Full name on account" />
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Bank Name <span className="text-[#D31111]">*</span></label>
                   <select value={domestic.bankName} onChange={(e) => handleFieldChange('bankName', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] bg-white">
@@ -227,10 +234,6 @@ export default function TransferModal({ onClose }: TransferModalProps) {
                 <div>
                   <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Account Number / IBAN <span className="text-[#D31111]">*</span></label>
                   <input type="text" value={domestic.accountNumber} onChange={(e) => handleFieldChange('accountNumber', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="8 digit account number" maxLength={24} />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Account Holder Name <span className="text-[#D31111]">*</span></label>
-                  <input type="text" value={domestic.accountHolder} onChange={(e) => handleFieldChange('accountHolder', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="Full name on account" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Amount (&pound;) <span className="text-[#D31111]">*</span></label>
@@ -248,8 +251,8 @@ export default function TransferModal({ onClose }: TransferModalProps) {
 
             {/* INTERNATIONAL FORM */}
             {transferType === 'international' && (
-              <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-1">
-                <div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-1">
+                <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Receiver Name <span className="text-[#D31111]">*</span></label>
                   <input type="text" value={international.receiverName} onChange={(e) => handleFieldChange('receiverName', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="Full legal name" />
                 </div>
@@ -261,7 +264,7 @@ export default function TransferModal({ onClose }: TransferModalProps) {
                   <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Email Address <span className="text-[#D31111]">*</span></label>
                   <input type="email" value={international.email} onChange={(e) => handleFieldChange('email', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="receiver@email.com" />
                 </div>
-                <div>
+                <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Address <span className="text-[#D31111]">*</span></label>
                   <input type="text" value={international.address} onChange={(e) => handleFieldChange('address', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="Street address, City, Country" />
                 </div>
@@ -273,6 +276,10 @@ export default function TransferModal({ onClose }: TransferModalProps) {
                   </select>
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">SWIFT / IBAN / Routing Number <span className="text-[#D31111]">*</span></label>
+                  <input type="text" value={international.swiftIban} onChange={(e) => handleFieldChange('swiftIban', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="e.g. CHASUS33 or GB29NWBK..." />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Amount (&pound;) <span className="text-[#D31111]">*</span></label>
                   <input type="number" value={international.amount} onChange={(e) => handleFieldChange('amount', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="0.00" />
                 </div>
@@ -282,10 +289,6 @@ export default function TransferModal({ onClose }: TransferModalProps) {
                     <option value="">Select purpose</option>
                     {purposes.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">SWIFT / IBAN / Routing Number <span className="text-[#D31111]">*</span></label>
-                  <input type="text" value={international.swiftIban} onChange={(e) => handleFieldChange('swiftIban', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="e.g. CHASUS33 or GB29NWBK..." />
                 </div>
               </div>
             )}

@@ -198,6 +198,7 @@ function Overview() {
   const { userName, currency, userId, userBalance, savingsBalance, checkSuspension, accountNumber } = useAuth()
   const cs = currency.symbol
   const [showTransfer, setShowTransfer] = useState(false)
+  const [transferTypeToOpen, setTransferTypeToOpen] = useState<'domestic' | 'international' | undefined>(undefined)
   const [showAddMoney, setShowAddMoney] = useState(false)
   const [cardFrozen, setCardFrozen] = useState(false)
   const [toast, setToast] = useState('')
@@ -298,7 +299,7 @@ function Overview() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {/* Domestic */}
           <button
-            onClick={() => { if (checkSuspension()) return; setShowTransfer(true); }}
+            onClick={() => { if (checkSuspension()) return; setTransferTypeToOpen('domestic'); setShowTransfer(true); }}
             className="flex flex-col items-center justify-center p-5 bg-white border border-light rounded-2xl hover:bg-[#FEE2E2]/30 hover:border-[#D31111] transition-all group shadow-soft"
           >
             <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-[#FEE2E2] transition-colors">
@@ -309,7 +310,7 @@ function Overview() {
 
           {/* International */}
           <button
-            onClick={() => { if (checkSuspension()) return; setShowTransfer(true); }}
+            onClick={() => { if (checkSuspension()) return; setTransferTypeToOpen('international'); setShowTransfer(true); }}
             className="flex flex-col items-center justify-center p-5 bg-white border border-light rounded-2xl hover:bg-[#FEE2E2]/30 hover:border-[#D31111] transition-all group shadow-soft"
           >
             <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-[#FEE2E2] transition-colors">
@@ -416,7 +417,7 @@ function Overview() {
       </div>
 
       {/* Modals */}
-      {showTransfer && <TransferModal onClose={() => setShowTransfer(false)} />}
+      {showTransfer && <TransferModal onClose={() => setShowTransfer(false)} initialType={transferTypeToOpen} />}
       {showAddMoney && <AddMoneyModal onClose={() => setShowAddMoney(false)} currencySymbol={cs} />}
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
       {selectedTxn && <TransactionReceiptModal txn={selectedTxn} onClose={() => setSelectedTxn(null)} currencySymbol={cs} />}
