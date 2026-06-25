@@ -170,20 +170,35 @@ function WhySection() {
 
   const features = [
     { icon: Zap, title: 'Instant Notifications', desc: 'Get real-time alerts for every transaction, payment, and balance change directly to your phone or email.' },
-    { icon: Shield, title: 'Bank-Grade Security', desc: '256-bit encryption, biometric login, and FSCS protection up to \u00A385,000. Your money is always safe.' },
+    { icon: Shield, title: 'A Trustworthy Shield', desc: 'Protected by the FSCS up to \u00A385,000 and fortified with advanced biometric authentication. Keeping your trust is our highest priority.' },
     { icon: Smartphone, title: 'Mobile-First Design', desc: 'Manage your entire financial life from your pocket. Transfer, save, and spend on the go.' },
     { icon: Clock, title: '24/7 Support', desc: 'Our UK-based support team is available around the clock via live chat, phone, or email.' },
-    { icon: Globe, title: 'Global Transfers', desc: 'Send money to over 180 countries with competitive exchange rates and low fees.' },
+    { icon: Globe, title: 'Seamless Global Transfers', desc: 'Send money across the globe in seconds. Enjoy competitive exchange rates, zero hidden fees, and complete transaction reliability.' },
     { icon: TrendingUp, title: 'Smart Savings', desc: 'Round up purchases, set savings goals, and earn 4.2% AER on your savings account.' },
   ]
 
   return (
-    <section ref={sectionRef} className="py-24 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section ref={sectionRef} className="py-24 relative overflow-hidden bg-white">
+      {/* Background Trust Image */}
+      <div className="absolute inset-0 z-0 select-none pointer-events-none">
+        <img 
+          src="/images/trust-bg.png" 
+          alt="Trust Background" 
+          className="w-full h-full object-cover object-center opacity-[0.15]" 
+        />
+        {/* Soft gradient to white */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/95 to-white" />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16">
           <span className="label-ui text-[#D31111] mb-3 block">WHY NORTH BRIDGE BANK</span>
           <h2 className="font-display text-4xl text-[#0A1628] mb-4">Banking that puts you first</h2>
-          <p className="text-[#64748B] max-w-2xl mx-auto">We have built a bank designed around your life — not the other way around. Every feature, every interaction, every decision starts with you.</p>
+          <p className="text-[#64748B] max-w-2xl mx-auto">
+            At North Bridge Bank, we believe trust is the cornerstone of every financial relationship. 
+            We pair bank-grade security with lightning-fast execution, delivering a seamless banking experience. 
+            From instant domestic transfers to zero-fee global payments, your transactions are protected, transparent, and completely effortless.
+          </p>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((f, i) => (

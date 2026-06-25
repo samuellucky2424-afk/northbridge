@@ -1,15 +1,13 @@
-import { Routes, Route, Navigate, Link } from 'react-router-dom'
+import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../App'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import {
-  ArrowUpRight, Send, Plus, Snowflake, Receipt,
+  ArrowUpRight, Send, Plus, Snowflake,
   TrendingUp, CreditCard, Wallet, Landmark, HelpCircle,
   ChevronRight, Lock, Eye, ShieldCheck, RefreshCw, Settings,
-  Bell, Menu, X, Phone, Mail, MapPin, Clock, Check
+  Bell, Menu, X, Phone, Mail, MapPin, Clock, Check, Globe
 } from 'lucide-react'
-import NumberTicker from '../components/NumberTicker'
-import Sparkline from '../components/Sparkline'
 import TransferModal from '../components/TransferModal'
 import AddMoneyModal from '../components/AddMoneyModal'
 import SettingsPanel from '../components/SettingsPanel'
@@ -195,15 +193,14 @@ function TransactionReceiptModal({ txn, onClose, currencySymbol }: { txn: any; o
 }
 
 /* ─── Overview Page ─── */
+/* ─── Overview Page ─── */
 function Overview() {
-  const { userName, currency, userId, userBalance, savingsBalance, checkSuspension } = useAuth()
+  const { userName, currency, userId, userBalance, savingsBalance, checkSuspension, accountNumber } = useAuth()
   const cs = currency.symbol
   const [showTransfer, setShowTransfer] = useState(false)
   const [showAddMoney, setShowAddMoney] = useState(false)
   const [cardFrozen, setCardFrozen] = useState(false)
-  const [showPayBills, setShowPayBills] = useState(false)
   const [toast, setToast] = useState('')
-  const [billForm, setBillForm] = useState({ provider: '', accountRef: '', amount: '' })
   const [selectedTxn, setSelectedTxn] = useState<any>(null)
 
   const [transactions, setTransactions] = useState<any[]>([
@@ -243,96 +240,119 @@ function Overview() {
 
   const showToast = (msg: string) => setToast(msg)
 
-  const balances = [
-    { label: 'Total Balance', value: userBalance + savingsBalance, change: '+2.4%', changeLabel: 'this month', type: 'total' as const },
-    { label: 'Current Account', value: userBalance, type: 'current' as const },
-    { label: 'Savings', value: savingsBalance, rate: '4.2% AER', type: 'savings' as const },
-  ]
-
-  const navShortcuts = [
-    { label: 'Accounts', icon: Wallet, color: '#D31111', bg: '#FEE2E2', path: '/dashboard/accounts' },
-    { label: 'Payments', icon: Send, color: '#0A1628', bg: '#F1F5F9', path: '/dashboard/payments' },
-    { label: 'Cards', icon: CreditCard, color: '#D31111', bg: '#FEE2E2', path: '/dashboard/cards' },
-    { label: 'Support', icon: HelpCircle, color: '#0A1628', bg: '#F1F5F9', path: '/dashboard/support' },
-  ]
-
-  const quickActions = [
-    { label: 'Send money', icon: Send, action: () => { if (checkSuspension()) return; setShowTransfer(true); } },
-    { label: 'Add money', icon: Plus, action: () => { if (checkSuspension()) return; setShowAddMoney(true); } },
-    { label: cardFrozen ? 'Unfreeze card' : 'Freeze card', icon: Snowflake, action: () => { if (checkSuspension()) return; setCardFrozen(!cardFrozen); showToast(cardFrozen ? 'Card unfrozen successfully' : 'Card frozen successfully'); } },
-    { label: 'Pay bills', icon: Receipt, action: () => { if (checkSuspension()) return; setShowPayBills(true); } },
-  ]
-
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-2xl sm:text-3xl text-[#0A1628]">Overview</h1>
-        <p className="text-[#64748B] mt-1 text-sm sm:text-base">Welcome back, {userName || 'Sarah'}</p>
-      </div>
-
-      {/* BALANCE CARDS — Horizontally swipeable */}
-      <div className="relative -mx-4 sm:-mx-0">
-        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory px-4 sm:px-0 pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          {balances.map((b, i) => (
-            <div key={i} className="snap-start flex-shrink-0 w-[85vw] sm:w-[calc(33.333%-11px)] bg-white border border-light rounded-2xl p-5 sm:p-6 hover:shadow-soft transition-all">
-              <p className="text-xs sm:text-sm text-[#64748B] mb-2">{b.label}</p>
-              <p className="text-2xl sm:text-3xl font-light text-[#0A1628] mb-1">
-                <NumberTicker value={b.value} prefix={cs} decimals={2} duration={1200} />
-              </p>
-              {b.change && (
-                <div className="flex items-center space-x-1">
-                  <ArrowUpRight size={14} className="text-[#10B981]" />
-                  <span className="text-xs sm:text-sm text-[#10B981] font-medium">{b.change}</span>
-                  <span className="text-xs text-[#64748B]">{b.changeLabel}</span>
-                </div>
-              )}
-              {b.rate && (
-                <span className="inline-block mt-2 px-2 py-0.5 bg-[#FEE2E2] text-[#D31111] text-xs font-medium rounded-md">{b.rate}</span>
-              )}
-              {b.type === 'current' && (
-                <div className="flex space-x-2 mt-4">
-                  <button onClick={() => { if (checkSuspension()) return; setShowTransfer(true); }} className="btn-outline text-xs py-2 px-3"><Send size={12} className="mr-1" /> Send</button>
-                  <button onClick={() => { if (checkSuspension()) return; setShowAddMoney(true); }} className="btn-outline text-xs py-2 px-3"><Plus size={12} className="mr-1" /> Add</button>
-                </div>
-              )}
-              <div className="mt-4"><Sparkline className="w-full" /></div>
-            </div>
-          ))}
+      {/* Greeting Header */}
+      <div className="flex items-center justify-between pb-2 border-b border-light">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-full bg-[#D31111] flex items-center justify-center text-white text-base font-bold">
+            {(userName || 'C').charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-[#0A1628]">Hi, {userName || 'Customer'}</h1>
+          </div>
         </div>
-        <div className="flex justify-center space-x-1.5 mt-2 sm:hidden">
-          {balances.map((_, i) => (<div key={i} className="w-1.5 h-1.5 rounded-full bg-[#D31111]/30" />))}
-        </div>
-      </div>
-
-      {/* NAV SHORTCUTS */}
-      <div className="grid grid-cols-4 gap-3">
-        {navShortcuts.map((item, i) => (
+        <div className="flex items-center space-x-2">
+          {/* Chat Icon */}
           <Link
-            key={i}
-            to={item.path}
-            onClick={(e) => {
-              if (checkSuspension()) {
-                e.preventDefault()
-              }
-            }}
-            className="flex flex-col items-center justify-center p-3 sm:p-4 bg-white border border-light rounded-2xl hover:shadow-soft hover:-translate-y-0.5 transition-all group"
+            to="/dashboard/support"
+            className="p-2 rounded-xl bg-slate-100 hover:bg-[#FEE2E2] hover:text-[#D31111] text-[#64748B] transition-all"
+            title="Start live chat"
           >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mb-2" style={{ backgroundColor: item.bg }}>
-              <item.icon size={20} style={{ color: item.color }} />
-            </div>
-            <span className="text-xs font-medium text-[#0A1628] group-hover:text-[#D31111] transition-colors">{item.label}</span>
+            <HelpCircle size={20} />
           </Link>
-        ))}
+          {/* Notification bell */}
+          <button
+            onClick={() => showToast('No new notifications')}
+            className="relative p-2 rounded-xl bg-slate-100 hover:bg-[#FEE2E2] hover:text-[#D31111] text-[#64748B] transition-all"
+            title="Notifications"
+          >
+            <Bell size={20} />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-[#D31111] rounded-full" />
+          </button>
+        </div>
       </div>
 
-      {/* QUICK ACTIONS */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {quickActions.map((action, i) => (
-          <button key={i} onClick={action.action} className="flex flex-col items-center justify-center p-4 sm:p-6 bg-white border border-light rounded-2xl hover:bg-[#D31111] hover:text-white hover:border-[#D31111] group transition-all duration-200">
-            <action.icon size={22} className="text-[#D31111] group-hover:text-white mb-2 transition-colors" />
-            <span className="text-xs sm:text-sm font-medium text-[#0A1628] group-hover:text-white transition-colors">{action.label}</span>
+      {/* Available Balance Card — Styled in Brand Red & White */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#D31111] to-[#990B0B] p-6 text-white shadow-md">
+        {/* Abstract pattern overlay */}
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, #FFFFFF 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+        
+        <div className="relative z-10 flex flex-col justify-between h-32">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-medium text-white/75 uppercase tracking-wider">Available Balance</p>
+              <p className="text-3xl font-bold tracking-tight mt-1.5">
+                {cs}{(userBalance + savingsBalance).toLocaleString('en-GB', { minimumFractionDigits: 2 })} <span className="text-base font-normal text-white/80">{currency.code || 'GBP'}</span>
+              </p>
+            </div>
+            <CreditCard size={28} className="text-white/80" />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-[10px] font-semibold text-white">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 mr-1.5 animate-pulse" />
+              Active Account
+            </span>
+            <span className="text-xs font-mono tracking-widest text-white/60">
+              {accountNumber ? `**** ${accountNumber.slice(-4)}` : '**** 4521'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions (2x2 Grid) */}
+      <div className="space-y-3">
+        <h3 className="text-xs font-bold text-[#0A1628] uppercase tracking-wider">Quick Actions</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Domestic */}
+          <button
+            onClick={() => { if (checkSuspension()) return; setShowTransfer(true); }}
+            className="flex flex-col items-center justify-center p-5 bg-white border border-light rounded-2xl hover:bg-[#FEE2E2]/30 hover:border-[#D31111] transition-all group shadow-soft"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-[#FEE2E2] transition-colors">
+              <Send size={22} className="text-[#D31111]" />
+            </div>
+            <span className="text-xs font-semibold text-[#0A1628] group-hover:text-[#D31111] transition-colors">Domestic</span>
           </button>
-        ))}
+
+          {/* International */}
+          <button
+            onClick={() => { if (checkSuspension()) return; setShowTransfer(true); }}
+            className="flex flex-col items-center justify-center p-5 bg-white border border-light rounded-2xl hover:bg-[#FEE2E2]/30 hover:border-[#D31111] transition-all group shadow-soft"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-[#FEE2E2] transition-colors">
+              <Globe size={22} className="text-[#D31111]" />
+            </div>
+            <span className="text-xs font-semibold text-[#0A1628] group-hover:text-[#D31111] transition-colors">International</span>
+          </button>
+
+          {/* Deposit */}
+          <button
+            onClick={() => { if (checkSuspension()) return; setShowAddMoney(true); }}
+            className="flex flex-col items-center justify-center p-5 bg-white border border-light rounded-2xl hover:bg-[#FEE2E2]/30 hover:border-[#D31111] transition-all group shadow-soft"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-[#FEE2E2] transition-colors">
+              <Plus size={22} className="text-[#D31111]" />
+            </div>
+            <span className="text-xs font-semibold text-[#0A1628] group-hover:text-[#D31111] transition-colors">Deposit</span>
+          </button>
+
+          {/* History */}
+          <button
+            onClick={() => {
+              if (checkSuspension()) return;
+              window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+              showToast('Scrolled to Transaction History');
+            }}
+            className="flex flex-col items-center justify-center p-5 bg-white border border-light rounded-2xl hover:bg-[#FEE2E2]/30 hover:border-[#D31111] transition-all group shadow-soft"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-[#FEE2E2] transition-colors">
+              <Clock size={22} className="text-[#D31111]" />
+            </div>
+            <span className="text-xs font-semibold text-[#0A1628] group-hover:text-[#D31111] transition-colors">History</span>
+          </button>
+        </div>
       </div>
 
       {/* Freeze card banner */}
@@ -341,7 +361,7 @@ function Overview() {
           <Snowflake size={20} className="text-[#D31111] flex-shrink-0" />
           <div className="flex-1">
             <p className="text-sm font-medium text-[#0A1628]">Your card is currently frozen</p>
-            <p className="text-xs text-[#64748B]">All card transactions are blocked. Click "Unfreeze card" above to restore.</p>
+            <p className="text-xs text-[#64748B]">All card transactions are blocked. Toggle status to restore.</p>
           </div>
           <button onClick={() => { setCardFrozen(false); showToast('Card unfrozen successfully'); }} className="px-4 py-2 bg-[#D31111] text-white rounded-xl text-xs font-medium hover:bg-[#0A1628] transition-colors">
             Unfreeze
@@ -349,54 +369,58 @@ function Overview() {
         </div>
       )}
 
-      {/* RECENT TRANSACTIONS */}
-      <div className="bg-white border border-light rounded-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-light">
-          <h2 className="font-display text-lg sm:text-xl text-[#0A1628]">Recent transactions</h2>
-          <span className="text-xs sm:text-sm text-[#D31111] hover:underline cursor-pointer font-medium">View all</span>
+      {/* Recent Transactions List */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-bold text-[#0A1628] uppercase tracking-wider">Recent Transactions</h3>
+          <Link to="/dashboard/accounts" className="text-xs sm:text-sm text-[#D31111] hover:underline font-semibold">View All</Link>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[500px]">
-            <thead>
-              <tr className="text-left text-[10px] sm:text-xs text-[#64748B] uppercase tracking-wider border-b border-light">
-                <th className="px-4 sm:px-6 py-3 font-medium">Date</th>
-                <th className="px-4 sm:px-6 py-3 font-medium">Description</th>
-                <th className="px-4 sm:px-6 py-3 font-medium">Category</th>
-                <th className="px-4 sm:px-6 py-3 font-medium text-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-4 sm:px-6 py-8 text-center text-sm text-[#64748B]">
-                    No transactions yet. Send money to get started!
-                  </td>
-                </tr>
-              ) : (
-                transactions.map((t, i) => (
-                  <tr key={i} onClick={() => setSelectedTxn(t)} className="hover:bg-[#F1F5F9] transition-colors cursor-pointer border-b border-light/50 last:border-0">
-                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-[#64748B]">{t.date}</td>
-                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium text-[#0A1628]">{t.desc}</td>
-                    <td className="px-4 sm:px-6 py-3 sm:py-4">
-                      <span className="inline-block px-2 py-0.5 bg-[#F1F5F9] text-[#64748B] text-[10px] sm:text-xs rounded-md">{t.cat}</span>
-                      {t.status && t.status !== 'Completed' && (
-                        <span className={`ml-2 inline-block px-1.5 py-0.5 text-[9px] font-medium rounded ${
-                          t.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
-                          t.status === 'Reversed' ? 'bg-red-100 text-red-700' :
-                          'bg-slate-100 text-slate-700'
-                        }`}>
-                          {t.status}
-                        </span>
+
+        <div className="space-y-3">
+          {transactions.length === 0 ? (
+            <div className="bg-white border border-light rounded-2xl p-8 text-center text-sm text-[#64748B]">
+              No transactions yet. Send or deposit money to get started!
+            </div>
+          ) : (
+            transactions.map((t, i) => {
+              const isCredit = t.amount > 0
+              return (
+                <div
+                  key={i}
+                  onClick={() => setSelectedTxn(t)}
+                  className="flex items-center justify-between p-4 bg-white border border-light rounded-2xl hover:shadow-soft transition-all duration-200 cursor-pointer group"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isCredit ? 'bg-green-50 text-green-600' : 'bg-red-50 text-[#D31111]'}`}>
+                      {isCredit ? (
+                        <ArrowUpRight className="rotate-180" size={18} />
+                      ) : (
+                        <ArrowUpRight size={18} />
                       )}
-                    </td>
-                    <td className={`px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium text-right ${t.amount > 0 ? 'text-[#10B981]' : 'text-[#0A1628]'}`}>
-                      {t.amount > 0 ? '+' : ''}{cs}{Math.abs(t.amount).toLocaleString('en-GB', { minimumFractionDigits: 2 })}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-[#0A1628] group-hover:text-[#D31111] transition-colors">{t.desc}</p>
+                      <p className="text-xs text-[#64748B] mt-0.5">{t.date} &middot; <span className="font-semibold text-slate-400">{t.cat || 'Transfer'}</span></p>
+                    </div>
+                  </div>
+                  <div className="text-right flex flex-col items-end">
+                    <p className={`text-sm font-bold ${isCredit ? 'text-green-600' : 'text-[#0A1628]'}`}>
+                      {isCredit ? '+' : '-'}{cs}{Math.abs(t.amount).toLocaleString('en-GB', { minimumFractionDigits: 2 })}
+                    </p>
+                    {t.status && (
+                      <span className={`inline-block mt-1 px-2 py-0.5 text-[10px] font-semibold rounded-md ${
+                        t.status === 'Completed' ? 'bg-green-50 text-green-700' :
+                        t.status === 'Pending' ? 'bg-amber-50 text-amber-700' :
+                        'bg-red-50 text-red-700'
+                      }`}>
+                        {t.status}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )
+            })
+          )}
         </div>
       </div>
 
@@ -405,49 +429,6 @@ function Overview() {
       {showAddMoney && <AddMoneyModal onClose={() => setShowAddMoney(false)} currencySymbol={cs} />}
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
       {selectedTxn && <TransactionReceiptModal txn={selectedTxn} onClose={() => setSelectedTxn(null)} currencySymbol={cs} />}
-
-      {/* Pay Bills Modal */}
-      {showPayBills && (
-        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-none sm:rounded-2xl shadow-xl w-full sm:max-w-md overflow-hidden my-0 sm:my-8 min-h-screen sm:min-h-0">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-light">
-              <h3 className="font-display text-lg text-[#0A1628]">Pay a Bill</h3>
-              <button onClick={() => setShowPayBills(false)} className="p-1 hover:bg-[#F1F5F9] rounded-lg"><X size={20} className="text-[#64748B]" /></button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Bill Provider <span className="text-[#D31111]">*</span></label>
-                <select value={billForm.provider} onChange={(e) => setBillForm({ ...billForm, provider: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111] bg-white">
-                  <option value="">Select provider</option>
-                  <option>British Gas</option>
-                  <option>EDF Energy</option>
-                  <option>Thames Water</option>
-                  <option>Virgin Media</option>
-                  <option>BT</option>
-                  <option>Sky</option>
-                  <option>TV Licence</option>
-                  <option>Council Tax</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Account Reference <span className="text-[#D31111]">*</span></label>
-                <input type="text" value={billForm.accountRef} onChange={(e) => setBillForm({ ...billForm, accountRef: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="Account number or reference" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Amount ({cs}) <span className="text-[#D31111]">*</span></label>
-                <input type="number" value={billForm.amount} onChange={(e) => setBillForm({ ...billForm, amount: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" placeholder="0.00" />
-              </div>
-              <button
-                onClick={() => { if (billForm.provider && billForm.accountRef && billForm.amount) { setShowPayBills(false); showToast(`Bill payment of ${cs}${parseFloat(billForm.amount).toFixed(2)} to ${billForm.provider} successful`); setBillForm({ provider: '', accountRef: '', amount: '' }); } }}
-                disabled={!billForm.provider || !billForm.accountRef || !billForm.amount}
-                className="w-full btn-primary py-3.5 disabled:opacity-50"
-              >
-                Pay Bill
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
@@ -777,6 +758,64 @@ function SupportPage() {
 }
 
 /* ─── Main Dashboard Layout ─── */
+/* ─── Bottom Navigation ─── */
+function BottomNav({ onSettings }: { onSettings: () => void }) {
+  const { checkSuspension } = useAuth()
+  const location = useLocation()
+
+  const navItems = [
+    { label: 'Home', icon: Landmark, path: '/dashboard' },
+    { label: 'Cards', icon: CreditCard, path: '/dashboard/cards' },
+    { label: 'Payments', icon: Send, path: '/dashboard/payments' },
+    { label: 'Support', icon: HelpCircle, path: '/dashboard/support' },
+    { label: 'Profile', icon: Settings, action: onSettings },
+  ]
+
+  return (
+    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-light z-40 px-6 py-2 shadow-lg flex items-center justify-between">
+      {navItems.map((item, i) => {
+        const isActive = item.path ? location.pathname === item.path : false
+        const Icon = item.icon
+        
+        if (item.action) {
+          return (
+            <button
+              key={i}
+              onClick={() => {
+                if (checkSuspension()) return
+                item.action?.()
+              }}
+              className="flex flex-col items-center justify-center space-y-1 text-[#64748B] hover:text-[#D31111]"
+            >
+              <Icon size={20} />
+              <span className="text-[10px] font-medium">{item.label}</span>
+            </button>
+          )
+        }
+
+        return (
+          <Link
+            key={i}
+            to={item.path || '#'}
+            onClick={(e) => {
+              if (checkSuspension()) {
+                e.preventDefault()
+              }
+            }}
+            className={`flex flex-col items-center justify-center space-y-1 ${
+              isActive ? 'text-[#D31111]' : 'text-[#64748B] hover:text-[#D31111]'
+            }`}
+          >
+            <Icon size={20} className={isActive ? 'text-[#D31111]' : 'text-[#64748B]'} />
+            <span className="text-[10px] font-medium">{item.label}</span>
+          </Link>
+        )
+      })}
+    </div>
+  )
+}
+
+/* ─── Main Dashboard Layout ─── */
 export default function Dashboard() {
   const [showSettings, setShowSettings] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
@@ -792,7 +831,7 @@ export default function Dashboard() {
         menuOpen={mobileMenuOpen}
       />
       {mobileMenuOpen && <MobileMenu onSettings={() => { if (checkSuspension()) return; setShowSettings(true); setMobileMenuOpen(false); }} onClose={() => setMobileMenuOpen(false)} />}
-      <main className="pt-20 sm:pt-24 pb-12 px-3 sm:px-4 lg:px-6 xl:px-8">
+      <main className="pt-20 sm:pt-24 pb-24 md:pb-12 px-3 sm:px-4 lg:px-6 xl:px-8">
         <div className="max-w-6xl mx-auto">
           <Routes>
             <Route path="/" element={<Overview />} />
@@ -804,6 +843,7 @@ export default function Dashboard() {
           </Routes>
         </div>
       </main>
+      <BottomNav onSettings={() => { if (checkSuspension()) return; setShowSettings(true); }} />
       {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} userName={userName} />}
       {showNotifications && <NotificationPanel onClose={() => setShowNotifications(false)} />}
     </div>
