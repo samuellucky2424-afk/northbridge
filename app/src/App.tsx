@@ -297,32 +297,69 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 function SuspensionWarningModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   if (!isOpen) return null
 
+  const handleOpenLiveChat = () => {
+    onClose()
+    if ((window as any).Tawk_API?.maximize) {
+      try {
+        (window as any).Tawk_API.maximize()
+      } catch (e) {
+        console.error('Failed to open Tawk.to live chat:', e)
+      }
+    }
+  }
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0A1628]/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
-      <div className="bg-white rounded-2xl border border-light shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="p-6 text-center space-y-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0A1628]/70 backdrop-blur-md p-4 animate-in fade-in duration-300">
+      <div className="bg-white rounded-2xl border border-red-100 shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+        {/* Top Accent Bar */}
+        <div className="h-2 bg-[#D31111] w-full" />
+        
+        <div className="p-6 text-center space-y-5">
+          {/* Professional Security Alert Icon */}
           <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto text-[#D31111]">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
             </svg>
           </div>
-          <div className="space-y-2">
-            <h3 className="font-display text-2xl text-[#0A1628]">Account Access Restricted</h3>
-            <p className="text-sm text-[#64748B] leading-relaxed">
-              We have detected unusual activity or repeated unauthorized transaction attempts on your account. As a security precaution, your account privileges have been suspended. 
-            </p>
-            <p className="text-sm text-[#64748B] leading-relaxed font-medium">
-              You are still able to log in, but all transaction and banking operations have been locked.
+          
+          <div className="space-y-3">
+            <h3 className="font-display text-2xl font-bold text-[#0A1628] tracking-tight">
+              Account Status Restricted
+            </h3>
+            
+            <div className="text-left bg-slate-50 border border-slate-100 rounded-xl p-4 space-y-3">
+              <p className="text-sm text-[#475569] leading-relaxed">
+                We regret to inform you that your account access and transaction privileges have been temporarily suspended. This restriction affects all outgoing transfers, deposits, and withdrawal activities.
+              </p>
+              <p className="text-sm text-[#475569] leading-relaxed font-semibold">
+                To secure your funds and lift this restriction, you are required to contact our Customer Care Support immediately to verify your identity and resolve the issue.
+              </p>
+            </div>
+            
+            <p className="text-xs text-[#94A3B8]">
+              Our support team is online and ready to assist you right away.
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="w-full py-3 bg-[#D31111] text-white rounded-xl font-medium hover:bg-[#0A1628] transition-colors"
-          >
-            Acknowledge & Continue
-          </button>
+          
+          <div className="space-y-2 pt-2">
+            <button
+              onClick={handleOpenLiveChat}
+              className="w-full py-3 bg-[#610C04] hover:bg-[#0A1628] text-white rounded-xl font-semibold shadow-lg shadow-red-900/10 hover:shadow-none transition-all duration-200 flex items-center justify-center space-x-2"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+              <span>Contact Customer Care (Live Chat)</span>
+            </button>
+            
+            <button
+              onClick={onClose}
+              className="w-full py-2.5 bg-slate-100 text-[#64748B] rounded-xl text-xs font-medium hover:bg-slate-200 transition-colors"
+            >
+              Acknowledge & Close
+            </button>
+          </div>
         </div>
       </div>
     </div>
