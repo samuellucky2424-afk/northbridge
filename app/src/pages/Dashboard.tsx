@@ -76,7 +76,7 @@ function DashboardNav({ onSettings, onNotifications, onMenuToggle, menuOpen }: {
 
 /* ─── Mobile Menu ─── */
 function MobileMenu({ onSettings, onClose }: { onSettings: () => void; onClose: () => void }) {
-  const { logout, checkSuspension } = useAuth()
+  const { logout } = useAuth()
   const menuItems = [
     { label: 'Overview', icon: Landmark, path: '/dashboard' },
     { label: 'Accounts', icon: Wallet, path: '/dashboard/accounts' },
@@ -93,12 +93,7 @@ function MobileMenu({ onSettings, onClose }: { onSettings: () => void; onClose: 
           <Link
             key={i}
             to={item.path || '#'}
-            onClick={(e) => {
-              if (checkSuspension()) {
-                e.preventDefault()
-                onClose()
-                return
-              }
+            onClick={() => {
               item.action?.()
               onClose()
             }}
@@ -427,7 +422,7 @@ function Overview() {
 
 /* ─── Accounts Page ─── */
 function AccountsPage() {
-  const { currency, userBalance, savingsBalance, accountNumber, checkSuspension, userId } = useAuth()
+  const { currency, userBalance, savingsBalance, accountNumber, userId } = useAuth()
   const cs = currency.symbol
   const [expandedAccount, setExpandedAccount] = useState<number | null>(0)
   const [selectedTxn, setSelectedTxn] = useState<any>(null)
@@ -527,7 +522,7 @@ function AccountsPage() {
           )}
         </div>
       ))}
-      <button onClick={() => { if (checkSuspension()) return; }} className="w-full py-3 sm:py-4 rounded-2xl border-2 border-dashed border-light text-[#610C04] font-medium text-sm hover:bg-[#FEE2E2] hover:border-[#610C04] transition-all flex items-center justify-center space-x-2">
+      <button onClick={() => {}} className="w-full py-3 sm:py-4 rounded-2xl border-2 border-dashed border-light text-[#610C04] font-medium text-sm hover:bg-[#FEE2E2] hover:border-[#610C04] transition-all flex items-center justify-center space-x-2">
         <Plus size={18} /><span>Add new account</span>
       </button>
       {selectedTxn && <TransactionReceiptModal txn={selectedTxn} onClose={() => setSelectedTxn(null)} currencySymbol={cs} />}
@@ -588,7 +583,7 @@ function PaymentsPage() {
 
 /* ─── Cards Page ─── */
 function CardsPage() {
-  const { checkSuspension, accountNumber } = useAuth()
+  const { accountNumber } = useAuth()
   const [frozen, setFrozen] = useState(false)
   const [showPin, setShowPin] = useState(false)
   const [toast, setToast] = useState('')
@@ -609,7 +604,7 @@ function CardsPage() {
             <p className="text-sm font-medium text-[#0A1628]">Your card is currently frozen</p>
             <p className="text-xs text-[#64748B]">All card transactions are blocked.</p>
           </div>
-          <button onClick={() => { if (checkSuspension()) return; setFrozen(false); showToast('Card unfrozen successfully'); }} className="px-4 py-2 bg-[#610C04] text-white rounded-xl text-xs font-medium hover:bg-[#0A1628] transition-colors">
+          <button onClick={() => { setFrozen(false); showToast('Card unfrozen successfully'); }} className="px-4 py-2 bg-[#610C04] text-white rounded-xl text-xs font-medium hover:bg-[#0A1628] transition-colors">
             Unfreeze
           </button>
         </div>
@@ -639,7 +634,7 @@ function CardsPage() {
               <div className="flex items-center justify-between">
                 <div><p className="text-white/60 text-[8px] sm:text-xs uppercase">Card holder</p><p className="text-white text-[10px] sm:text-sm font-medium">SARAH MILLER</p></div>
                 <div><p className="text-white/60 text-[8px] sm:text-xs uppercase">Expires</p><p className="text-white text-[10px] sm:text-sm font-medium">09/28</p></div>
-                <div><p className="text-white/60 text-[8px] sm:text-xs uppercase">CVV</p><p className="text-white text-[10px] sm:text-sm font-medium flex items-center">{showPin ? '342' : '***'}<button onClick={() => { if (checkSuspension()) return; setShowPin(!showPin); }} className="ml-1 text-white/60 hover:text-white">{showPin ? <Eye size={12} /> : <Lock size={12} />}</button></p></div>
+                <div><p className="text-white/60 text-[8px] sm:text-xs uppercase">CVV</p><p className="text-white text-[10px] sm:text-sm font-medium flex items-center">{showPin ? '342' : '***'}<button onClick={() => { setShowPin(!showPin); }} className="ml-1 text-white/60 hover:text-white">{showPin ? <Eye size={12} /> : <Lock size={12} />}</button></p></div>
               </div>
             </div>
             {frozen && (
@@ -652,17 +647,17 @@ function CardsPage() {
             )}
           </div>
           <div className="grid grid-cols-2 gap-2 sm:gap-3 mt-4 sm:mt-6">
-            <button onClick={() => { if (checkSuspension()) return; setFrozen(!frozen); showToast(frozen ? 'Card unfrozen successfully' : 'Card frozen successfully'); }} className={`flex items-center justify-center space-x-1 sm:space-x-2 py-2.5 sm:py-3 rounded-xl border transition-all text-xs sm:text-sm ${frozen ? 'border-[#10B981] text-[#10B981] hover:bg-[#10B981]/5' : 'border-light text-[#64748B] hover:border-[#610C04] hover:text-[#610C04]'}`}>
+            <button onClick={() => { setFrozen(!frozen); showToast(frozen ? 'Card unfrozen successfully' : 'Card frozen successfully'); }} className={`flex items-center justify-center space-x-1 sm:space-x-2 py-2.5 sm:py-3 rounded-xl border transition-all text-xs sm:text-sm ${frozen ? 'border-[#10B981] text-[#10B981] hover:bg-[#10B981]/5' : 'border-light text-[#64748B] hover:border-[#610C04] hover:text-[#610C04]'}`}>
               <Snowflake size={14} /><span>{frozen ? 'Unfreeze' : 'Freeze'}</span>
             </button>
-            <button onClick={() => { if (checkSuspension()) return; }} className="flex items-center justify-center space-x-1 sm:space-x-2 py-2.5 sm:py-3 rounded-xl border border-light text-[#64748B] hover:border-[#610C04] hover:text-[#610C04] transition-all text-xs sm:text-sm">
+            <button onClick={() => {}} className="flex items-center justify-center space-x-1 sm:space-x-2 py-2.5 sm:py-3 rounded-xl border border-light text-[#64748B] hover:border-[#610C04] hover:text-[#610C04] transition-all text-xs sm:text-sm">
               <RefreshCw size={14} /><span>Replace</span>
             </button>
           </div>
         </div>
         <div className="space-y-2 sm:space-y-3">
           {[{ icon: Lock, label: 'Change PIN', desc: 'Update your card PIN' }, { icon: ShieldCheck, label: 'Report lost or stolen', desc: 'Get a replacement card' }, { icon: TrendingUp, label: 'Spending limits', desc: 'Set daily transaction limits' }, { icon: Eye, label: 'Online purchases', desc: 'Toggle online payments' }].map((action, i) => (
-            <button key={i} onClick={() => { if (checkSuspension()) return; }} className="w-full flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 bg-white border border-light rounded-2xl hover:shadow-soft transition-all text-left">
+            <button key={i} onClick={() => {}} className="w-full flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 bg-white border border-light rounded-2xl hover:shadow-soft transition-all text-left">
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#F1F5F9] flex items-center justify-center flex-shrink-0">
                 <action.icon size={16} className="text-[#610C04]" />
               </div>
@@ -682,7 +677,6 @@ function CardsPage() {
 
 /* ─── Support Page ─── */
 function SupportPage() {
-  const { checkSuspension } = useAuth()
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [chatOpen, setChatOpen] = useState(false)
   const [chatText, setChatText] = useState('')
@@ -710,7 +704,7 @@ function SupportPage() {
           </div>
         ))}
       </div>
-      <button onClick={() => { if (checkSuspension()) return; setChatOpen(!chatOpen); }} className="w-full btn-primary py-3 sm:py-4 flex items-center justify-center space-x-2 text-sm sm:text-base">
+      <button onClick={() => { setChatOpen(!chatOpen); }} className="w-full btn-primary py-3 sm:py-4 flex items-center justify-center space-x-2 text-sm sm:text-base">
         <HelpCircle size={18} /><span>Start live chat</span>
       </button>
       {chatOpen && (
@@ -725,7 +719,7 @@ function SupportPage() {
           <div className="bg-[#F1F5F9] rounded-xl p-3 sm:p-4 mb-3 sm:mb-4"><p className="text-xs sm:text-sm text-[#64748B]">Hello! How can I help you today?</p></div>
           <div className="flex space-x-2">
             <input type="text" value={chatText} onChange={(e) => setChatText(e.target.value)} className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-light text-sm text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="Type your message..." />
-            <button onClick={() => { if (checkSuspension()) return; setChatText(''); }} className="btn-primary px-3 sm:px-4"><Send size={16} /></button>
+            <button onClick={() => { setChatText(''); }} className="btn-primary px-3 sm:px-4"><Send size={16} /></button>
           </div>
         </div>
       )}
@@ -752,7 +746,6 @@ function SupportPage() {
 /* ─── Main Dashboard Layout ─── */
 /* ─── Bottom Navigation ─── */
 function BottomNav({ onSettings }: { onSettings: () => void }) {
-  const { checkSuspension } = useAuth()
   const location = useLocation()
 
   const navItems = [
@@ -774,7 +767,6 @@ function BottomNav({ onSettings }: { onSettings: () => void }) {
             <button
               key={i}
               onClick={() => {
-                if (checkSuspension()) return
                 item.action?.()
               }}
               className="flex flex-col items-center justify-center space-y-1 text-[#64748B] hover:text-[#610C04]"
@@ -789,11 +781,6 @@ function BottomNav({ onSettings }: { onSettings: () => void }) {
           <Link
             key={i}
             to={item.path || '#'}
-            onClick={(e) => {
-              if (checkSuspension()) {
-                e.preventDefault()
-              }
-            }}
             className={`flex flex-col items-center justify-center space-y-1 ${
               isActive ? 'text-[#610C04]' : 'text-[#64748B] hover:text-[#610C04]'
             }`}
@@ -812,17 +799,17 @@ export default function Dashboard() {
   const [showSettings, setShowSettings] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { userName, checkSuspension } = useAuth()
+  const { userName } = useAuth()
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       <DashboardNav
-        onSettings={() => { if (checkSuspension()) return; setShowSettings(true); }}
-        onNotifications={() => { if (checkSuspension()) return; setShowNotifications(true); }}
+        onSettings={() => setShowSettings(true)}
+        onNotifications={() => setShowNotifications(true)}
         onMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
         menuOpen={mobileMenuOpen}
       />
-      {mobileMenuOpen && <MobileMenu onSettings={() => { if (checkSuspension()) return; setShowSettings(true); setMobileMenuOpen(false); }} onClose={() => setMobileMenuOpen(false)} />}
+      {mobileMenuOpen && <MobileMenu onSettings={() => { setShowSettings(true); setMobileMenuOpen(false); }} onClose={() => setMobileMenuOpen(false)} />}
       <main className="pt-20 sm:pt-24 pb-24 md:pb-12 px-3 sm:px-4 lg:px-6 xl:px-8">
         <div className="max-w-6xl mx-auto">
           <Routes>
@@ -835,7 +822,7 @@ export default function Dashboard() {
           </Routes>
         </div>
       </main>
-      <BottomNav onSettings={() => { if (checkSuspension()) return; setShowSettings(true); }} />
+      <BottomNav onSettings={() => setShowSettings(true)} />
       {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} userName={userName} />}
       {showNotifications && <NotificationPanel onClose={() => setShowNotifications(false)} />}
     </div>

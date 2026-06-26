@@ -12,7 +12,7 @@ type TransferStep = 'form' | 'preview' | 'otp' | 'receipt'
 type TransferType = 'domestic' | 'international'
 
 export default function TransferModal({ onClose, initialType }: TransferModalProps) {
-  const { userEmail, userId, refreshProfile, userBalance, savingsBalance, currency } = useAuth()
+  const { userEmail, userId, refreshProfile, userBalance, savingsBalance, currency, checkSuspension } = useAuth()
   const [step, setStep] = useState<TransferStep>('form')
   const [transferType, setTransferType] = useState<TransferType>(initialType || 'domestic')
   const [otp, setOtp] = useState(['', '', '', '', '', '', '', '']) // 8-digit OTP
@@ -32,8 +32,13 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
   })
 
   const countries = [
-    'United States', 'Canada', 'Germany', 'France', 'Spain', 'Netherlands',
+    'Turkey', 'United Kingdom', 'United States', 'Canada', 'Germany', 'France', 'Spain', 'Netherlands',
     'Australia', 'UAE', 'Nigeria', 'India', 'China', 'Japan', 'Brazil', 'South Africa',
+    'Italy', 'Ireland', 'Switzerland', 'Sweden', 'Norway', 'Denmark', 'Finland', 'Belgium',
+    'Austria', 'Portugal', 'Greece', 'Poland', 'Singapore', 'Hong Kong', 'New Zealand', 'Mexico',
+    'Argentina', 'Chile', 'Colombia', 'Egypt', 'Kenya', 'Ghana', 'Morocco', 'Saudi Arabia',
+    'Qatar', 'Kuwait', 'Malaysia', 'Thailand', 'Indonesia', 'Vietnam', 'South Korea', 'Pakistan',
+    'Bangladesh', 'Philippines'
   ]
 
   const purposes = ['Personal', 'Business', 'Family Support', 'Education', 'Medical', 'Investment', 'Goods/Services', 'Other']
@@ -59,6 +64,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
   }
 
   const handleConfirm = async () => {
+    if (checkSuspension()) return
     setLoadingOtp(true)
     setOtpError('')
     try {
@@ -77,6 +83,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
   }
 
   const handleOtpVerify = async () => {
+    if (checkSuspension()) return
     const code = otp.join('')
     setVerifying(true)
     setOtpError('')

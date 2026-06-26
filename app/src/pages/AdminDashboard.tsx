@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, Receipt, BarChart3,
   Search, ChevronLeft, ChevronRight, Bell, LogOut,
   ArrowUpRight, ArrowDownRight, UserCheck,
-  Clock, AlertTriangle, Download, Ban, Plus, Edit, Trash2, X
+  Clock, AlertTriangle, Download, Ban, Plus, Edit, Trash2, X, Menu
 } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
@@ -37,9 +37,63 @@ function getCurrency(country: string) {
 }
 
 /* ─── Admin Nav ─── */
+/* ─── Admin Mobile Menu ─── */
+function AdminMobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const { logout } = useAuth()
+  const location = useLocation()
+  const navItems = [
+    { path: '/admin', label: 'Overview', icon: LayoutDashboard },
+    { path: '/admin/users', label: 'Users', icon: Users },
+    { path: '/admin/transactions', label: 'Transactions', icon: Receipt },
+    { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+  ]
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-40 md:hidden animate-in fade-in duration-200" style={{ top: '64px' }}>
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute left-0 top-0 bottom-0 w-64 bg-white shadow-xl p-4 space-y-1">
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.path
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={onClose}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all text-left ${
+                isActive
+                  ? 'text-[#610C04] bg-[#FEE2E2] font-semibold'
+                  : 'text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0A1628]'
+              }`}
+            >
+              <item.icon size={20} />
+              <span className="text-sm font-medium">{item.label}</span>
+            </Link>
+          )
+        })}
+        <div className="border-t border-light pt-3 mt-3">
+          <button
+            onClick={() => {
+              logout()
+              onClose()
+            }}
+            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-[#610C04] hover:bg-[#FEE2E2] transition-all text-left font-medium"
+          >
+            <LogOut size={20} />
+            <span className="text-sm">Logout</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Admin Nav ─── */
 function AdminNav() {
   const { logout } = useAuth()
   const location = useLocation()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const navItems = [
     { path: '/admin', label: 'Overview', icon: LayoutDashboard },
@@ -49,53 +103,67 @@ function AdminNav() {
   ]
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-b border-light">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <Link to="/admin" className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg bg-[#610C04] flex items-center justify-center">
-              <span className="text-white font-display text-[10px]">NBB</span>
+    <>
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-light">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-2">
+              {/* Mobile hamburger menu toggle */}
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="p-2 rounded-lg hover:bg-[#F1F5F9] transition-colors md:hidden text-[#64748B]"
+                title="Toggle Menu"
+              >
+                {menuOpen ? <X size={20} /> : <Menu size={20} />}
+              </button>
+              <Link to="/admin" className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-lg bg-[#610C04] flex items-center justify-center">
+                  <span className="text-white font-display text-[10px]">NBB</span>
+                </div>
+                <span className="font-display text-xl text-[#0A1628] hidden sm:inline">North Bridge Bank</span>
+                <span className="font-display text-xl text-[#0A1628] sm:hidden">NBB</span>
+                <span className="ml-2 px-2 py-0.5 bg-[#FEE2E2] text-[#610C04] text-xs font-medium rounded-md">Admin</span>
+              </Link>
             </div>
-            <span className="font-display text-xl text-[#0A1628]">North Bridge Bank</span>
-            <span className="ml-2 px-2 py-0.5 bg-[#FEE2E2] text-[#610C04] text-xs font-medium rounded-md">Admin</span>
-          </Link>
 
-          <div className="hidden md:flex items-center space-x-1">
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.path
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`relative flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    isActive
-                      ? 'text-[#610C04] bg-[#FEE2E2]'
-                      : 'text-[#64748B] hover:text-[#0A1628] hover:bg-[#F1F5F9]'
-                  }`}
-                >
-                  <item.icon size={18} />
-                  <span>{item.label}</span>
-                </Link>
-              )
-            })}
-          </div>
+            <div className="hidden md:flex items-center space-x-1">
+              {navItems.map((item) => {
+                const isActive = location.pathname === item.path
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`relative flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      isActive
+                        ? 'text-[#610C04] bg-[#FEE2E2]'
+                        : 'text-[#64748B] hover:text-[#0A1628] hover:bg-[#F1F5F9]'
+                    }`}
+                  >
+                    <item.icon size={18} />
+                    <span>{item.label}</span>
+                  </Link>
+                )
+              })}
+            </div>
 
-          <div className="flex items-center space-x-4">
-            <button className="relative p-2 rounded-lg hover:bg-[#F1F5F9] transition-colors">
-              <Bell size={20} className="text-[#64748B]" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-[#610C04] rounded-full" />
-            </button>
-            <button
-              onClick={logout}
-              className="p-2 rounded-lg hover:bg-[#FEE2E2] transition-colors"
-              title="Logout"
-            >
-              <LogOut size={18} className="text-[#64748B]" />
-            </button>
+            <div className="flex items-center space-x-4">
+              <button className="relative p-2 rounded-lg hover:bg-[#F1F5F9] transition-colors">
+                <Bell size={20} className="text-[#64748B]" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-[#610C04] rounded-full" />
+              </button>
+              <button
+                onClick={logout}
+                className="p-2 rounded-lg hover:bg-[#FEE2E2] transition-colors"
+                title="Logout"
+              >
+                <LogOut size={18} className="text-[#64748B]" />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+      <AdminMobileMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
+    </>
   )
 }
 

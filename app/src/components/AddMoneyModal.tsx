@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { X, ArrowRight, Check, CreditCard, Landmark, Wallet } from 'lucide-react'
+import { useAuth } from '../App'
 
 interface AddMoneyModalProps {
   onClose: () => void
@@ -7,6 +8,7 @@ interface AddMoneyModalProps {
 }
 
 export default function AddMoneyModal({ onClose, currencySymbol }: AddMoneyModalProps) {
+  const { checkSuspension } = useAuth()
   const [step, setStep] = useState<'amount' | 'method' | 'confirm' | 'success'>('amount')
   const [amount, setAmount] = useState('')
   const [method, setMethod] = useState('')
@@ -120,7 +122,13 @@ export default function AddMoneyModal({ onClose, currencySymbol }: AddMoneyModal
               <button onClick={() => setStep('method')} className="flex-1 py-3 rounded-xl border border-light text-[#64748B] font-medium text-sm hover:bg-[#F1F5F9] transition-colors">
                 Back
               </button>
-              <button onClick={() => setStep('success')} className="flex-1 btn-primary py-3 flex items-center justify-center space-x-2">
+              <button
+                onClick={() => {
+                  if (checkSuspension()) return
+                  setStep('success')
+                }}
+                className="flex-1 btn-primary py-3 flex items-center justify-center space-x-2"
+              >
                 <span>Confirm Deposit</span>
               </button>
             </div>
