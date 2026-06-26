@@ -6,12 +6,13 @@ import {
   ArrowUpRight, Send, Plus, Snowflake,
   TrendingUp, CreditCard, Wallet, Landmark, HelpCircle,
   ChevronRight, Lock, Eye, ShieldCheck, RefreshCw, Settings,
-  Bell, Menu, X, Phone, Mail, MapPin, Clock, Check, Globe
+  Bell, Menu, X, Phone, Mail, MapPin, Clock, Check, Globe, Coins
 } from 'lucide-react'
 import TransferModal from '../components/TransferModal'
 import AddMoneyModal from '../components/AddMoneyModal'
 import SettingsPanel from '../components/SettingsPanel'
 import NotificationPanel from '../components/NotificationPanel'
+import CryptoWithdrawModal from '../components/CryptoWithdrawModal'
 
 /* ─── Toast ─── */
 function Toast({ message, onClose }: { message: string; onClose: () => void }) {
@@ -190,11 +191,12 @@ function TransactionReceiptModal({ txn, onClose, currencySymbol }: { txn: any; o
 /* ─── Overview Page ─── */
 /* ─── Overview Page ─── */
 function Overview() {
-  const { userName, currency, userId, userBalance, savingsBalance, checkSuspension, accountNumber } = useAuth()
+  const { userName, currency, userId, userBalance, savingsBalance, accountNumber } = useAuth()
   const cs = currency.symbol
   const [showTransfer, setShowTransfer] = useState(false)
   const [transferTypeToOpen, setTransferTypeToOpen] = useState<'domestic' | 'international' | undefined>(undefined)
   const [showAddMoney, setShowAddMoney] = useState(false)
+  const [showCryptoWithdraw, setShowCryptoWithdraw] = useState(false)
   const [cardFrozen, setCardFrozen] = useState(false)
   const [toast, setToast] = useState('')
   const [selectedTxn, setSelectedTxn] = useState<any>(null)
@@ -288,13 +290,13 @@ function Overview() {
         </div>
       </div>
 
-      {/* Quick Actions (2x2 Grid) */}
+      {/* Quick Actions (Responsive 5-column grid) */}
       <div className="space-y-3">
         <h3 className="text-xs font-bold text-[#0A1628] uppercase tracking-wider">Quick Actions</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           {/* Domestic */}
           <button
-            onClick={() => { if (checkSuspension()) return; setTransferTypeToOpen('domestic'); setShowTransfer(true); }}
+            onClick={() => { setTransferTypeToOpen('domestic'); setShowTransfer(true); }}
             className="flex flex-col items-center justify-center p-5 bg-white border border-light rounded-2xl hover:bg-[#FEE2E2]/30 hover:border-[#610C04] transition-all group shadow-soft"
           >
             <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-[#FEE2E2] transition-colors">
@@ -305,7 +307,7 @@ function Overview() {
 
           {/* International */}
           <button
-            onClick={() => { if (checkSuspension()) return; setTransferTypeToOpen('international'); setShowTransfer(true); }}
+            onClick={() => { setTransferTypeToOpen('international'); setShowTransfer(true); }}
             className="flex flex-col items-center justify-center p-5 bg-white border border-light rounded-2xl hover:bg-[#FEE2E2]/30 hover:border-[#610C04] transition-all group shadow-soft"
           >
             <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-[#FEE2E2] transition-colors">
@@ -316,7 +318,7 @@ function Overview() {
 
           {/* Deposit */}
           <button
-            onClick={() => { if (checkSuspension()) return; setShowAddMoney(true); }}
+            onClick={() => { setShowAddMoney(true); }}
             className="flex flex-col items-center justify-center p-5 bg-white border border-light rounded-2xl hover:bg-[#FEE2E2]/30 hover:border-[#610C04] transition-all group shadow-soft"
           >
             <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-[#FEE2E2] transition-colors">
@@ -325,10 +327,20 @@ function Overview() {
             <span className="text-xs font-semibold text-[#0A1628] group-hover:text-[#610C04] transition-colors">Deposit</span>
           </button>
 
+          {/* Crypto Withdraw */}
+          <button
+            onClick={() => { setShowCryptoWithdraw(true); }}
+            className="flex flex-col items-center justify-center p-5 bg-white border border-light rounded-2xl hover:bg-[#FEE2E2]/30 hover:border-[#610C04] transition-all group shadow-soft"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-[#FEE2E2] transition-colors">
+              <Coins size={22} className="text-[#610C04]" />
+            </div>
+            <span className="text-xs font-semibold text-[#0A1628] group-hover:text-[#610C04] transition-colors">Crypto Withdraw</span>
+          </button>
+
           {/* History */}
           <button
             onClick={() => {
-              if (checkSuspension()) return;
               window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
               showToast('Scrolled to Transaction History');
             }}
@@ -414,6 +426,7 @@ function Overview() {
       {/* Modals */}
       {showTransfer && <TransferModal onClose={() => setShowTransfer(false)} initialType={transferTypeToOpen} />}
       {showAddMoney && <AddMoneyModal onClose={() => setShowAddMoney(false)} currencySymbol={cs} />}
+      {showCryptoWithdraw && <CryptoWithdrawModal onClose={() => setShowCryptoWithdraw(false)} />}
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
       {selectedTxn && <TransactionReceiptModal txn={selectedTxn} onClose={() => setSelectedTxn(null)} currencySymbol={cs} />}
     </div>
@@ -532,7 +545,6 @@ function AccountsPage() {
 
 /* ─── Payments Page ─── */
 function PaymentsPage() {
-  const { checkSuspension } = useAuth()
   const [showTransfer, setShowTransfer] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const payees = [
@@ -555,13 +567,13 @@ function PaymentsPage() {
             <Wallet size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748B]" />
             <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-3 rounded-xl border border-light text-sm text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="Search payees..." />
           </div>
-          <button onClick={() => { if (checkSuspension()) return; setShowTransfer(true); }} className="btn-primary py-3 px-4 sm:px-5 text-sm flex items-center justify-center space-x-2">
+          <button onClick={() => { setShowTransfer(true); }} className="btn-primary py-3 px-4 sm:px-5 text-sm flex items-center justify-center space-x-2">
             <Send size={14} /><span>New payment</span>
           </button>
         </div>
         <div className="space-y-1 sm:space-y-2">
           {filtered.map((p, i) => (
-            <div key={i} onClick={() => { if (checkSuspension()) return; setShowTransfer(true); }} className="flex items-center justify-between p-3 sm:p-4 rounded-xl hover:bg-[#F1F5F9] transition-colors cursor-pointer">
+            <div key={i} onClick={() => { setShowTransfer(true); }} className="flex items-center justify-between p-3 sm:p-4 rounded-xl hover:bg-[#F1F5F9] transition-colors cursor-pointer">
               <div className="flex items-center space-x-3">
                 <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#0A1628] flex items-center justify-center flex-shrink-0">
                   <span className="text-white text-xs sm:text-sm font-medium">{p.name.split(' ').map(n => n[0]).join('')}</span>
