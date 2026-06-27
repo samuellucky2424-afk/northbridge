@@ -4,7 +4,7 @@ import { useAuth } from '../App'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import {
   ArrowUpRight, Send, Plus, Snowflake,
-  TrendingUp, CreditCard, Wallet, Landmark, HelpCircle,
+  TrendingUp, CreditCard, Wallet, HelpCircle,
   ChevronRight, Lock, Eye, ShieldCheck, RefreshCw, Settings,
   Bell, Menu, X, Phone, Mail, MapPin, Clock, Check, Globe, Coins,
   Home, User, Sparkles, DollarSign
@@ -437,7 +437,7 @@ function Overview() {
 
 /* ─── Accounts Page ─── */
 function AccountsPage() {
-  const { currency, userBalance, savingsBalance, accountNumber, userId, userName } = useAuth()
+  const { currency, userBalance, savingsBalance, accountNumber, userId } = useAuth()
   const cs = currency.symbol
   const [expandedAccount, setExpandedAccount] = useState<number | null>(0)
   const [selectedTxn, setSelectedTxn] = useState<any>(null)
