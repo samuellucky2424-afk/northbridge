@@ -119,10 +119,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (profile) {
-        console.log('[NBB Supabase Debug] Profile loaded successfully:', profile.first_name)
+        const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email || ''
+        console.log('[NBB Supabase Debug] Profile loaded successfully:', fullName)
         setUserId(profile.id)
         setUserEmail(profile.email)
-        setUserName(profile.first_name)
+        setUserName(fullName)
         setUserRole(profile.role as UserRole)
         setUserStatus(profile.status)
         setAccountNumber(profile.account_number)
@@ -225,9 +226,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: 'User profile record not found in database.' }
       }
 
+      const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email || ''
       setUserId(profile.id)
       setUserEmail(profile.email)
-      setUserName(profile.first_name)
+      setUserName(fullName)
       setUserRole(profile.role as UserRole)
       setUserStatus(profile.status)
       setAccountNumber(profile.account_number)

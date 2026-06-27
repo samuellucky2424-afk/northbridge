@@ -6,7 +6,8 @@ import {
   ArrowUpRight, Send, Plus, Snowflake,
   TrendingUp, CreditCard, Wallet, Landmark, HelpCircle,
   ChevronRight, Lock, Eye, ShieldCheck, RefreshCw, Settings,
-  Bell, Menu, X, Phone, Mail, MapPin, Clock, Check, Globe, Coins
+  Bell, Menu, X, Phone, Mail, MapPin, Clock, Check, Globe, Coins,
+  Home, User, Sparkles, DollarSign
 } from 'lucide-react'
 import TransferModal from '../components/TransferModal'
 import AddMoneyModal from '../components/AddMoneyModal'
@@ -79,10 +80,11 @@ function DashboardNav({ onSettings, onNotifications, onMenuToggle, menuOpen }: {
 function MobileMenu({ onSettings, onClose }: { onSettings: () => void; onClose: () => void }) {
   const { logout } = useAuth()
   const menuItems = [
-    { label: 'Overview', icon: Landmark, path: '/dashboard' },
-    { label: 'Accounts', icon: Wallet, path: '/dashboard/accounts' },
-    { label: 'Payments', icon: Send, path: '/dashboard/payments' },
+    { label: 'Home', icon: Home, path: '/dashboard' },
     { label: 'Cards', icon: CreditCard, path: '/dashboard/cards' },
+    { label: 'Payments', icon: Send, path: '/dashboard/payments' },
+    { label: 'Loan', icon: Coins, path: '/dashboard/loan' },
+    { label: 'AI Assistant', icon: Sparkles, path: '/dashboard/ai' },
     { label: 'Support', icon: HelpCircle, path: '/dashboard/support' },
     { label: 'Settings', icon: Settings, action: onSettings },
   ]
@@ -435,7 +437,7 @@ function Overview() {
 
 /* ─── Accounts Page ─── */
 function AccountsPage() {
-  const { currency, userBalance, savingsBalance, accountNumber, userId } = useAuth()
+  const { currency, userBalance, savingsBalance, accountNumber, userId, userName } = useAuth()
   const cs = currency.symbol
   const [expandedAccount, setExpandedAccount] = useState<number | null>(0)
   const [selectedTxn, setSelectedTxn] = useState<any>(null)
@@ -595,7 +597,7 @@ function PaymentsPage() {
 
 /* ─── Cards Page ─── */
 function CardsPage() {
-  const { accountNumber } = useAuth()
+  const { accountNumber, userName } = useAuth()
   const [frozen, setFrozen] = useState(false)
   const [showPin, setShowPin] = useState(false)
   const [toast, setToast] = useState('')
@@ -644,7 +646,7 @@ function CardsPage() {
               </div>
               <p className="text-white text-sm sm:text-lg tracking-widest font-mono mb-3 sm:mb-4">**** **** **** {cardSuffix}</p>
               <div className="flex items-center justify-between">
-                <div><p className="text-white/60 text-[8px] sm:text-xs uppercase">Card holder</p><p className="text-white text-[10px] sm:text-sm font-medium">SARAH MILLER</p></div>
+                <div><p className="text-white/60 text-[8px] sm:text-xs uppercase">Card holder</p><p className="text-white text-[10px] sm:text-sm font-medium">{userName || 'Cardholder'}</p></div>
                 <div><p className="text-white/60 text-[8px] sm:text-xs uppercase">Expires</p><p className="text-white text-[10px] sm:text-sm font-medium">09/28</p></div>
                 <div><p className="text-white/60 text-[8px] sm:text-xs uppercase">CVV</p><p className="text-white text-[10px] sm:text-sm font-medium flex items-center">{showPin ? '342' : '***'}<button onClick={() => { setShowPin(!showPin); }} className="ml-1 text-white/60 hover:text-white">{showPin ? <Eye size={12} /> : <Lock size={12} />}</button></p></div>
               </div>
@@ -761,47 +763,104 @@ function BottomNav({ onSettings }: { onSettings: () => void }) {
   const location = useLocation()
 
   const navItems = [
-    { label: 'Home', icon: Landmark, path: '/dashboard' },
+    { label: 'Home', icon: Home, path: '/dashboard' },
     { label: 'Cards', icon: CreditCard, path: '/dashboard/cards' },
     { label: 'Payments', icon: Send, path: '/dashboard/payments' },
-    { label: 'Support', icon: HelpCircle, path: '/dashboard/support' },
-    { label: 'Profile', icon: Settings, action: onSettings },
+    { label: 'Loan', icon: DollarSign, path: '/dashboard/loan' },
+    { label: 'AI', icon: Sparkles, path: '/dashboard/ai' },
+    { label: 'Me', icon: User, action: onSettings },
   ]
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-light z-40 px-6 py-2 shadow-lg flex items-center justify-between">
-      {navItems.map((item, i) => {
-        const isActive = item.path ? location.pathname === item.path : false
-        const Icon = item.icon
-        
-        if (item.action) {
-          return (
-            <button
-              key={i}
-              onClick={() => {
-                item.action?.()
-              }}
-              className="flex flex-col items-center justify-center space-y-1 text-[#64748B] hover:text-[#610C04]"
-            >
-              <Icon size={20} />
-              <span className="text-[10px] font-medium">{item.label}</span>
-            </button>
-          )
-        }
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 border-t border-slate-200 shadow-[0_-10px_40px_rgba(15,23,42,0.08)] px-4 py-2">
+      <div className="flex items-center justify-between gap-1">
+        {navItems.map((item, i) => {
+          const isActive = item.path ? location.pathname === item.path : false
+          const Icon = item.icon
 
-        return (
-          <Link
-            key={i}
-            to={item.path || '#'}
-            className={`flex flex-col items-center justify-center space-y-1 ${
-              isActive ? 'text-[#610C04]' : 'text-[#64748B] hover:text-[#610C04]'
-            }`}
-          >
-            <Icon size={20} className={isActive ? 'text-[#610C04]' : 'text-[#64748B]'} />
-            <span className="text-[10px] font-medium">{item.label}</span>
-          </Link>
-        )
-      })}
+          const itemClasses = `flex-1 min-w-[0] inline-flex flex-col items-center justify-center gap-1 rounded-3xl px-3 py-2 text-[10px] font-semibold transition-all duration-200 ${
+            isActive ? 'bg-[#FEE2E2] text-[#D31111] shadow-sm' : 'text-[#64748B] hover:text-[#0A1628] hover:bg-slate-100'
+          }`
+
+          if (item.action) {
+            return (
+              <button key={i} onClick={() => item.action?.()} className={itemClasses}>
+                <Icon size={20} />
+                <span>{item.label}</span>
+              </button>
+            )
+          }
+
+          return (
+            <Link key={i} to={item.path || '#'} className={itemClasses}>
+              <Icon size={20} className={isActive ? 'text-[#D31111]' : 'text-current'} />
+              <span>{item.label}</span>
+            </Link>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+/* ─── Loan Page ─── */
+function LoanPage() {
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      <div>
+        <h1 className="font-display text-2xl sm:text-3xl text-[#0A1628]">Loan</h1>
+        <p className="text-[#64748B] mt-1 text-sm">View current loan options, manage your repayments, and apply for new credit.</p>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {[
+          { title: 'Personal Loan', desc: 'Flexible repayment terms for household expenses and purchases.', rate: '7.9% APR' },
+          { title: 'Home Loan', desc: 'Competitive mortgage offers for buy-to-let or first-time buyers.', rate: '3.4% APR' },
+          { title: 'Car Loan', desc: 'Low-rate finance to purchase or refinance your vehicle.', rate: '6.2% APR' },
+          { title: 'Overdraft', desc: 'Short-term bridge funding with easy access to cash.', rate: 'Variable interest' },
+        ].map((plan, index) => (
+          <div key={index} className="bg-white border border-light rounded-3xl p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold text-[#0A1628]">{plan.title}</h2>
+              <span className="text-sm font-semibold text-[#610C04]">{plan.rate}</span>
+            </div>
+            <p className="text-sm text-[#64748B] leading-relaxed mb-5">{plan.desc}</p>
+            <button className="w-full py-3 rounded-3xl bg-[#D31111] text-white font-semibold hover:bg-[#B40D0D] transition-colors">Apply now</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ─── AI Assistant Page ─── */
+function AIAssistantPage() {
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      <div>
+        <h1 className="font-display text-2xl sm:text-3xl text-[#0A1628]">AI Assistant</h1>
+        <p className="text-[#64748B] mt-1 text-sm">Ask the assistant about your account, payments, loans, or anything else banking-related.</p>
+      </div>
+      <div className="bg-white border border-light rounded-3xl p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-sm font-medium text-[#0A1628]">AI banker</p>
+            <p className="text-xs text-[#64748B]">Available 24/7 for instant help</p>
+          </div>
+          <div className="w-10 h-10 rounded-2xl bg-[#FEE2E2] flex items-center justify-center text-[#D31111]">
+            <Sparkles size={18} />
+          </div>
+        </div>
+        <div className="space-y-3">
+          <div className="rounded-3xl bg-slate-50 p-4 text-sm text-[#475569]">How can I help today? Try asking: “Show me my latest payments,” “What loans can I apply for?”, or “Freeze my debit card.”</div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {['Account balance', 'Recent transfers', 'Loan advice'].map((item, index) => (
+              <button key={index} className="rounded-3xl border border-light px-4 py-3 text-left text-sm text-[#0A1628] hover:border-[#D31111] hover:bg-[#FEF2F2] transition-all">{item}</button>
+            ))}
+          </div>
+          <textarea className="w-full min-h-[140px] rounded-3xl border border-light p-4 text-sm text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="Ask the assistant anything about your account..." />
+          <button className="w-full py-3 rounded-3xl bg-[#610C04] text-white font-semibold hover:bg-[#4c0802] transition-colors">Start chat</button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -829,6 +888,8 @@ export default function Dashboard() {
             <Route path="accounts" element={<AccountsPage />} />
             <Route path="payments" element={<PaymentsPage />} />
             <Route path="cards" element={<CardsPage />} />
+            <Route path="loan" element={<LoanPage />} />
+            <Route path="ai" element={<AIAssistantPage />} />
             <Route path="support" element={<SupportPage />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
