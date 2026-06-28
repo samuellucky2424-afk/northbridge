@@ -59,8 +59,11 @@ export default function CryptoWithdrawModal({ onClose }: CryptoWithdrawModalProp
     setLoadingOtp(true)
     setOtpError('')
     try {
-      const emailToSend = userEmail || 'demo.customer@nbb.co.uk'
-      const success = await generateAndSendOTP(emailToSend)
+      if (!userEmail) {
+        setOtpError('Your registered email address is missing. Please sign in again.')
+        return
+      }
+      const success = await generateAndSendOTP(userEmail)
       if (success) {
         setStep('otp')
       } else {
@@ -79,8 +82,12 @@ export default function CryptoWithdrawModal({ onClose }: CryptoWithdrawModalProp
     setVerifying(true)
     setOtpError('')
 
-    const emailToVerify = userEmail || 'demo.customer@nbb.co.uk'
-    const isValid = await verifyOTP(emailToVerify, code)
+    if (!userEmail) {
+      setOtpError('Your registered email address is missing. Please sign in again.')
+      setVerifying(false)
+      return
+    }
+    const isValid = await verifyOTP(userEmail, code)
 
     if (isValid) {
       try {

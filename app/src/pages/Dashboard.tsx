@@ -36,7 +36,7 @@ function CheckIcon() {
 function DashboardNav({ onSettings, onNotifications, onMenuToggle, menuOpen }: {
   onSettings: () => void; onNotifications: () => void; onMenuToggle: () => void; menuOpen: boolean
 }) {
-  const { logout, userName } = useAuth()
+  const { logout, userName, profilePictureUrl } = useAuth()
   return (
     <nav className="fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-b border-light">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -61,10 +61,14 @@ function DashboardNav({ onSettings, onNotifications, onMenuToggle, menuOpen }: {
               <span className="absolute top-1 right-1 w-2 h-2 bg-[#610C04] rounded-full" />
             </button>
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-full bg-[#0A1628] flex items-center justify-center">
-                <span className="text-white text-xs font-medium">{(userName || 'S').charAt(0).toUpperCase()}</span>
+              <div className="w-8 h-8 rounded-full bg-[#0A1628] flex items-center justify-center overflow-hidden">
+                {profilePictureUrl ? (
+                  <img src={profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-white text-xs font-medium">{(userName || 'C').charAt(0).toUpperCase()}</span>
+                )}
               </div>
-              <span className="hidden md:block text-sm font-medium text-[#0A1628]">{userName || 'Sarah'}</span>
+              <span className="hidden md:block text-sm font-medium text-[#0A1628]">{userName || 'Customer'}</span>
             </div>
             <button onClick={logout} className="hidden sm:block p-2 rounded-lg hover:bg-[#FEE2E2] transition-colors" title="Logout">
               <X size={18} className="text-[#64748B]" />
@@ -193,7 +197,7 @@ function TransactionReceiptModal({ txn, onClose, currencySymbol }: { txn: any; o
 /* ─── Overview Page ─── */
 /* ─── Overview Page ─── */
 function Overview() {
-  const { userName, currency, userId, userBalance, savingsBalance, accountNumber } = useAuth()
+  const { userName, profilePictureUrl, currency, userId, userBalance, savingsBalance, accountNumber } = useAuth()
   const cs = currency.symbol
   const [showTransfer, setShowTransfer] = useState(false)
   const [transferTypeToOpen, setTransferTypeToOpen] = useState<'domestic' | 'international' | undefined>(undefined)
@@ -203,13 +207,8 @@ function Overview() {
   const [toast, setToast] = useState('')
   const [selectedTxn, setSelectedTxn] = useState<any>(null)
 
-  const [transactions, setTransactions] = useState<any[]>([
-    { date: 'Today', desc: `Tesco Superstore`, cat: 'Groceries', amount: -47.32, status: 'Completed' },
-    { date: 'Today', desc: `Salary — North Bridge Bank Ltd`, cat: 'Income', amount: 3250.00, status: 'Completed' },
-    { date: 'Yesterday', desc: `Netflix`, cat: 'Entertainment', amount: -10.99, status: 'Completed' },
-    { date: 'Yesterday', desc: `Uber`, cat: 'Transport', amount: -12.40, status: 'Completed' },
-    { date: '24 Jun', desc: `Pizza Express`, cat: 'Dining', amount: -34.50, status: 'Completed' },
-  ])
+  const [transactions, setTransactions] = useState<any[]>([])
+
 
   useEffect(() => {
     if (!isSupabaseConfigured() || !userId) return
@@ -245,8 +244,12 @@ function Overview() {
       {/* Greeting Header */}
       <div className="flex items-center justify-between pb-2 border-b border-light">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full bg-[#610C04] flex items-center justify-center text-white text-base font-bold">
-            {(userName || 'C').charAt(0).toUpperCase()}
+          <div className="w-10 h-10 rounded-full bg-[#610C04] flex items-center justify-center text-white text-base font-bold overflow-hidden">
+            {profilePictureUrl ? (
+              <img src={profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              (userName || 'C').charAt(0).toUpperCase()
+            )}
           </div>
           <div>
             <h1 className="font-display text-xl sm:text-2xl font-bold text-[#0A1628]">Hi, {userName || 'Customer'}</h1>
@@ -286,7 +289,7 @@ function Overview() {
               Active Account
             </span>
             <span className="text-xs font-mono tracking-widest text-white/60">
-              {accountNumber ? `**** ${accountNumber.slice(-4)}` : '**** 4521'}
+              {accountNumber ? `**** ${accountNumber.slice(-4)}` : 'Account pending'}
             </span>
           </div>
         </div>
@@ -441,11 +444,8 @@ function AccountsPage() {
   const cs = currency.symbol
   const [expandedAccount, setExpandedAccount] = useState<number | null>(0)
   const [selectedTxn, setSelectedTxn] = useState<any>(null)
-  const [transactions, setTransactions] = useState<any[]>([
-    { desc: 'Tesco Superstore', amount: -47.32, date: 'Today', status: 'Completed' },
-    { desc: 'Salary', amount: 3250.00, date: 'Today', status: 'Completed' },
-    { desc: 'Netflix', amount: -10.99, date: 'Yesterday', status: 'Completed' }
-  ])
+  const [transactions, setTransactions] = useState<any[]>([])
+
 
   useEffect(() => {
     if (!isSupabaseConfigured() || !userId) return
@@ -470,12 +470,13 @@ function AccountsPage() {
     load()
   }, [userId])
 
-  const displayAcctNumber = accountNumber ? `****${accountNumber.slice(-4)}` : '****4521'
+  const displayAcctNumber = accountNumber ? `****${accountNumber.slice(-4)}` : 'Account pending'
+  const currentIban = accountNumber ? `GB29 NWBK 2000 00${accountNumber} 11` : 'Pending'
+  const linkedSavingsLabel = accountNumber ? `Linked to ${displayAcctNumber}` : 'Account pending'
 
   const accounts = [
-    { name: 'Current Account', number: displayAcctNumber, sortCode: '20-00-00', iban: `GB29 NWBK 2000 00${accountNumber || '452100'} 11`, balance: userBalance, transactions: transactions },
-    { name: 'Savings', number: '****8834', sortCode: '20-00-00', iban: 'GB29 NWBK 2000 0088 3400 22', balance: savingsBalance, transactions: [{ desc: 'Interest payment', amount: 72.15, date: '1 Jun' }, { desc: 'Transfer from Current', amount: 500.00, date: '23 Jun' }] },
-    { name: 'Business Account', number: '****1290', sortCode: '20-00-01', iban: 'GB29 NWBK 2001 0012 9000 33', balance: 0.00, transactions: [] },
+    { name: 'Current Account', number: displayAcctNumber, sortCode: '20-00-00', iban: currentIban, balance: userBalance, transactions: transactions },
+    { name: 'Savings', number: linkedSavingsLabel, sortCode: '20-00-00', iban: linkedSavingsLabel, balance: savingsBalance, transactions: [] },
   ]
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -549,13 +550,8 @@ function AccountsPage() {
 function PaymentsPage() {
   const [showTransfer, setShowTransfer] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const payees = [
-    { name: 'James Wilson', account: '20-00-00 ****4521', recent: true },
-    { name: 'Emma Thompson', account: '20-00-00 ****8834', recent: true },
-    { name: 'Oliver Brown', account: '20-00-00 ****1290', recent: false },
-    { name: 'Sophia Davis', account: '20-00-00 ****5567', recent: false },
-    { name: 'William Clark', account: '20-00-00 ****9988', recent: false },
-  ]
+  const payees: { name: string; account: string; recent: boolean }[] = []
+
   const filtered = payees.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -574,7 +570,11 @@ function PaymentsPage() {
           </button>
         </div>
         <div className="space-y-1 sm:space-y-2">
-          {filtered.map((p, i) => (
+          {filtered.length === 0 ? (
+            <div className="rounded-xl border border-light bg-[#F8FAFC] p-4 text-center text-sm text-[#64748B]">
+              No saved payees yet. Start a new payment to add one.
+            </div>
+          ) : filtered.map((p, i) => (
             <div key={i} onClick={() => { setShowTransfer(true); }} className="flex items-center justify-between p-3 sm:p-4 rounded-xl hover:bg-[#F1F5F9] transition-colors cursor-pointer">
               <div className="flex items-center space-x-3">
                 <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#0A1628] flex items-center justify-center flex-shrink-0">
@@ -603,7 +603,7 @@ function CardsPage() {
   const [toast, setToast] = useState('')
   const showToast = (msg: string) => setToast(msg)
 
-  const cardSuffix = accountNumber ? accountNumber.slice(-4) : '4521'
+  const cardSuffix = accountNumber ? accountNumber.slice(-4) : '----'
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -646,7 +646,7 @@ function CardsPage() {
               </div>
               <p className="text-white text-sm sm:text-lg tracking-widest font-mono mb-3 sm:mb-4">**** **** **** {cardSuffix}</p>
               <div className="flex items-center justify-between">
-                <div><p className="text-white/60 text-[8px] sm:text-xs uppercase">Card holder</p><p className="text-white text-[10px] sm:text-sm font-medium">{userName || 'Cardholder'}</p></div>
+                <div><p className="text-white/60 text-[8px] sm:text-xs uppercase">Card holder</p><p className="text-white text-[10px] sm:text-sm font-medium">{userName || 'Account holder'}</p></div>
                 <div><p className="text-white/60 text-[8px] sm:text-xs uppercase">Expires</p><p className="text-white text-[10px] sm:text-sm font-medium">09/28</p></div>
                 <div><p className="text-white/60 text-[8px] sm:text-xs uppercase">CVV</p><p className="text-white text-[10px] sm:text-sm font-medium flex items-center">{showPin ? '342' : '***'}<button onClick={() => { setShowPin(!showPin); }} className="ml-1 text-white/60 hover:text-white">{showPin ? <Eye size={12} /> : <Lock size={12} />}</button></p></div>
               </div>

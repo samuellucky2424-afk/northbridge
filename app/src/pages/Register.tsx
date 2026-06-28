@@ -96,12 +96,28 @@ export default function Register() {
     setLoading(true)
 
     if (!isSupabaseConfigured()) {
-      // Local simulated signup fallback
-      setTimeout(() => {
-        login(form.email, form.password)
+      const result = await login(form.email, form.password, {
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        phone: form.phone,
+        houseAddress: form.houseAddress,
+        city: form.city,
+        country: form.country,
+        postcode: form.postcode,
+        dateOfBirth: form.dateOfBirth,
+        ssn: form.ssn,
+        occupation: form.occupation,
+        incomeSource: form.incomeSource,
+      })
+
+      if (result.success) {
         navigate('/dashboard')
-        setLoading(false)
-      }, 1200)
+      } else {
+        setError(result.error || 'Unable to create your account')
+      }
+
+      setLoading(false)
       return
     }
 

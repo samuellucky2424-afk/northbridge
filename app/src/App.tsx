@@ -22,6 +22,127 @@ import { supabase, isSupabaseConfigured, getEmailByAccountNumber } from './lib/s
 
 type UserRole = 'customer' | 'admin' | null
 
+interface SignupProfileInput {
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  houseAddress: string
+  city: string
+  country: string
+  postcode: string
+  dateOfBirth: string
+  ssn: string
+  occupation: string
+  incomeSource: string
+}
+
+interface ProfileDetails {
+  firstName: string
+  lastName: string
+  phone: string
+  houseAddress: string
+  city: string
+  postcode: string
+  country: string
+}
+
+interface ProfileUpdateInput {
+  firstName: string
+  lastName: string
+  phone: string
+  houseAddress: string
+  city: string
+  postcode: string
+}
+
+interface StoredLocalProfile extends SignupProfileInput {
+  id: string
+  password: string
+  accountNumber: string
+  profilePictureUrl: string
+  role: 'customer'
+  status: 'active' | 'suspended'
+  balance: number
+  savingsBalance: number
+  createdAt: string
+  updatedAt: string
+}
+
+const LOCAL_PROFILES_STORAGE_KEY = 'nbb-local-profiles'
+const LOCAL_CURRENT_USER_STORAGE_KEY = 'nbb-current-user-id'
+const PROFILE_IMAGE_BUCKET = 'profile-pictures'
+
+const defaultProfileDetails: ProfileDetails = {
+  firstName: '',
+  lastName: '',
+  phone: '',
+  houseAddress: '',
+  city: '',
+  postcode: '',
+  country: 'United Kingdom',
+}
+
+function fullName(firstName: string, lastName: string, email = '') {
+  return [firstName, lastName].filter(Boolean).join(' ') || email
+}
+
+function toNumber(value: unknown) {
+  const parsed = Number(value ?? 0)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+function createLocalId() {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID()
+  }
+
+  return `local-${Date.now()}-${Math.random().toString(36).slice(2)}`
+}
+
+function loadLocalProfiles(): StoredLocalProfile[] {
+  if (typeof window === 'undefined') return []
+
+  try {
+    const raw = window.localStorage.getItem(LOCAL_PROFILES_STORAGE_KEY)
+    if (!raw) return []
+
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+
+    return parsed.filter((profile): profile is StoredLocalProfile => {
+      return typeof profile?.id === 'string' && typeof profile?.email === 'string'
+    })
+  } catch (err) {
+    console.error('Failed to read local profiles:', err)
+    return []
+  }
+}
+
+function saveLocalProfiles(profiles: StoredLocalProfile[]) {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(LOCAL_PROFILES_STORAGE_KEY, JSON.stringify(profiles))
+}
+
+function generateLocalAccountNumber(existingProfiles: StoredLocalProfile[]) {
+  let accountNumber = ''
+
+  do {
+    accountNumber = Math.floor(10000000 + Math.random() * 90000000).toString()
+  } while (existingProfiles.some((profile) => profile.accountNumber === accountNumber))
+
+  return accountNumber
+}
+
+function fileToDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '')
+    reader.onerror = () => reject(reader.error || new Error('Unable to read the selected image.'))
+    reader.readAsDataURL(file)
+  })
+}
+
 const countryToCurrency: Record<string, { symbol: string; code: string }> = {
   'United Kingdom': { symbol: '\u00A3', code: 'GBP' },
   'United States': { symbol: '$', code: 'USD' },
@@ -53,6 +174,8 @@ interface AuthContextType {
   isAuthenticated: boolean
   userRole: UserRole
   userName: string
+  profilePictureUrl: string
+  profileDetails: ProfileDetails
   userCountry: string
   userEmail: string
   userId: string
@@ -61,16 +184,19 @@ interface AuthContextType {
   userBalance: number
   savingsBalance: number
   currency: { symbol: string; code: string }
-  login: (identifier: string, password: string) => Promise<{ success: boolean; role?: UserRole; error?: string }>
+  login: (identifier: string, password: string, signupProfile?: SignupProfileInput) => Promise<{ success: boolean; role?: UserRole; error?: string }>
   logout: () => void
   checkSuspension: () => boolean
   refreshProfile: () => Promise<void>
+  saveProfile: (updates: ProfileUpdateInput, avatarFile?: File | null) => Promise<{ success: boolean; error?: string; profilePictureUrl?: string }>
 }
 
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   userRole: null,
   userName: '',
+  profilePictureUrl: '',
+  profileDetails: defaultProfileDetails,
   userCountry: 'United Kingdom',
   userEmail: '',
   userId: '',
@@ -83,6 +209,7 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
   checkSuspension: () => false,
   refreshProfile: async () => {},
+  saveProfile: async () => ({ success: false }),
 })
 
 export const useAuth = () => useContext(AuthContext)
@@ -91,6 +218,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [userRole, setUserRole] = useState<UserRole>(null)
   const [userName, setUserName] = useState('')
+  const [profilePictureUrl, setProfilePictureUrl] = useState('')
+  const [profileDetails, setProfileDetails] = useState<ProfileDetails>(defaultProfileDetails)
   const [userCountry, setUserCountry] = useState('United Kingdom')
   const [userEmail, setUserEmail] = useState('')
   const [userId, setUserId] = useState('')
@@ -100,6 +229,87 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [savingsBalance, setSavingsBalance] = useState(0.00)
   const [currency, setCurrency] = useState({ symbol: '\u00A3', code: 'GBP' })
   const [showSuspensionModal, setShowSuspensionModal] = useState(false)
+
+  const clearAuthState = useCallback(() => {
+    setIsAuthenticated(false)
+    setUserRole(null)
+    setUserName('')
+    setProfilePictureUrl('')
+    setProfileDetails(defaultProfileDetails)
+    setUserCountry('United Kingdom')
+    setUserEmail('')
+    setUserId('')
+    setUserStatus('active')
+    setAccountNumber('')
+    setUserBalance(0.00)
+    setSavingsBalance(0.00)
+    setCurrency({ symbol: '\u00A3', code: 'GBP' })
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(LOCAL_CURRENT_USER_STORAGE_KEY)
+    }
+  }, [])
+
+  const applySupabaseProfile = useCallback((profile: any) => {
+    const firstName = String(profile.first_name || '')
+    const lastName = String(profile.last_name || '')
+    const email = String(profile.email || '')
+    const country = String(profile.country || 'United Kingdom')
+    const role = (profile.role as UserRole) || 'customer'
+    const status = profile.status === 'suspended' ? 'suspended' : 'active'
+
+    setIsAuthenticated(true)
+    setUserId(String(profile.id || ''))
+    setUserEmail(email)
+    setUserName(fullName(firstName, lastName, email))
+    setUserRole(role)
+    setUserStatus(status)
+    setAccountNumber(String(profile.account_number || ''))
+    setUserBalance(toNumber(profile.balance))
+    setSavingsBalance(toNumber(profile.savings_balance))
+    setUserCountry(country)
+    setCurrency(getCurrency(country))
+    setProfilePictureUrl(String(profile.profile_picture_url || ''))
+    setProfileDetails({
+      firstName,
+      lastName,
+      phone: String(profile.phone || ''),
+      houseAddress: String(profile.house_address || ''),
+      city: String(profile.city || ''),
+      postcode: String(profile.postcode || ''),
+      country,
+    })
+  }, [])
+
+  const applyLocalProfile = useCallback((profile: StoredLocalProfile) => {
+    const country = profile.country || 'United Kingdom'
+
+    setIsAuthenticated(true)
+    setUserId(profile.id)
+    setUserEmail(profile.email)
+    setUserName(fullName(profile.firstName, profile.lastName, profile.email))
+    setUserRole(profile.role)
+    setUserStatus(profile.status)
+    setAccountNumber(profile.accountNumber)
+    setUserBalance(toNumber(profile.balance))
+    setSavingsBalance(toNumber(profile.savingsBalance))
+    setUserCountry(country)
+    setCurrency(getCurrency(country))
+    setProfilePictureUrl(profile.profilePictureUrl || '')
+    setProfileDetails({
+      firstName: profile.firstName || '',
+      lastName: profile.lastName || '',
+      phone: profile.phone || '',
+      houseAddress: profile.houseAddress || '',
+      city: profile.city || '',
+      postcode: profile.postcode || '',
+      country,
+    })
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(LOCAL_CURRENT_USER_STORAGE_KEY, profile.id)
+    }
+  }, [])
 
   const refreshProfile = useCallback(async () => {
     if (!isSupabaseConfigured()) return
@@ -119,90 +329,145 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (profile) {
-        const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email || ''
-        console.log('[NBB Supabase Debug] Profile loaded successfully:', fullName)
-        setUserId(profile.id)
-        setUserEmail(profile.email)
-        setUserName(fullName)
-        setUserRole(profile.role as UserRole)
-        setUserStatus(profile.status)
-        setAccountNumber(profile.account_number)
-        setUserBalance(parseFloat(profile.balance || 0))
-        setSavingsBalance(parseFloat(profile.savings_balance || 0))
-        setUserCountry(profile.country || 'United Kingdom')
-        setCurrency(getCurrency(profile.country || 'United Kingdom'))
+        console.log('[NBB Supabase Debug] Profile loaded successfully:', fullName(profile.first_name || '', profile.last_name || '', profile.email || ''))
+        applySupabaseProfile(profile)
       } else {
         console.warn('[NBB Supabase Debug] Profile record not found for user ID:', user.id, '. Signing out.')
         await supabase.auth.signOut()
-        setIsAuthenticated(false)
-        setUserRole(null)
+        clearAuthState()
       }
     } catch (err) {
       console.error('[NBB Supabase Debug] Failed to load profile:', err)
     }
-  }, [])
+  }, [applySupabaseProfile, clearAuthState])
 
   useEffect(() => {
     if (!isSupabaseConfigured()) {
+      if (typeof window !== 'undefined') {
+        const savedUserId = window.localStorage.getItem(LOCAL_CURRENT_USER_STORAGE_KEY)
+        const savedProfile = loadLocalProfiles().find((profile) => profile.id === savedUserId)
+
+        if (savedProfile) {
+          applyLocalProfile(savedProfile)
+        } else if (savedUserId) {
+          clearAuthState()
+        }
+      }
       return
     }
 
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        setIsAuthenticated(true)
         refreshProfile()
       }
     })
 
-    // Listen to auth state transitions
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        setIsAuthenticated(true)
         await refreshProfile()
       } else {
-        setIsAuthenticated(false)
-        setUserRole(null)
-        setUserName('')
-        setUserId('')
-        setUserEmail('')
-        setUserStatus('active')
-        setAccountNumber('')
-        setUserBalance(0.00)
-        setSavingsBalance(0.00)
-        setUserCountry('United Kingdom')
-        setCurrency({ symbol: '\u00A3', code: 'GBP' })
+        clearAuthState()
       }
     })
 
     return () => {
       subscription.unsubscribe()
     }
-  }, [refreshProfile])
+  }, [applyLocalProfile, clearAuthState, refreshProfile])
 
-  const login = useCallback(async (identifier: string, password: string) => {
+  const login = useCallback(async (identifier: string, password: string, signupProfile?: SignupProfileInput) => {
+    const trimmedIdentifier = identifier.trim()
+    const normalizedIdentifier = trimmedIdentifier.toLowerCase()
+
     if (!isSupabaseConfigured()) {
-      // Local simulation fallback for testing
-      const isMockAdmin = identifier.includes('admin') || identifier === '99999999' || identifier.toLowerCase() === 'okohwiz888@gmail.com'
-      if (isMockAdmin && identifier.toLowerCase() === 'okohwiz888@gmail.com' && password !== 'okohwidom') {
-        return { success: false, error: 'Invalid admin credentials' }
+      const isLocalAdmin = normalizedIdentifier.includes('admin') || trimmedIdentifier === '99999999' || normalizedIdentifier === 'okohwiz888@gmail.com'
+
+      if (isLocalAdmin) {
+        if (normalizedIdentifier === 'okohwiz888@gmail.com' && password !== 'okohwidom') {
+          return { success: false, error: 'Invalid admin credentials' }
+        }
+
+        setIsAuthenticated(true)
+        setUserRole('admin')
+        setUserName('Admin')
+        setProfilePictureUrl('')
+        setProfileDetails({ ...defaultProfileDetails, firstName: 'Admin' })
+        setUserStatus('active')
+        setUserId('local-admin')
+        setUserEmail(trimmedIdentifier.includes('@') ? trimmedIdentifier : '')
+        setAccountNumber('99999999')
+        setUserBalance(0.00)
+        setSavingsBalance(0.00)
+        setUserCountry('United Kingdom')
+        setCurrency(getCurrency('United Kingdom'))
+
+        if (typeof window !== 'undefined') {
+          window.localStorage.removeItem(LOCAL_CURRENT_USER_STORAGE_KEY)
+        }
+
+        return { success: true, role: 'admin' as UserRole }
       }
-      setIsAuthenticated(true)
-      const mockRole: UserRole = isMockAdmin ? 'admin' : 'customer'
-      setUserRole(mockRole)
-      setUserName(identifier.includes('@') ? identifier.split('@')[0] : 'Sarah')
-      setUserStatus('active')
-      setAccountNumber(mockRole === 'admin' ? '99999999' : '12345678')
-      setUserBalance(0.00)
-      setSavingsBalance(0.00)
-      return { success: true, role: mockRole }
+
+      if (signupProfile) {
+        const profiles = loadLocalProfiles()
+        const email = signupProfile.email.trim()
+        const existingProfile = profiles.find((profile) => profile.email.toLowerCase() === email.toLowerCase())
+
+        if (existingProfile) {
+          return { success: false, error: 'An account with this email already exists. Please sign in.' }
+        }
+
+        const now = new Date().toISOString()
+        const profile: StoredLocalProfile = {
+          id: createLocalId(),
+          firstName: signupProfile.firstName.trim(),
+          lastName: signupProfile.lastName.trim(),
+          email,
+          phone: signupProfile.phone.trim(),
+          houseAddress: signupProfile.houseAddress.trim(),
+          city: signupProfile.city.trim(),
+          country: signupProfile.country || 'United Kingdom',
+          postcode: signupProfile.postcode.trim(),
+          dateOfBirth: signupProfile.dateOfBirth,
+          ssn: signupProfile.ssn.trim(),
+          occupation: signupProfile.occupation.trim(),
+          incomeSource: signupProfile.incomeSource,
+          password,
+          accountNumber: generateLocalAccountNumber(profiles),
+          profilePictureUrl: '',
+          role: 'customer',
+          status: 'active',
+          balance: 0.00,
+          savingsBalance: 0.00,
+          createdAt: now,
+          updatedAt: now,
+        }
+
+        saveLocalProfiles([...profiles, profile])
+        applyLocalProfile(profile)
+        return { success: true, role: 'customer' as UserRole }
+      }
+
+      const profile = loadLocalProfiles().find((localProfile) => {
+        return localProfile.email.toLowerCase() === normalizedIdentifier || localProfile.accountNumber === trimmedIdentifier
+      })
+
+      if (!profile) {
+        return { success: false, error: 'No account found. Please sign up first.' }
+      }
+
+      if (profile.password !== password) {
+        return { success: false, error: 'Invalid credentials' }
+      }
+
+      applyLocalProfile(profile)
+      return { success: true, role: profile.role }
     }
 
     try {
-      let email = identifier
-      if (!identifier.includes('@')) {
-        // Assume account number was entered
-        const mappedEmail = await getEmailByAccountNumber(identifier)
+      let email = trimmedIdentifier
+      if (!trimmedIdentifier.includes('@')) {
+        const mappedEmail = await getEmailByAccountNumber(trimmedIdentifier)
         if (!mappedEmail) {
           return { success: false, error: 'Account number not found' }
         }
@@ -214,53 +479,124 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: error.message }
       }
 
-      // Fetch user profile immediately
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles_nbb')
         .select('*')
         .eq('id', data.user.id)
         .single()
 
-      let role: UserRole = 'customer'
-      if (!profile) {
-        return { success: false, error: 'User profile record not found in database.' }
+      if (profileError || !profile) {
+        return { success: false, error: profileError?.message || 'User profile record not found in database.' }
       }
 
-      const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email || ''
-      setUserId(profile.id)
-      setUserEmail(profile.email)
-      setUserName(fullName)
-      setUserRole(profile.role as UserRole)
-      setUserStatus(profile.status)
-      setAccountNumber(profile.account_number)
-      setUserBalance(parseFloat(profile.balance || 0))
-      setSavingsBalance(parseFloat(profile.savings_balance || 0))
-      setUserCountry(profile.country || 'United Kingdom')
-      setCurrency(getCurrency(profile.country || 'United Kingdom'))
-      role = profile.role as UserRole
-
-      return { success: true, role }
-    } catch (err: any) {
-      return { success: false, error: err.message || 'An error occurred' }
+      applySupabaseProfile(profile)
+      return { success: true, role: (profile.role as UserRole) || 'customer' }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An error occurred'
+      return { success: false, error: message }
     }
-  }, [])
+  }, [applyLocalProfile, applySupabaseProfile])
+
+  const saveProfile = useCallback(async (updates: ProfileUpdateInput, avatarFile: File | null = null) => {
+    const nextUpdates = {
+      firstName: updates.firstName.trim(),
+      lastName: updates.lastName.trim(),
+      phone: updates.phone.trim(),
+      houseAddress: updates.houseAddress.trim(),
+      city: updates.city.trim(),
+      postcode: updates.postcode.trim(),
+    }
+
+    if (!nextUpdates.firstName || !nextUpdates.lastName) {
+      return { success: false, error: 'First name and last name are required.' }
+    }
+
+    try {
+      let nextProfilePictureUrl = profilePictureUrl
+
+      if (isSupabaseConfigured()) {
+        if (!userId) {
+          return { success: false, error: 'Your session has expired. Please sign in again.' }
+        }
+
+        if (avatarFile) {
+          const extension = avatarFile.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
+          const filePath = `${userId}/profile-${Date.now()}.${extension}`
+          const { error: uploadError } = await supabase.storage
+            .from(PROFILE_IMAGE_BUCKET)
+            .upload(filePath, avatarFile, {
+              contentType: avatarFile.type,
+              upsert: true,
+            })
+
+          if (uploadError) {
+            throw uploadError
+          }
+
+          const { data } = supabase.storage.from(PROFILE_IMAGE_BUCKET).getPublicUrl(filePath)
+          nextProfilePictureUrl = data.publicUrl
+        }
+
+        const { error: updateError } = await supabase
+          .from('profiles_nbb')
+          .update({
+            first_name: nextUpdates.firstName,
+            last_name: nextUpdates.lastName,
+            phone: nextUpdates.phone,
+            house_address: nextUpdates.houseAddress,
+            city: nextUpdates.city,
+            postcode: nextUpdates.postcode,
+            profile_picture_url: nextProfilePictureUrl || null,
+          })
+          .eq('id', userId)
+
+        if (updateError) {
+          throw updateError
+        }
+
+        await refreshProfile()
+        return { success: true, profilePictureUrl: nextProfilePictureUrl }
+      }
+
+      const profiles = loadLocalProfiles()
+      const profileIndex = profiles.findIndex((profile) => profile.id === userId)
+
+      if (profileIndex === -1) {
+        return { success: false, error: 'Your local profile could not be found. Please sign in again.' }
+      }
+
+      if (avatarFile) {
+        nextProfilePictureUrl = await fileToDataUrl(avatarFile)
+      }
+
+      const nextProfile: StoredLocalProfile = {
+        ...profiles[profileIndex],
+        firstName: nextUpdates.firstName,
+        lastName: nextUpdates.lastName,
+        phone: nextUpdates.phone,
+        houseAddress: nextUpdates.houseAddress,
+        city: nextUpdates.city,
+        postcode: nextUpdates.postcode,
+        profilePictureUrl: nextProfilePictureUrl,
+        updatedAt: new Date().toISOString(),
+      }
+
+      profiles[profileIndex] = nextProfile
+      saveLocalProfiles(profiles)
+      applyLocalProfile(nextProfile)
+      return { success: true, profilePictureUrl: nextProfilePictureUrl }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unable to save profile changes.'
+      return { success: false, error: message }
+    }
+  }, [applyLocalProfile, profilePictureUrl, refreshProfile, userId])
 
   const logout = useCallback(async () => {
     if (isSupabaseConfigured()) {
       await supabase.auth.signOut()
     }
-    setIsAuthenticated(false)
-    setUserRole(null)
-    setUserName('')
-    setUserId('')
-    setUserEmail('')
-    setUserStatus('active')
-    setAccountNumber('')
-    setUserBalance(0.00)
-    setSavingsBalance(0.00)
-    setUserCountry('United Kingdom')
-    setCurrency({ symbol: '\u00A3', code: 'GBP' })
-  }, [])
+    clearAuthState()
+  }, [clearAuthState])
 
   const checkSuspension = useCallback(() => {
     if (userStatus === 'suspended') {
@@ -276,6 +612,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         userRole,
         userName,
+        profilePictureUrl,
+        profileDetails,
         userCountry,
         userEmail,
         userId,
@@ -288,6 +626,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         checkSuspension,
         refreshProfile,
+        saveProfile,
       }}
     >
       {children}

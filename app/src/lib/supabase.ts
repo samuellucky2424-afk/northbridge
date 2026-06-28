@@ -31,8 +31,8 @@ export function isSupabaseConfigured(): boolean {
  */
 export async function getEmailByAccountNumber(accountNumber: string): Promise<string | null> {
   if (!isSupabaseConfigured()) {
-    console.warn('Supabase not configured. Simulating email retrieval.')
-    return 'sarah.miller@email.com' // Fallback for local demo
+    console.warn('Supabase not configured. Account-number lookup is handled by local auth profiles.')
+    return null
   }
 
   try {

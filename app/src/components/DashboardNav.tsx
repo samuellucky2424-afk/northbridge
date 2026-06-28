@@ -12,7 +12,7 @@ const navItems = [
 
 export default function DashboardNav() {
   const location = useLocation()
-  const { logout, userName } = useAuth()
+  const { logout, userName, profilePictureUrl } = useAuth()
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-b border-light">
@@ -54,10 +54,14 @@ export default function DashboardNav() {
               <span className="absolute top-1 right-1 w-2 h-2 bg-[#D31111] rounded-full" />
             </button>
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-full bg-[#0A1628] flex items-center justify-center">
-                <span className="text-white text-xs font-medium">
-                  {userName ? userName.charAt(0).toUpperCase() : 'U'}
-                </span>
+              <div className="w-8 h-8 rounded-full bg-[#0A1628] flex items-center justify-center overflow-hidden">
+                {profilePictureUrl ? (
+                  <img src={profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-white text-xs font-medium">
+                    {userName ? userName.charAt(0).toUpperCase() : 'U'}
+                  </span>
+                )}
               </div>
               <span className="hidden sm:block text-sm font-medium text-[#0A1628]">
                 {userName || 'User'}
