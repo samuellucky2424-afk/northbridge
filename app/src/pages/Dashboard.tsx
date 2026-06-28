@@ -89,7 +89,7 @@ function MobileMenu({ onSettings, onClose }: { onSettings: () => void; onClose: 
     { label: 'Settings', icon: Settings, action: onSettings },
   ]
   return (
-    <div className="fixed inset-0 z-45 lg:hidden" style={{ top: '64px' }}>
+    <div className="fixed inset-0 z-[55] lg:hidden" style={{ top: '64px' }}>
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="absolute left-0 top-0 bottom-0 w-64 bg-white shadow-xl p-4 space-y-1">
         {menuItems.map((item, i) => (
