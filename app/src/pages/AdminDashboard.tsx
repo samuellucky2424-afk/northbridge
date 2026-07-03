@@ -10,6 +10,17 @@ import {
 } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
+// Helper: convert Firestore Timestamp, string, number, or null to a JS Date
+function toDateSafe(value: unknown): Date {
+  if (!value) return new Date()
+  if (value instanceof Date) return value
+  if (typeof value === 'object' && value !== null && typeof (value as any).toDate === 'function') {
+    return (value as any).toDate()
+  }
+  const d = new Date(value as any)
+  return isNaN(d.getTime()) ? new Date() : d
+}
+
 const countryToCurrency: Record<string, { symbol: string; code: string }> = {
   'United Kingdom': { symbol: '\u00A3', code: 'GBP' },
   'United States': { symbol: '$', code: 'USD' },
@@ -203,7 +214,7 @@ function AdminOverview() {
           // Calculate signups for each day of the week (Mon-Sun)
           const daySignups = [0, 0, 0, 0, 0, 0, 0]
           profiles.forEach((p: any) => {
-            const date = new Date(p.created_at || Date.now())
+            const date = toDateSafe(p.created_at)
             let dayIndex = date.getDay() - 1 // 0 = Mon, 6 = Sun
             if (dayIndex < 0) dayIndex = 6 // Sunday
             if (dayIndex >= 0 && dayIndex < 7) {
@@ -230,7 +241,7 @@ function AdminOverview() {
             amount: parseFloat(t.amount),
             status: t.status,
             currencySymbol: t.profiles_nbb ? getCurrency(t.profiles_nbb.country || 'United Kingdom').symbol : '\u00A3',
-            date: new Date(t.date).toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })
+            date: toDateSafe(t.date).toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })
           })))
         }
       } catch (err: any) {
@@ -443,7 +454,7 @@ function UsersPage() {
           status: u.status === 'suspended' ? 'Suspended' : 'Active',
           balance: parseFloat(u.balance || 0),
           savingsBalance: parseFloat(u.savings_balance || 0),
-          joined: new Date(u.created_at || Date.now()).toISOString().slice(0, 10),
+          joined: toDateSafe(u.created_at).toISOString().slice(0, 10),
           kyc: 'Verified',
           account_number: u.account_number
         })))
@@ -588,7 +599,7 @@ function UsersPage() {
 
     const amount = parseFloat(fundAmount)
     const isSavings = targetWallet === 'savings'
-    const formattedIsoDate = new Date(fundDate).toISOString()
+    const formattedIsoDate = toDateSafe(fundDate).toISOString()
 
     try {
       // Look up profile by account number
@@ -1230,7 +1241,7 @@ function TransactionsPage() {
       category: txn.category || 'Transfers',
       amount: Math.abs(txn.amount).toString(),
       status: txn.status,
-      date: new Date(txn.date).toISOString().slice(0, 16) // datetime-local format
+      date: toDateSafe(txn.date).toISOString().slice(0, 16) // datetime-local format
     })
     setEditSuccess('')
   }
@@ -1256,7 +1267,7 @@ function TransactionsPage() {
           category: editForm.category,
           amount: updatedAmount,
           status: editForm.status,
-          date: new Date(editForm.date).toISOString()
+          date: toDateSafe(editForm.date).toISOString()
         })
         .eq('id', selectedTxn.id)
 
@@ -1330,7 +1341,7 @@ function TransactionsPage() {
               {filtered.map((t, i) => (
                 <tr key={i} className="hover:bg-[#F1F5F9] transition-colors border-b border-light/50 last:border-0">
                   <td className="px-6 py-4 text-xs text-[#64748B]">
-                    <p className="font-semibold">{new Date(t.date).toLocaleDateString('en-GB')}</p>
+                    <p className="font-semibold">{toDateSafe(t.date).toLocaleDateString('en-GB')}</p>
                     <p className="font-mono text-[10px] mt-0.5">{t.id.slice(0, 8).toUpperCase()}</p>
                   </td>
                   <td className="px-6 py-4 text-sm text-[#0A1628] font-medium">{t.user}</td>

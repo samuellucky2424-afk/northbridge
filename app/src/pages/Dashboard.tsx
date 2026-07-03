@@ -3,6 +3,17 @@ import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../App'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+
+function toDateSafe(value: unknown): Date {
+  if (!value) return new Date()
+  if (value instanceof Date) return value
+  if (typeof value === 'object' && value !== null && typeof (value as any).toDate === 'function') {
+    return (value as any).toDate()
+  }
+  const d = new Date(value as any)
+  return isNaN(d.getTime()) ? new Date() : d
+}
+
 import {
   ArrowUpRight, Send, Plus, Snowflake,
   TrendingUp, CreditCard, Wallet, HelpCircle,
@@ -123,8 +134,8 @@ function MobileMenu({ onSettings, onClose }: { onSettings: () => void; onClose: 
 /* ─── Transaction Receipt Modal ─── */
 function TransactionReceiptModal({ txn, onClose, currencySymbol }: { txn: any; onClose: () => void; currencySymbol: string }) {
   if (!txn) return null
-  const formattedDate = new Date(txn.rawDate || txn.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
-  const formattedTime = new Date(txn.rawDate || txn.date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  const formattedDate = toDateSafe(txn.rawDate || txn.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
+  const formattedTime = toDateSafe(txn.rawDate || txn.date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
   
   const isPending = txn.status === 'Pending'
   const isReversed = txn.status === 'Reversed' || txn.status === 'Declined'
@@ -225,7 +236,7 @@ function Overview() {
       if (!error) {
         setTransactions(data && data.length > 0 ? data.map((txn: any) => ({
           id: txn.id,
-          date: new Date(txn.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
+          date: toDateSafe(txn.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
           rawDate: txn.date,
           desc: txn.description,
           cat: txn.category,
@@ -462,7 +473,7 @@ function AccountsPage() {
           id: t.id,
           desc: t.description,
           amount: parseFloat(t.amount),
-          date: new Date(t.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
+          date: toDateSafe(t.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
           rawDate: t.date,
           status: t.status || 'Completed'
         })) : [])
