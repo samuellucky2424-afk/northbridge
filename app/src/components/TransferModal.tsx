@@ -451,7 +451,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
         {step === 'receipt' && (
           <div className="p-6">
             {/* Receipt Card */}
-            <div className="bg-white border-2 border-amber-500 rounded-2xl overflow-hidden shadow-soft">
+            <div id="printable-receipt" className="bg-white border-2 border-amber-500 rounded-2xl overflow-hidden shadow-soft">
               {/* Receipt Header */}
               <div className="bg-amber-500 px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center space-x-2">

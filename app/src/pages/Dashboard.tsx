@@ -218,7 +218,7 @@ function TransactionReceiptModal({ txn, onClose, currencySymbol }: { txn: any; o
         </div>
         
         <div className="p-6">
-          <div className="border-2 rounded-2xl overflow-hidden shadow-soft bg-white" style={{ borderColor: isPending ? '#F59E0B' : isReversed ? '#EF4444' : '#10B981' }}>
+          <div id="printable-receipt" className="border-2 rounded-2xl overflow-hidden shadow-soft bg-white" style={{ borderColor: isPending ? '#F59E0B' : isReversed ? '#EF4444' : '#10B981' }}>
             <div className="px-6 py-4 flex items-center justify-between text-white" style={{ backgroundColor: isPending ? '#F59E0B' : isReversed ? '#EF4444' : '#10B981' }}>
               <div className="flex items-center space-x-2">
                 {isPending ? <Clock size={20} /> : <Check size={20} />}

@@ -379,7 +379,61 @@
   background: #1E293B !important;
 }
 
+
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #64748B !important;
 }
+
+/* ─── Print Styles for Receipts ─── */
+@media print {
+  /* Hide all elements on the body */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Make the printable receipt and all its descendants visible */
+  #printable-receipt,
+  #printable-receipt * {
+    visibility: visible !important;
+  }
+
+  /* Style and position the receipt on the printed page */
+  #printable-receipt {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50px !important;
+    transform: translateX(-50%) !important;
+    width: 100% !important;
+    max-width: 480px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    border: 2px solid #E2E8F0 !important;
+    border-radius: 16px !important;
+    box-shadow: none !important;
+    background-color: white !important;
+  }
+
+  /* Ensure text colors are printed clearly (override dark mode styles during print) */
+  #printable-receipt .text-\[\#0A1628\],
+  #printable-receipt .text-slate,
+  #printable-receipt .text-\[\#64748B\],
+  #printable-receipt p,
+  #printable-receipt span,
+  #printable-receipt div {
+    color: #0A1628 !important;
+  }
+
+  #printable-receipt .text-white,
+  #printable-receipt .text-white * {
+    color: white !important;
+  }
+
+  /* Ensure the header bg colors print correctly */
+  #printable-receipt .bg-amber-500 {
+    background-color: #F59E0B !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
 

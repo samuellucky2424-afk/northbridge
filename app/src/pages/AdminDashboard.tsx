@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users, Receipt, BarChart3,
   Search, ChevronLeft, ChevronRight, Bell, LogOut,
   ArrowUpRight, ArrowDownRight, UserCheck,
-  Clock, AlertTriangle, Download, Ban, Plus, Edit, Trash2, X, Menu
+  Clock, AlertTriangle, Download, Ban, Plus, Minus, Edit, Trash2, X, Menu
 } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { db } from '../lib/firebase'
@@ -394,6 +394,16 @@ function UsersPage() {
   const [fundDescription, setFundDescription] = useState('Deposit Funds')
   const [fundDate, setFundDate] = useState(getLocalDatetimeString())
 
+  // Debit Money Modal states
+  const [debitUser, setDebitUser] = useState<any>(null)
+  const [debitAmount, setDebitAmount] = useState('')
+  const [debiting, setDebiting] = useState(false)
+  const [debitSuccess, setDebitSuccess] = useState('')
+  const [debitWallet, setDebitWallet] = useState<'current' | 'savings'>('current')
+  const [debitAccountNumber, setDebitAccountNumber] = useState('')
+  const [debitDescription, setDebitDescription] = useState('Service Charge')
+  const [debitDate, setDebitDate] = useState(getLocalDatetimeString())
+
   // Edit User Modal states
   const [editingUser, setEditingUser] = useState<any>(null)
   const [editUserForm, setEditUserForm] = useState({
@@ -639,6 +649,75 @@ function UsersPage() {
     }
   }
 
+  const handleDebitSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!isSupabaseConfigured()) {
+      alert('Error: Firebase is not configured.')
+      return
+    }
+
+    if (!debitAccountNumber || !debitAmount || parseFloat(debitAmount) <= 0) return
+    setDebiting(true)
+    setDebitSuccess('')
+
+    const amount = parseFloat(debitAmount)
+    const isSavings = debitWallet === 'savings'
+
+    try {
+      const profileQuery = firestoreQuery(
+        collection(db, 'profiles_nbb'),
+        where('account_number', '==', debitAccountNumber)
+      )
+      const profileSnap = await getDocs(profileQuery)
+
+      if (profileSnap.empty) {
+        throw new Error('Account number not found in database')
+      }
+
+      const profileDoc = profileSnap.docs[0]
+      const profile = { id: profileDoc.id, ...profileDoc.data() } as any
+      
+      const balanceColumn = isSavings ? 'savings_balance' : 'balance'
+      const currentBalance = parseFloat(profile[balanceColumn] || 0)
+
+      if (currentBalance < amount) {
+        throw new Error(`Insufficient funds in user's ${isSavings ? 'Savings' : 'Current'} account. Current balance is ${getCurrency(profile.country || 'United Kingdom').symbol}${currentBalance.toFixed(2)}`)
+      }
+
+      const batch = writeBatch(db)
+      const transactionRef = doc(collection(db, 'transactions_nbb'))
+
+      batch.update(doc(db, 'profiles_nbb', profile.id), {
+        [balanceColumn]: increment(-amount),
+      })
+      batch.set(transactionRef, {
+        user_id: profile.id,
+        description: debitDescription || `Fund Debit (Admin Charge - ${isSavings ? 'Savings' : 'Current'})`,
+        category: 'Debit',
+        amount: -amount,
+        status: 'Completed',
+        date: toDateSafe(debitDate),
+        created_at: serverTimestamp(),
+        wallet: debitWallet,
+        created_by: 'admin',
+      })
+
+      await batch.commit()
+
+      const currencySymbol = getCurrency(profile.country || 'United Kingdom').symbol
+      setDebitSuccess(`Successfully debited ${currencySymbol}${amount.toFixed(2)} from ${profile.first_name} ${profile.last_name || ''}'s ${isSavings ? 'Savings' : 'Current'} wallet`)
+      setDebitAmount('')
+      setDebitDescription('Service Charge')
+      setTimeout(() => setDebitUser(null), 1500)
+    } catch (err: any) {
+      console.error('Debiting failed:', err.message)
+      setDebitSuccess(`Error: ${err.message}`)
+    } finally {
+      setDebiting(false)
+      loadUsers()
+    }
+  }
+
   const filtered = users.filter(u => {
     const matchesSearch = u.name.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -705,6 +784,21 @@ function UsersPage() {
             <Plus size={16} />
             <span>Manual Deposit</span>
           </button>
+          <button
+            onClick={() => {
+              setDebitUser({ isManual: true, name: 'Manual Entry', balance: 0, savingsBalance: 0, country: 'United Kingdom' });
+              setDebitAccountNumber('');
+              setDebitDescription('Service Charge');
+              setDebitDate(getLocalDatetimeString());
+              setDebitWallet('current');
+              setDebitSuccess('');
+              setDebitAmount('');
+            }}
+            className="px-4 py-2 rounded-xl text-sm font-medium bg-[#610C04] text-white hover:bg-[#0A1628] transition-all flex items-center space-x-2"
+          >
+            <Minus size={16} />
+            <span>Manual Debit</span>
+          </button>
         </div>
       </div>
 
@@ -762,10 +856,25 @@ function UsersPage() {
                           setFundSuccess('');
                           setFundAmount('');
                         }}
-                        className="p-1.5 hover:bg-[#FEE2E2] text-[#610C04] rounded-lg transition-colors flex items-center space-x-1"
+                        className="p-1.5 hover:bg-slate-100 text-[#10B981] rounded-lg transition-colors flex items-center space-x-1"
                         title="Add Money"
                       >
                         <Plus size={16} /> <span className="text-xs font-medium">Add Money</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setDebitUser(u);
+                          setDebitAccountNumber(u.account_number);
+                          setDebitDescription('Service Charge');
+                          setDebitDate(getLocalDatetimeString());
+                          setDebitWallet('current');
+                          setDebitSuccess('');
+                          setDebitAmount('');
+                        }}
+                        className="p-1.5 hover:bg-slate-100 text-[#EF4444] rounded-lg transition-colors flex items-center space-x-1"
+                        title="Debit Money"
+                      >
+                        <Minus size={16} /> <span className="text-xs font-medium">Debit</span>
                       </button>
                       <button
                         onClick={() => handleEditUserClick(u)}
@@ -924,6 +1033,124 @@ function UsersPage() {
                 </button>
                 <button type="submit" disabled={funding || !fundAmount} className="flex-1 btn-primary py-3 flex items-center justify-center">
                   {funding ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Credit Account'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Debit Funds Modal */}
+      {debitUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0A1628]/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl border border-light shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-light">
+              <h3 className="font-display text-lg text-[#0A1628]">Debit Funds</h3>
+              <button onClick={() => setDebitUser(null)} className="p-1 hover:bg-[#F1F5F9] rounded-lg"><X size={20} className="text-[#64748B]" /></button>
+            </div>
+            <form onSubmit={handleDebitSubmit} className="p-6 space-y-4">
+              {debitSuccess && (
+                <div className={`p-3 border text-sm rounded-xl text-center ${
+                  debitSuccess.startsWith('Error:') 
+                    ? 'bg-red-50 border-red-100 text-[#EF4444]' 
+                    : 'bg-green-50 border-green-100 text-[#10B981]'
+                }`}>
+                  {debitSuccess}
+                </div>
+              )}
+              {debitUser.isManual ? (
+                <div>
+                  <label className="block text-xs font-semibold text-[#0A1628] mb-1.5">Account Number</label>
+                  <input
+                    type="text"
+                    value={debitAccountNumber}
+                    onChange={(e) => setDebitAccountNumber(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-light text-sm text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]"
+                    placeholder="Enter 8-digit account number"
+                    maxLength={8}
+                    required
+                  />
+                </div>
+              ) : (
+                <div className="bg-slate-50 p-4 rounded-xl space-y-1">
+                  <p className="text-xs text-[#64748B]">Debiting user account:</p>
+                  <p className="text-sm font-bold text-[#0A1628]">{debitUser.name}</p>
+                  <p className="text-xs text-[#64748B]">Account Number: <span className="font-mono">{debitUser.account_number}</span></p>
+                  <p className="text-xs text-[#64748B]">Current Balance: <span className="font-semibold">{getCurrency(debitUser.country || 'United Kingdom').symbol}{debitUser.balance.toFixed(2)}</span></p>
+                  <p className="text-xs text-[#64748B]">Savings Balance: <span className="font-semibold">{getCurrency(debitUser.country || 'United Kingdom').symbol}{(debitUser.savingsBalance || 0).toFixed(2)}</span></p>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-semibold text-[#0A1628] mb-1.5">Select Source Wallet</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setDebitWallet('current')}
+                    className={`py-3 rounded-xl border text-sm font-medium transition-all ${
+                      debitWallet === 'current'
+                        ? 'border-[#610C04] bg-[#FEE2E2] text-[#610C04]'
+                        : 'border-light bg-white text-[#64748B] hover:border-[#610C04]'
+                    }`}
+                  >
+                    Current Account
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDebitWallet('savings')}
+                    className={`py-3 rounded-xl border text-sm font-medium transition-all ${
+                      debitWallet === 'savings'
+                        ? 'border-[#610C04] bg-[#FEE2E2] text-[#610C04]'
+                        : 'border-light bg-white text-[#64748B] hover:border-[#610C04]'
+                    }`}
+                  >
+                    Savings Account
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#0A1628] mb-1.5">Amount to Debit ({getCurrency(debitUser.country || 'United Kingdom').symbol})</label>
+                <input
+                  type="number"
+                  value={debitAmount}
+                  onChange={(e) => setDebitAmount(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]"
+                  placeholder="0.00"
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#0A1628] mb-1.5">Transaction Description</label>
+                <input
+                  type="text"
+                  value={debitDescription}
+                  onChange={(e) => setDebitDescription(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]"
+                  placeholder="e.g. Service Charge"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#0A1628] mb-1.5">Transaction Date & Time</label>
+                <input
+                  type="datetime-local"
+                  value={debitDate}
+                  onChange={(e) => setDebitDate(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]"
+                  required
+                />
+              </div>
+
+              <div className="flex space-x-3 pt-2">
+                <button type="button" onClick={() => setDebitUser(null)} className="flex-1 py-3 rounded-xl border border-light text-[#64748B] font-medium text-sm hover:bg-[#F1F5F9]">
+                  Cancel
+                </button>
+                <button type="submit" disabled={debiting || !debitAmount} className="flex-1 btn-primary py-3 flex items-center justify-center bg-[#EF4444] hover:bg-[#D31111]">
+                  {debiting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Debit Account'}
                 </button>
               </div>
             </form>
