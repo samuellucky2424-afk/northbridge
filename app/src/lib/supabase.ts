@@ -20,6 +20,7 @@ import {
   limit,
   serverTimestamp,
   writeBatch,
+  documentId,
   type QueryConstraint,
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
@@ -123,7 +124,8 @@ class QueryBuilder {
   }
 
   eq(field: string, value: unknown) {
-    this.constraints.push(where(field, '==', value))
+    const searchField = field === 'id' ? documentId() : field
+    this.constraints.push(where(searchField, '==', value))
     return this
   }
 
@@ -174,7 +176,8 @@ class QueryBuilder {
       eq: (field: string, value: unknown) => ({
         then: async (resolve: (value: SupabaseResponse) => void) => {
           try {
-            const q = query(collection(db, this.table), where(field, '==', value))
+            const searchField = field === 'id' ? documentId() : field
+            const q = query(collection(db, this.table), where(searchField, '==', value))
             const snap = await getDocs(q)
             const batch = writeBatch(db)
             snap.docs.forEach((d) => batch.update(d.ref, { ...payload, updated_at: serverTimestamp() }))
@@ -193,7 +196,8 @@ class QueryBuilder {
       eq: (field: string, value: unknown) => ({
         then: async (resolve: (value: SupabaseResponse) => void) => {
           try {
-            const q = query(collection(db, this.table), where(field, '==', value))
+            const searchField = field === 'id' ? documentId() : field
+            const q = query(collection(db, this.table), where(searchField, '==', value))
             const snap = await getDocs(q)
             const batch = writeBatch(db)
             snap.docs.forEach((d) => batch.delete(d.ref))
