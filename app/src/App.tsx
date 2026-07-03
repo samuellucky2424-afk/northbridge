@@ -18,7 +18,6 @@ import {
   type ProfileUpdateInput,
   ADMIN_EMAIL,
 } from './lib/auth'
-import { seedUserTransactions } from './lib/db'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -228,7 +227,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Registration path
       if (signupProfile) {
         const { profile: newProfile } = await firebaseSignUp(signupProfile.email, password, signupProfile)
-        await seedUserTransactions(newProfile.uid, newProfile.firstName)
         applyProfile(newProfile)
         return { success: true, role: 'customer' as UserRole }
       }

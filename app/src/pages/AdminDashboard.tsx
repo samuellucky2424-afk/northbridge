@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { collection, doc, getDocs, increment, query as firestoreQuery, serverTimestamp, where, writeBatch } from 'firebase/firestore'
 import { useAuth } from '../App'
 import {
   LayoutDashboard, Users, Receipt, BarChart3,
@@ -9,6 +10,7 @@ import {
   Clock, AlertTriangle, Download, Ban, Plus, Edit, Trash2, X, Menu
 } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { db } from '../lib/firebase'
 
 // Helper: convert Firestore Timestamp, string, number, or null to a JS Date
 function toDateSafe(value: unknown): Date {
@@ -605,48 +607,40 @@ function UsersPage() {
 
     const amount = parseFloat(fundAmount)
     const isSavings = targetWallet === 'savings'
-    const formattedIsoDate = toDateSafe(fundDate).toISOString()
 
     try {
-      // Look up profile by account number
-      const { data: profile, error: lookupError } = await supabase
-        .from('profiles_nbb')
-        .select('*')
-        .eq('account_number', targetAccountNumber)
-        .maybeSingle()
+      const profileQuery = firestoreQuery(
+        collection(db, 'profiles_nbb'),
+        where('account_number', '==', targetAccountNumber)
+      )
+      const profileSnap = await getDocs(profileQuery)
 
-      if (lookupError || !profile) {
+      if (profileSnap.empty) {
         throw new Error('Account number not found in database')
       }
 
-      const currentVal = parseFloat(isSavings ? (profile.savings_balance || 0) : (profile.balance || 0))
-      const newBal = currentVal + amount
+      const profileDoc = profileSnap.docs[0]
+      const profile = { id: profileDoc.id, ...profileDoc.data() } as any
+      const batch = writeBatch(db)
+      const balanceColumn = isSavings ? 'savings_balance' : 'balance'
+      const transactionRef = doc(collection(db, 'transactions_nbb'))
 
-      const updatePayload = isSavings 
-        ? { savings_balance: newBal } 
-        : { balance: newBal }
+      batch.update(doc(db, 'profiles_nbb', profile.id), {
+        [balanceColumn]: increment(amount),
+      })
+      batch.set(transactionRef, {
+        user_id: profile.id,
+        description: fundDescription || `Fund Credit (Admin Deposit - ${isSavings ? 'Savings' : 'Current'})`,
+        category: 'Income',
+        amount,
+        status: 'Completed',
+        date: toDateSafe(fundDate),
+        created_at: serverTimestamp(),
+        wallet: targetWallet,
+        created_by: 'admin',
+      })
 
-      // Update balance
-      const { error: balanceError } = await supabase
-        .from('profiles_nbb')
-        .update(updatePayload)
-        .eq('id', profile.id)
-
-      if (balanceError) throw balanceError
-
-      // Log transaction
-      const { error: txnError } = await supabase
-        .from('transactions_nbb')
-        .insert([{
-          user_id: profile.id,
-          description: fundDescription || `Fund Credit (Admin Deposit - ${isSavings ? 'Savings' : 'Current'})`,
-          category: 'Income',
-          amount: amount,
-          status: 'Completed',
-          date: formattedIsoDate
-        }])
-
-      if (txnError) console.error('Error logging transaction:', txnError)
+      await batch.commit()
 
       const currencySymbol = getCurrency(profile.country || 'United Kingdom').symbol
       setFundSuccess(`Successfully credited ${currencySymbol}${amount.toFixed(2)} to ${profile.first_name} ${profile.last_name || ''}'s ${isSavings ? 'Savings' : 'Current'} wallet`)

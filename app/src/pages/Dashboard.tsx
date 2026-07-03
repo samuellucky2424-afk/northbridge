@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { collection, getDocs, query, where } from 'firebase/firestore'
 import { useAuth } from '../App'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { db } from '../lib/firebase'
 
 function toDateSafe(value: unknown): Date {
   if (!value) return new Date()
@@ -12,6 +13,74 @@ function toDateSafe(value: unknown): Date {
   }
   const d = new Date(value as any)
   return isNaN(d.getTime()) ? new Date() : d
+}
+
+type DemoTransactionMatcher = {
+  description?: string
+  descriptionIncludes?: string[]
+  category: string
+  amount: number
+}
+
+const DEMO_TRANSACTION_MATCHERS: DemoTransactionMatcher[] = [
+  { description: 'Welcome Bonus', category: 'Income', amount: 2500 },
+  { description: 'Tesco Superstore', category: 'Groceries', amount: -47.32 },
+  { descriptionIncludes: ['Salary', 'North Bridge Bank Ltd'], category: 'Income', amount: 3250 },
+  { description: 'Netflix', category: 'Entertainment', amount: -10.99 },
+  { description: 'Uber', category: 'Transport', amount: -12.4 },
+  { description: 'Pizza Express', category: 'Dining', amount: -34.5 },
+]
+
+function normalizeTransactionText(value: unknown): string {
+  return String(value ?? '').replace(/\s+/g, ' ').trim()
+}
+
+function getTransactionAmount(value: unknown): number {
+  const amount = Number(value ?? 0)
+  return Number.isFinite(amount) ? amount : 0
+}
+
+function isSeededDemoTransaction(txn: any): boolean {
+  if (txn.is_demo === true || txn.source === 'demo') return true
+
+  const description = normalizeTransactionText(txn.description ?? txn.desc)
+  const category = normalizeTransactionText(txn.category ?? txn.cat)
+  const amount = getTransactionAmount(txn.amount)
+
+  return DEMO_TRANSACTION_MATCHERS.some((matcher) => {
+    const amountMatches = Math.abs(amount - matcher.amount) < 0.005
+    const categoryMatches = category === matcher.category
+    const descriptionMatches = matcher.description
+      ? description === matcher.description
+      : (matcher.descriptionIncludes || []).every((part) => description.includes(part))
+
+    return amountMatches && categoryMatches && descriptionMatches
+  })
+}
+
+function mapCustomerTransaction(txn: any) {
+  return {
+    id: txn.id,
+    date: toDateSafe(txn.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
+    rawDate: txn.date,
+    desc: normalizeTransactionText(txn.description ?? txn.desc),
+    cat: normalizeTransactionText(txn.category ?? txn.cat) || 'Transfers',
+    amount: getTransactionAmount(txn.amount),
+    status: txn.status || 'Completed',
+  }
+}
+
+async function fetchCustomerTransactions(userId: string, limitCount: number) {
+  const txQuery = query(collection(db, 'transactions_nbb'), where('user_id', '==', userId))
+  const snap = await getDocs(txQuery)
+  const rows = snap.docs
+    .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() } as any))
+    .sort((a, b) => toDateSafe(b.date).getTime() - toDateSafe(a.date).getTime())
+
+  return rows
+    .filter((txn: any) => !isSeededDemoTransaction(txn))
+    .slice(0, limitCount)
+    .map(mapCustomerTransaction)
 }
 
 import {
@@ -209,7 +278,7 @@ function TransactionReceiptModal({ txn, onClose, currencySymbol }: { txn: any; o
 /* ─── Overview Page ─── */
 /* ─── Overview Page ─── */
 function Overview() {
-  const { userName, profilePictureUrl, currency, userId, userBalance, savingsBalance, accountNumber } = useAuth()
+  const { userName, profilePictureUrl, currency, userId, userBalance, savingsBalance, accountNumber, refreshProfile } = useAuth()
   const cs = currency.symbol
   const [showTransfer, setShowTransfer] = useState(false)
   const [transferTypeToOpen, setTransferTypeToOpen] = useState<'domestic' | 'international' | undefined>(undefined)
@@ -221,33 +290,50 @@ function Overview() {
 
   const [transactions, setTransactions] = useState<any[]>([])
 
-
-  useEffect(() => {
-    if (!isSupabaseConfigured() || !userId) return
-
-    async function loadTransactions() {
-      const { data, error } = await supabase
-        .from('transactions_nbb')
-        .select('*')
-        .eq('user_id', userId)
-        .order('date', { ascending: false })
-        .limit(10)
-
-      if (!error) {
-        setTransactions(data && data.length > 0 ? data.map((txn: any) => ({
-          id: txn.id,
-          date: toDateSafe(txn.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
-          rawDate: txn.date,
-          desc: txn.description,
-          cat: txn.category,
-          amount: parseFloat(txn.amount),
-          status: txn.status || 'Completed'
-        })) : [])
-      }
+  const loadTransactions = useCallback(async () => {
+    if (!userId) {
+      setTransactions([])
+      return
     }
 
-    loadTransactions()
+    try {
+      setTransactions(await fetchCustomerTransactions(userId, 10))
+    } catch (err) {
+      console.error('Error loading customer transactions:', err)
+    }
   }, [userId])
+
+  useEffect(() => {
+    const initialLoadId = window.setTimeout(() => {
+      void loadTransactions()
+    }, 0)
+
+    const refreshDashboardData = () => {
+      void refreshProfile()
+      void loadTransactions()
+    }
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) refreshDashboardData()
+    }
+
+    window.addEventListener('focus', refreshDashboardData)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    const intervalId = window.setInterval(refreshDashboardData, 15000)
+
+    return () => {
+      window.clearTimeout(initialLoadId)
+      window.removeEventListener('focus', refreshDashboardData)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.clearInterval(intervalId)
+    }
+  }, [loadTransactions, refreshProfile])
+
+  const handleCloseAddMoney = () => {
+    setShowAddMoney(false)
+    void refreshProfile()
+    void loadTransactions()
+  }
 
   const showToast = (msg: string) => setToast(msg)
 
@@ -442,7 +528,7 @@ function Overview() {
 
       {/* Modals */}
       {showTransfer && <TransferModal onClose={() => setShowTransfer(false)} initialType={transferTypeToOpen} />}
-      {showAddMoney && <AddMoneyModal onClose={() => setShowAddMoney(false)} currencySymbol={cs} />}
+      {showAddMoney && <AddMoneyModal onClose={handleCloseAddMoney} currencySymbol={cs} />}
       {showCryptoWithdraw && <CryptoWithdrawModal onClose={() => setShowCryptoWithdraw(false)} />}
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
       {selectedTxn && <TransactionReceiptModal txn={selectedTxn} onClose={() => setSelectedTxn(null)} currencySymbol={cs} />}
@@ -452,35 +538,50 @@ function Overview() {
 
 /* ─── Accounts Page ─── */
 function AccountsPage() {
-  const { currency, userBalance, savingsBalance, accountNumber, userId } = useAuth()
+  const { currency, userBalance, savingsBalance, accountNumber, userId, refreshProfile } = useAuth()
   const cs = currency.symbol
   const [expandedAccount, setExpandedAccount] = useState<number | null>(0)
   const [selectedTxn, setSelectedTxn] = useState<any>(null)
   const [transactions, setTransactions] = useState<any[]>([])
 
+  const loadTransactions = useCallback(async () => {
+    if (!userId) {
+      setTransactions([])
+      return
+    }
+
+    try {
+      setTransactions(await fetchCustomerTransactions(userId, 5))
+    } catch (err) {
+      console.error('Error loading account transactions:', err)
+    }
+  }, [userId])
 
   useEffect(() => {
-    if (!isSupabaseConfigured() || !userId) return
-    async function load() {
-      const { data, error } = await supabase
-        .from('transactions_nbb')
-        .select('*')
-        .eq('user_id', userId)
-        .order('date', { ascending: false })
-        .limit(5)
-      if (!error) {
-        setTransactions(data && data.length > 0 ? data.map((t: any) => ({
-          id: t.id,
-          desc: t.description,
-          amount: parseFloat(t.amount),
-          date: toDateSafe(t.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
-          rawDate: t.date,
-          status: t.status || 'Completed'
-        })) : [])
-      }
+    const initialLoadId = window.setTimeout(() => {
+      void loadTransactions()
+    }, 0)
+
+    const refreshAccountData = () => {
+      void refreshProfile()
+      void loadTransactions()
     }
-    load()
-  }, [userId])
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) refreshAccountData()
+    }
+
+    window.addEventListener('focus', refreshAccountData)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    const intervalId = window.setInterval(refreshAccountData, 15000)
+
+    return () => {
+      window.clearTimeout(initialLoadId)
+      window.removeEventListener('focus', refreshAccountData)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.clearInterval(intervalId)
+    }
+  }, [loadTransactions, refreshProfile])
 
   const displayAcctNumber = accountNumber ? `****${accountNumber.slice(-4)}` : 'Account pending'
   const currentIban = accountNumber ? `GB29 NWBK 2000 00${accountNumber} 11` : 'Pending'

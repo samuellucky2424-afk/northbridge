@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { X, ArrowRight, Check, CreditCard, Landmark, Wallet } from 'lucide-react'
+import { collection, doc, increment, serverTimestamp, writeBatch } from 'firebase/firestore'
 import { useAuth } from '../App'
+import { db } from '../lib/firebase'
 
 interface AddMoneyModalProps {
   onClose: () => void
@@ -8,16 +10,65 @@ interface AddMoneyModalProps {
 }
 
 export default function AddMoneyModal({ onClose, currencySymbol }: AddMoneyModalProps) {
-  const { checkSuspension } = useAuth()
+  const { checkSuspension, userId, refreshProfile } = useAuth()
   const [step, setStep] = useState<'amount' | 'method' | 'confirm' | 'success'>('amount')
   const [amount, setAmount] = useState('')
   const [method, setMethod] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
 
   const methods = [
     { id: 'bank', label: 'Bank Transfer', desc: 'Transfer from another bank account', icon: Landmark },
     { id: 'card', label: 'Debit Card', desc: 'Instant deposit via card', icon: CreditCard },
     { id: 'wallet', label: 'Digital Wallet', desc: 'Apple Pay or Google Pay', icon: Wallet },
   ]
+
+  const selectedMethodLabel = methods.find((m) => m.id === method)?.label || 'Deposit'
+
+  const handleConfirmDeposit = async () => {
+    if (checkSuspension()) return
+
+    const depositAmount = Number(amount)
+    if (!Number.isFinite(depositAmount) || depositAmount <= 0) {
+      setError('Please enter a valid deposit amount.')
+      return
+    }
+
+    if (!userId) {
+      setError('Your session is missing. Please sign in again.')
+      return
+    }
+
+    setSubmitting(true)
+    setError('')
+
+    try {
+      const batch = writeBatch(db)
+      const profileRef = doc(db, 'profiles_nbb', userId)
+      const transactionRef = doc(collection(db, 'transactions_nbb'))
+
+      batch.update(profileRef, { balance: increment(depositAmount) })
+      batch.set(transactionRef, {
+        user_id: userId,
+        description: `Deposit via ${selectedMethodLabel}`,
+        category: 'Income',
+        amount: depositAmount,
+        status: 'Completed',
+        date: serverTimestamp(),
+        created_at: serverTimestamp(),
+      })
+
+      await batch.commit()
+
+      await refreshProfile()
+      setStep('success')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unable to complete deposit.'
+      setError(message)
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto">
@@ -76,7 +127,7 @@ export default function AddMoneyModal({ onClose, currencySymbol }: AddMoneyModal
             {methods.map((m) => (
               <button
                 key={m.id}
-                onClick={() => { setMethod(m.id); setStep('confirm'); }}
+                onClick={() => { setMethod(m.id); setError(''); setStep('confirm'); }}
                 className="w-full flex items-center space-x-4 p-4 rounded-xl border border-light hover:border-[#610C04] hover:bg-[#FEE2E2]/20 transition-all text-left"
               >
                 <div className="w-12 h-12 rounded-xl bg-[#F1F5F9] flex items-center justify-center flex-shrink-0">
@@ -107,7 +158,7 @@ export default function AddMoneyModal({ onClose, currencySymbol }: AddMoneyModal
               </div>
               <div className="flex justify-between py-2 border-b border-light/50">
                 <span className="text-sm text-[#64748B]">Method</span>
-                <span className="text-sm text-[#0A1628]">{methods.find(m => m.id === method)?.label}</span>
+                <span className="text-sm text-[#0A1628]">{selectedMethodLabel}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-light/50">
                 <span className="text-sm text-[#64748B]">Fee</span>
@@ -118,18 +169,25 @@ export default function AddMoneyModal({ onClose, currencySymbol }: AddMoneyModal
                 <span className="text-sm text-[#0A1628]">Current Account</span>
               </div>
             </div>
+            {error && (
+              <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-sm text-[#EF4444] text-center">
+                {error}
+              </div>
+            )}
             <div className="flex space-x-3">
               <button onClick={() => setStep('method')} className="flex-1 py-3 rounded-xl border border-light text-[#64748B] font-medium text-sm hover:bg-[#F1F5F9] transition-colors">
                 Back
               </button>
               <button
-                onClick={() => {
-                  if (checkSuspension()) return
-                  setStep('success')
-                }}
-                className="flex-1 btn-primary py-3 flex items-center justify-center space-x-2"
+                onClick={handleConfirmDeposit}
+                disabled={submitting}
+                className="flex-1 btn-primary py-3 flex items-center justify-center space-x-2 disabled:opacity-50"
               >
-                <span>Confirm Deposit</span>
+                {submitting ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <span>Confirm Deposit</span>
+                )}
               </button>
             </div>
           </div>
