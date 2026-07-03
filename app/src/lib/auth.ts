@@ -19,6 +19,8 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { auth, db, storage } from './firebase'
 
 export const ADMIN_EMAIL = 'okohwiz889@mail.com'
+const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024
+const ACCEPTED_PROFILE_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
 
 export type UserRole = 'customer' | 'admin' | null
 
@@ -255,8 +257,15 @@ export async function updateUserProfile(
     if (current) profilePictureUrl = current.profilePictureUrl
 
     if (avatarFile) {
+      if (!ACCEPTED_PROFILE_IMAGE_TYPES.has(avatarFile.type)) {
+        throw new Error('Choose a JPG, PNG, WebP, or GIF image.')
+      }
+      if (avatarFile.size > MAX_PROFILE_IMAGE_SIZE) {
+        throw new Error('Profile picture must be 5 MB or smaller.')
+      }
+
       const extension = avatarFile.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
-      const filePath = `${uid}/profile-${Date.now()}.${extension}`
+      const filePath = `profile-pictures/${uid}/profile-${Date.now()}.${extension}`
       const storageRef = ref(storage, filePath)
       await uploadBytes(storageRef, avatarFile, { contentType: avatarFile.type })
       profilePictureUrl = await getDownloadURL(storageRef)

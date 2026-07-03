@@ -15,7 +15,7 @@ import {
   Timestamp,
   writeBatch,
 } from 'firebase/firestore'
-import { db } from './firebase'
+import { auth, db } from './firebase'
 
 export interface FirestoreTransaction {
   id: string
@@ -186,12 +186,32 @@ export async function deleteUserProfile(uid: string) {
 }
 
 export async function generateAndSendOTP(email: string): Promise<boolean> {
+  const normalizedEmail = email.trim().toLowerCase()
   const code = Math.floor(10000000 + Math.random() * 90000000).toString()
-  await setDoc(doc(db, 'otps', email.toLowerCase()), {
+  await setDoc(doc(db, 'otps', normalizedEmail), {
     code,
     created_at: serverTimestamp(),
   })
-  console.log(`[Firebase OTP] Code for ${email}: ${code}`)
+
+  const idToken = await auth.currentUser?.getIdToken()
+  if (!idToken) {
+    throw new Error('Your session expired. Please sign in again.')
+  }
+
+  const response = await fetch('/api/send-otp', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${idToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email: normalizedEmail, code }),
+  })
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null)
+    throw new Error(body?.error || 'Unable to send verification code.')
+  }
+
   return true
 }
 

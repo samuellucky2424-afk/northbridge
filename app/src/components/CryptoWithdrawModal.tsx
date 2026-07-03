@@ -70,8 +70,8 @@ export default function CryptoWithdrawModal({ onClose }: CryptoWithdrawModalProp
       } else {
         setOtpError('Failed to request verification code.')
       }
-    } catch {
-      setOtpError('Failed to trigger OTP email.')
+    } catch (err) {
+      setOtpError(err instanceof Error ? err.message : 'Failed to trigger OTP email.')
     } finally {
       setLoadingOtp(false)
     }
