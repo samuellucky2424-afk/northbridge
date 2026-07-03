@@ -110,12 +110,6 @@ function generateAccountNumber(): string {
 }
 
 export async function generateUniqueAccountNumber(): Promise<string> {
-  const maxAttempts = 20
-  for (let i = 0; i < maxAttempts; i++) {
-    const candidate = generateAccountNumber()
-    const snap = await getDoc(doc(db, 'profiles_nbb', candidate))
-    if (!snap.exists()) return candidate
-  }
   return generateAccountNumber()
 }
 
