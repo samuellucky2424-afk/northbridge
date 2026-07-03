@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, ArrowRight, Shield } from 'lucide-react'
 import { useAuth } from '../App'
+import { getEmailByAccountNumber } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 
 export default function Login() {
@@ -19,7 +20,18 @@ export default function Login() {
     setLoading(true)
 
     try {
-      const res = await login(email, password)
+      let identifier = email.trim()
+      if (!identifier.includes('@')) {
+        const mappedEmail = await getEmailByAccountNumber(identifier)
+        if (!mappedEmail) {
+          setError('Account number not found')
+          setLoading(false)
+          return
+        }
+        identifier = mappedEmail
+      }
+
+      const res = await login(identifier, password)
       if (res.success) {
         if (res.role === 'admin') {
           navigate('/admin')
@@ -29,8 +41,8 @@ export default function Login() {
       } else {
         setError(res.error || 'Invalid credentials')
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred')
+    } catch (err) {
+      setError((err as Error).message || 'An error occurred')
     } finally {
       setLoading(false)
     }

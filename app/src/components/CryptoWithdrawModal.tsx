@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { X, ArrowRight, Shield, ChevronLeft, Clock } from 'lucide-react'
 import { useAuth } from '../App'
@@ -69,7 +70,7 @@ export default function CryptoWithdrawModal({ onClose }: CryptoWithdrawModalProp
       } else {
         setOtpError('Failed to request verification code.')
       }
-    } catch (err: any) {
+    } catch {
       setOtpError('Failed to trigger OTP email.')
     } finally {
       setLoadingOtp(false)

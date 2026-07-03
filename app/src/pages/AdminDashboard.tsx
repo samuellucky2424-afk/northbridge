@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../App'
@@ -196,12 +197,12 @@ function AdminOverview() {
         
         if (profiles) {
           setUserCount(profiles.length)
-          setActiveToday(profiles.filter(p => p.status === 'active' || p.status === 'Active').length)
-          setPendingKyc(profiles.filter(p => p.status === 'suspended' || p.status === 'Suspended').length)
+          setActiveToday(profiles.filter((p: any) => p.status === 'active' || p.status === 'Active').length)
+          setPendingKyc(profiles.filter((p: any) => p.status === 'suspended' || p.status === 'Suspended').length)
 
           // Calculate signups for each day of the week (Mon-Sun)
           const daySignups = [0, 0, 0, 0, 0, 0, 0]
-          profiles.forEach(p => {
+          profiles.forEach((p: any) => {
             const date = new Date(p.created_at || Date.now())
             let dayIndex = date.getDay() - 1 // 0 = Mon, 6 = Sun
             if (dayIndex < 0) dayIndex = 6 // Sunday
@@ -426,7 +427,7 @@ function UsersPage() {
       if (error) throw error
 
       if (data) {
-        setUsers(data.map(u => ({
+        setUsers(data.map((u: any) => ({
           id: u.id,
           firstName: u.first_name,
           lastName: u.last_name,
@@ -1513,7 +1514,7 @@ function AnalyticsPage() {
         if (profiles) {
           let sumCurrent = 0
           let sumSavings = 0
-          profiles.forEach(p => {
+          profiles.forEach((p: any) => {
             sumCurrent += parseFloat(p.balance || 0)
             sumSavings += parseFloat(p.savings_balance || 0)
           })
@@ -1550,7 +1551,7 @@ function AnalyticsPage() {
         if (txns) {
           let dep = 0
           let wit = 0
-          txns.forEach(t => {
+          txns.forEach((t: any) => {
             const amt = parseFloat(t.amount || 0)
             if (amt > 0) {
               dep += amt
@@ -1581,7 +1582,7 @@ function AnalyticsPage() {
 
           let monthlyVol = 0
           if (mTxns && !mError) {
-            mTxns.forEach(t => {
+            mTxns.forEach((t: any) => {
               monthlyVol += Math.abs(parseFloat(t.amount || 0))
             })
           }

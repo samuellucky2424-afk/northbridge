@@ -34,8 +34,8 @@ export default function AdminLogin() {
       } else {
         setError('Unauthorized: Admin access only')
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred during login')
+    } catch (err) {
+      setError((err as Error).message || 'An error occurred during login')
     } finally {
       setLoading(false)
     }

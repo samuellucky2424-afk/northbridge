@@ -1,0 +1,294 @@
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  sendPasswordResetEmail,
+  onAuthStateChanged,
+  updateProfile,
+  type User as FirebaseUser,
+} from 'firebase/auth'
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  serverTimestamp,
+  Timestamp,
+} from 'firebase/firestore'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { auth, db, storage } from './firebase'
+
+export type UserRole = 'customer' | 'admin' | null
+
+export interface UserProfile {
+  uid: string
+  email: string
+  firstName: string
+  lastName: string
+  phone: string
+  houseAddress: string
+  city: string
+  country: string
+  postcode: string
+  dateOfBirth: string
+  ssn: string
+  occupation: string
+  incomeSource: string
+  accountNumber: string
+  balance: number
+  savingsBalance: number
+  profilePictureUrl: string
+  role: UserRole
+  status: 'active' | 'suspended'
+  createdAt?: Date
+}
+
+export interface ProfileUpdateInput {
+  firstName: string
+  lastName: string
+  phone: string
+  houseAddress: string
+  city: string
+  postcode: string
+}
+
+export interface SignupProfileInput {
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  houseAddress: string
+  city: string
+  country: string
+  postcode: string
+  dateOfBirth: string
+  ssn: string
+  occupation: string
+  incomeSource: string
+}
+
+const countryToCurrency: Record<string, { symbol: string; code: string }> = {
+  'United Kingdom': { symbol: '\u00A3', code: 'GBP' },
+  'United States': { symbol: '$', code: 'USD' },
+  'Canada': { symbol: 'C$', code: 'CAD' },
+  'Germany': { symbol: '\u20AC', code: 'EUR' },
+  'France': { symbol: '\u20AC', code: 'EUR' },
+  'Spain': { symbol: '\u20AC', code: 'EUR' },
+  'Netherlands': { symbol: '\u20AC', code: 'EUR' },
+  'Italy': { symbol: '\u20AC', code: 'EUR' },
+  'Ireland': { symbol: '\u20AC', code: 'EUR' },
+  'Australia': { symbol: 'A$', code: 'AUD' },
+  'Nigeria': { symbol: '\u20A6', code: 'NGN' },
+  'India': { symbol: '\u20B9', code: 'INR' },
+  'China': { symbol: '\u00A5', code: 'CNY' },
+  'Japan': { symbol: '\u00A5', code: 'JPY' },
+  'Brazil': { symbol: 'R$', code: 'BRL' },
+  'South Africa': { symbol: 'R', code: 'ZAR' },
+  'UAE': { symbol: '\u062F.\u0625', code: 'AED' },
+  'Switzerland': { symbol: 'CHF', code: 'CHF' },
+  'Sweden': { symbol: 'kr', code: 'SEK' },
+  'Norway': { symbol: 'kr', code: 'NOK' },
+}
+
+export function getCurrency(country: string) {
+  return countryToCurrency[country] || { symbol: '\u00A3', code: 'GBP' }
+}
+
+export function fullName(firstName: string, lastName: string, email = '') {
+  return [firstName, lastName].filter(Boolean).join(' ') || email
+}
+
+export function toNumber(value: unknown): number {
+  const parsed = Number(value ?? 0)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+function generateAccountNumber(): string {
+  return Math.floor(10000000 + Math.random() * 90000000).toString()
+}
+
+export async function generateUniqueAccountNumber(): Promise<string> {
+  const maxAttempts = 20
+  for (let i = 0; i < maxAttempts; i++) {
+    const candidate = generateAccountNumber()
+    const snap = await getDoc(doc(db, 'profiles_nbb', candidate))
+    if (!snap.exists()) return candidate
+  }
+  return generateAccountNumber()
+}
+
+export function mapProfileFromDoc(uid: string, data: Record<string, unknown>): UserProfile {
+  return {
+    uid,
+    email: String(data.email || ''),
+    firstName: String(data.first_name || data.firstName || ''),
+    lastName: String(data.last_name || data.lastName || ''),
+    phone: String(data.phone || ''),
+    houseAddress: String(data.house_address || data.houseAddress || ''),
+    city: String(data.city || ''),
+    country: String(data.country || 'United Kingdom'),
+    postcode: String(data.postcode || ''),
+    dateOfBirth: String(data.date_of_birth || data.dateOfBirth || ''),
+    ssn: String(data.ssn || ''),
+    occupation: String(data.occupation || ''),
+    incomeSource: String(data.income_source || data.incomeSource || ''),
+    accountNumber: String(data.account_number || data.accountNumber || ''),
+    balance: toNumber(data.balance),
+    savingsBalance: toNumber(data.savings_balance || data.savingsBalance),
+    profilePictureUrl: String(data.profile_picture_url || data.profilePictureUrl || ''),
+    role: (data.role as UserRole) || 'customer',
+    status: data.status === 'suspended' ? 'suspended' : 'active',
+    createdAt: data.created_at instanceof Timestamp ? data.created_at.toDate() : undefined,
+  }
+}
+
+export function mapProfileToDoc(profile: Partial<UserProfile>): Record<string, unknown> {
+  return {
+    first_name: profile.firstName || '',
+    last_name: profile.lastName || '',
+    email: profile.email || '',
+    phone: profile.phone || '',
+    house_address: profile.houseAddress || '',
+    city: profile.city || '',
+    country: profile.country || 'United Kingdom',
+    postcode: profile.postcode || '',
+    date_of_birth: profile.dateOfBirth || '',
+    ssn: profile.ssn || '',
+    occupation: profile.occupation || '',
+    income_source: profile.incomeSource || '',
+    account_number: profile.accountNumber || '',
+    balance: profile.balance ?? 0,
+    savings_balance: profile.savingsBalance ?? 0,
+    profile_picture_url: profile.profilePictureUrl || '',
+    role: profile.role || 'customer',
+    status: profile.status || 'active',
+  }
+}
+
+export async function getUserProfile(uid: string): Promise<UserProfile | null> {
+  const snap = await getDoc(doc(db, 'profiles_nbb', uid))
+  if (!snap.exists()) return null
+  return mapProfileFromDoc(uid, snap.data())
+}
+
+export async function createUserProfile(
+  uid: string,
+  input: SignupProfileInput & { accountNumber?: string; role?: UserRole; balance?: number; savingsBalance?: number }
+): Promise<UserProfile> {
+  const accountNumber = input.accountNumber || (await generateUniqueAccountNumber())
+  const profile: UserProfile = {
+    uid,
+    email: input.email,
+    firstName: input.firstName,
+    lastName: input.lastName,
+    phone: input.phone,
+    houseAddress: input.houseAddress,
+    city: input.city,
+    country: input.country || 'United Kingdom',
+    postcode: input.postcode,
+    dateOfBirth: input.dateOfBirth,
+    ssn: input.ssn,
+    occupation: input.occupation,
+    incomeSource: input.incomeSource,
+    accountNumber,
+    balance: input.balance ?? 0,
+    savingsBalance: input.savingsBalance ?? 0,
+    profilePictureUrl: '',
+    role: input.role || 'customer',
+    status: 'active',
+  }
+  await setDoc(doc(db, 'profiles_nbb', uid), {
+    ...mapProfileToDoc(profile),
+    created_at: serverTimestamp(),
+  })
+  return profile
+}
+
+export async function ensureAdminRole(uid: string, email: string): Promise<UserRole> {
+  const ref = doc(db, 'profiles_nbb', uid)
+  const snap = await getDoc(ref)
+  if (!snap.exists()) {
+    await createUserProfile(uid, {
+      firstName: 'Admin',
+      lastName: 'User',
+      email,
+      phone: '',
+      houseAddress: '',
+      city: '',
+      country: 'United Kingdom',
+      postcode: '',
+      dateOfBirth: '',
+      ssn: '',
+      occupation: '',
+      incomeSource: '',
+      role: 'admin',
+    })
+    return 'admin'
+  }
+  return (snap.data().role as UserRole) || null
+}
+
+export async function signUp(email: string, password: string, profile: SignupProfileInput) {
+  const cred = await createUserWithEmailAndPassword(auth, email, password)
+  await updateProfile(cred.user, { displayName: fullName(profile.firstName, profile.lastName, email) })
+  const userProfile = await createUserProfile(cred.user.uid, { ...profile, role: 'customer' })
+  return { user: cred.user, profile: userProfile }
+}
+
+export async function signIn(email: string, password: string) {
+  const cred = await signInWithEmailAndPassword(auth, email, password)
+  return cred.user
+}
+
+export async function signOut() {
+  return firebaseSignOut(auth)
+}
+
+export async function resetPassword(email: string) {
+  return sendPasswordResetEmail(auth, email)
+}
+
+export async function updateUserProfile(
+  uid: string,
+  updates: ProfileUpdateInput,
+  avatarFile?: File | null
+): Promise<{ success: boolean; error?: string; profilePictureUrl?: string }> {
+  try {
+    let profilePictureUrl = ''
+    const current = await getUserProfile(uid)
+    if (current) profilePictureUrl = current.profilePictureUrl
+
+    if (avatarFile) {
+      const extension = avatarFile.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
+      const filePath = `${uid}/profile-${Date.now()}.${extension}`
+      const storageRef = ref(storage, filePath)
+      await uploadBytes(storageRef, avatarFile, { contentType: avatarFile.type })
+      profilePictureUrl = await getDownloadURL(storageRef)
+    }
+
+    const updatePayload: Record<string, unknown> = {
+      first_name: updates.firstName.trim(),
+      last_name: updates.lastName.trim(),
+      phone: updates.phone.trim(),
+      house_address: updates.houseAddress.trim(),
+      city: updates.city.trim(),
+      postcode: updates.postcode.trim(),
+    }
+    if (profilePictureUrl) {
+      updatePayload.profile_picture_url = profilePictureUrl
+    }
+
+    await updateDoc(doc(db, 'profiles_nbb', uid), updatePayload)
+    return { success: true, profilePictureUrl }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unable to save profile changes.'
+    return { success: false, error: message }
+  }
+}
+
+export async function refreshUserProfile(uid: string): Promise<UserProfile | null> {
+  return getUserProfile(uid)
+}
+
+export { onAuthStateChanged, auth, db, storage }
+export type { FirebaseUser }

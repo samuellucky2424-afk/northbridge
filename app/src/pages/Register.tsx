@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, ArrowRight, Check, ChevronLeft, Crown } from 'lucide-react'
 import { useAuth } from '../App'
 import Navbar from '../components/Navbar'
-import { supabase, isSupabaseConfigured, generateUniqueAccountNumber } from '../lib/supabase'
 
 export default function Register() {
   const [step, setStep] = useState(1)
@@ -94,8 +93,9 @@ export default function Register() {
     e.preventDefault()
     if (!validateStep(step)) return
     setLoading(true)
+    setError('')
 
-    if (!isSupabaseConfigured()) {
+    try {
       const result = await login(form.email, form.password, {
         firstName: form.firstName,
         lastName: form.lastName,
@@ -116,74 +116,8 @@ export default function Register() {
       } else {
         setError(result.error || 'Unable to create your account')
       }
-
-      setLoading(false)
-      return
-    }
-
-    try {
-      // 1. Sign up the user in Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
-        options: {
-          data: {
-            first_name: form.firstName,
-            last_name: form.lastName,
-          }
-        }
-      })
-
-      if (authError) {
-        setError(authError.message)
-        setLoading(false)
-        return
-      }
-
-      if (!authData.user) {
-        setError('Signup complete. Please check your email for a verification link or try signing in.')
-        setLoading(false)
-        return
-      }
-
-      // 2. Generate a unique account number
-      const accountNumber = await generateUniqueAccountNumber()
-
-      // 3. Create the user profile in profiles_nbb
-      const { error: profileError } = await supabase
-        .from('profiles_nbb')
-        .insert([{
-          id: authData.user.id,
-          first_name: form.firstName,
-          last_name: form.lastName,
-          email: form.email,
-          phone: form.phone,
-          house_address: form.houseAddress,
-          city: form.city,
-          country: form.country,
-          postcode: form.postcode,
-          date_of_birth: form.dateOfBirth,
-          ssn: form.ssn,
-          occupation: form.occupation,
-          income_source: form.incomeSource,
-          account_number: accountNumber,
-          balance: 0.00,
-          savings_balance: 0.00,
-          role: 'customer',
-          status: 'active'
-        }])
-
-      if (profileError) {
-        setError(profileError.message)
-        setLoading(false)
-        return
-      }
-
-      // 4. Log in the user in our Context
-      await login(form.email, form.password)
-      navigate('/dashboard')
-    } catch (err: any) {
-      setError(err.message || 'An error occurred during registration')
+    } catch (err) {
+      setError((err as Error).message || 'An error occurred during registration')
     } finally {
       setLoading(false)
     }
