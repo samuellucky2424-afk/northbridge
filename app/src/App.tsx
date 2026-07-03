@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
-import { onAuthStateChanged, signOut as firebaseSignOut, createUserWithEmailAndPassword, type User as FirebaseUser } from 'firebase/auth'
+import { onAuthStateChanged, signOut as firebaseSignOut, type User as FirebaseUser } from 'firebase/auth'
 import {
   auth,
   signIn as firebaseSignIn,
@@ -210,26 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // Admin login path (only accessible from the admin portal)
       if (isAdminPortal && normalizedIdentifier === ADMIN_EMAIL.toLowerCase()) {
-        let user: FirebaseUser
-        try {
-          user = await firebaseSignIn(trimmedIdentifier, password)
-        } catch (err) {
-          const code = (err as { code?: string })?.code
-          // Newer Firebase projects return auth/invalid-credential for missing users (email enumeration protection)
-          if (code === 'auth/user-not-found' || code === 'auth/invalid-credential') {
-            try {
-              const cred = await createUserWithEmailAndPassword(auth, trimmedIdentifier, password)
-              user = cred.user
-            } catch (createErr) {
-              if ((createErr as { code?: string })?.code === 'auth/email-already-in-use') {
-                return { success: false, error: 'Invalid email or password. Please try again.' }
-              }
-              throw createErr
-            }
-          } else {
-            throw err
-          }
-        }
+        const user = await firebaseSignIn(trimmedIdentifier, password)
         const role = await ensureAdminRole(user.uid, trimmedIdentifier)
         if (role !== 'admin') {
           return { success: false, error: 'Unauthorized: Admin access only' }
