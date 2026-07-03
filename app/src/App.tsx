@@ -101,6 +101,37 @@ const AuthContext = createContext<AuthContextType>({
 // eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext)
 
+function getFirebaseAuthErrorMessage(err: unknown): string {
+  const code = (err as { code?: string })?.code
+  const message = (err as { message?: string })?.message || ''
+
+  switch (code) {
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential':
+      return 'Invalid email or password. Please try again.'
+    case 'auth/invalid-email':
+      return 'Please enter a valid email address.'
+    case 'auth/user-disabled':
+      return 'This account has been disabled. Please contact support.'
+    case 'auth/too-many-requests':
+      return 'Too many failed attempts. Please try again later.'
+    case 'auth/email-already-in-use':
+      return 'An account with this email already exists. Please sign in.'
+    case 'auth/weak-password':
+      return 'Password is too weak. Please use at least 6 characters.'
+    case 'auth/operation-not-allowed':
+      return 'Email/password sign-in is not enabled in Firebase. Please enable it in the Firebase console.'
+    case 'auth/invalid-api-key':
+      return 'Invalid Firebase API key. Please check your Firebase configuration.'
+    case 'auth/network-request-failed':
+      return 'Network error. Please check your internet connection.'
+    default:
+      // Fall back to Firebase's message, cleaned up
+      return message || 'An error occurred. Please try again.'
+  }
+}
+
 function SuspensionWarningModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   if (!isOpen) return null
   return (
@@ -216,7 +247,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       applyProfile(p)
       return { success: true, role: p.role }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred'
+      const message = getFirebaseAuthErrorMessage(err)
       return { success: false, error: message }
     }
   }, [applyProfile])
