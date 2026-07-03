@@ -70,7 +70,7 @@ interface AuthContextType {
   userBalance: number
   savingsBalance: number
   currency: { symbol: string; code: string }
-  login: (identifier: string, password: string, signupProfile?: SignupProfileInput) => Promise<{ success: boolean; role?: UserRole; error?: string }>
+  login: (identifier: string, password: string, signupProfile?: SignupProfileInput, isAdminPortal?: boolean) => Promise<{ success: boolean; role?: UserRole; error?: string }>
   logout: () => Promise<void>
   checkSuspension: () => boolean
   refreshProfile: () => Promise<void>
@@ -199,13 +199,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null)
   }, [])
 
-  const login = useCallback(async (identifier: string, password: string, signupProfile?: SignupProfileInput) => {
+  const login = useCallback(async (identifier: string, password: string, signupProfile?: SignupProfileInput, isAdminPortal = false) => {
     const trimmedIdentifier = identifier.trim()
     const normalizedIdentifier = trimmedIdentifier.toLowerCase()
 
     try {
-      // Admin login path
-      if (normalizedIdentifier === 'okohwiz888@gmail.com') {
+      // Admin login path (only accessible from the admin portal)
+      if (isAdminPortal && normalizedIdentifier === 'okohwiz888@gmail.com') {
         let user: FirebaseUser
         try {
           user = await firebaseSignIn(trimmedIdentifier, password)
@@ -224,6 +224,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const p = await getUserProfile(user.uid)
         applyProfile(p)
         return { success: true, role: 'admin' as UserRole }
+      }
+
+      // Prevent admin email from signing in through the customer portal
+      if (normalizedIdentifier === 'okohwiz888@gmail.com') {
+        return { success: false, error: 'Please use the admin portal to sign in as an administrator.' }
       }
 
       // Registration path

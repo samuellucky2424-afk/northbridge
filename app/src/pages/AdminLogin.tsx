@@ -26,7 +26,7 @@ export default function AdminLogin() {
     }
 
     try {
-      const res = await login(email, password)
+      const res = await login(email, password, undefined, true)
       if (res.success && res.role === 'admin') {
         navigate('/admin')
       } else if (!res.success) {

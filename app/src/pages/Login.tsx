@@ -148,16 +148,10 @@ export default function Login() {
               </button>
             </form>
 
-            <p className="mt-8 text-center text-sm text-[#64748B] flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
-              <span>
-                Don&apos;t have an account?{' '}
-                <Link to="/register" className="text-[#610C04] font-medium hover:underline">
-                  Get started
-                </Link>
-              </span>
-              <span className="hidden sm:inline text-slate-300">|</span>
-              <Link to="/admin/login" className="text-[#64748B] hover:text-[#610C04] hover:underline font-medium">
-                Admin Portal
+            <p className="mt-8 text-center text-sm text-[#64748B]">
+              Don&apos;t have an account?{' '}
+              <Link to="/register" className="text-[#610C04] font-medium hover:underline">
+                Get started
               </Link>
             </p>
           </div>
