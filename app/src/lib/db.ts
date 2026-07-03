@@ -3,7 +3,6 @@ import {
   doc,
   getDocs,
   getDoc,
-  setDoc,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -187,16 +186,24 @@ export async function deleteUserProfile(uid: string) {
 
 export async function generateAndSendOTP(email: string): Promise<boolean> {
   const normalizedEmail = email.trim().toLowerCase()
-  const code = Math.floor(10000000 + Math.random() * 90000000).toString()
-  await setDoc(doc(db, 'otps', normalizedEmail), {
-    code,
-    created_at: serverTimestamp(),
-  })
+  const currentUser = auth.currentUser
+  const currentEmail = currentUser?.email?.trim().toLowerCase() || ''
 
-  const idToken = await auth.currentUser?.getIdToken()
-  if (!idToken) {
+  if (!currentUser || !currentEmail) {
     throw new Error('Your session expired. Please sign in again.')
   }
+  if (currentEmail !== normalizedEmail) {
+    throw new Error('Your registered email address could not be verified. Please sign in again.')
+  }
+
+  const code = Math.floor(10000000 + Math.random() * 90000000).toString()
+
+  await updateDoc(doc(db, 'profiles_nbb', currentUser.uid), {
+    transfer_otp_code: code,
+    transfer_otp_created_at: serverTimestamp(),
+  })
+
+  const idToken = await currentUser.getIdToken()
 
   const response = await fetch('/api/send-otp', {
     method: 'POST',
@@ -223,13 +230,29 @@ export async function generateAndSendOTP(email: string): Promise<boolean> {
 }
 
 export async function verifyOTP(email: string, otpCode: string): Promise<boolean> {
-  const snap = await getDoc(doc(db, 'otps', email.toLowerCase()))
+  const currentUser = auth.currentUser
+  const normalizedEmail = email.trim().toLowerCase()
+  const currentEmail = currentUser?.email?.trim().toLowerCase() || ''
+
+  if (!currentUser || !currentEmail || currentEmail !== normalizedEmail) return false
+
+  const profileRef = doc(db, 'profiles_nbb', currentUser.uid)
+  const snap = await getDoc(profileRef)
   if (!snap.exists()) return false
   const data = snap.data()
-  const createdAt = data.created_at instanceof Timestamp ? data.created_at.toDate() : new Date(0)
+  const createdAt = data.transfer_otp_created_at instanceof Timestamp ? data.transfer_otp_created_at.toDate() : new Date(0)
   const isExpired = Date.now() - createdAt.getTime() > 10 * 60 * 1000 // 10 minutes
   if (isExpired) return false
-  return data.code === otpCode
+
+  const isValid = String(data.transfer_otp_code || '') === otpCode
+  if (isValid) {
+    await updateDoc(profileRef, {
+      transfer_otp_code: '',
+      transfer_otp_verified_at: serverTimestamp(),
+    }).catch(() => undefined)
+  }
+
+  return isValid
 }
 
 export async function getEmailByAccountNumber(accountNumber: string): Promise<string | null> {
