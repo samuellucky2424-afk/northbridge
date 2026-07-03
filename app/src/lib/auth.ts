@@ -15,11 +15,14 @@ import {
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { auth, db, storage } from './firebase'
+import { auth, db } from './firebase'
 
 export const ADMIN_EMAIL = 'okohwiz889@mail.com'
 const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024
+const MAX_PROFILE_IMAGE_DATA_URL_CHARS = 650 * 1024
+const PROFILE_IMAGE_DIMENSION = 320
+const PROFILE_IMAGE_MIN_DIMENSION = 160
+const PROFILE_IMAGE_QUALITY = 0.78
 const ACCEPTED_PROFILE_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
 
 export type UserRole = 'customer' | 'admin' | null
@@ -246,6 +249,84 @@ export async function resetPassword(email: string) {
   return sendPasswordResetEmail(auth, email)
 }
 
+function validateProfileImageFile(file: File) {
+  if (!ACCEPTED_PROFILE_IMAGE_TYPES.has(file.type)) {
+    throw new Error('Choose a JPG, PNG, WebP, or GIF image.')
+  }
+  if (file.size > MAX_PROFILE_IMAGE_SIZE) {
+    throw new Error('Profile picture must be 5 MB or smaller.')
+  }
+}
+
+function loadImageFromFile(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file)
+    const image = new Image()
+
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+      resolve(image)
+    }
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      reject(new Error('Unable to read that image. Please choose another file.'))
+    }
+    image.src = objectUrl
+  })
+}
+
+function renderProfileImageDataUrl(image: HTMLImageElement, dimension: number, quality: number): string {
+  const sourceWidth = image.naturalWidth || image.width
+  const sourceHeight = image.naturalHeight || image.height
+
+  if (!sourceWidth || !sourceHeight) {
+    throw new Error('Unable to read that image. Please choose another file.')
+  }
+
+  const sourceSize = Math.min(sourceWidth, sourceHeight)
+  const sourceX = Math.max(0, (sourceWidth - sourceSize) / 2)
+  const sourceY = Math.max(0, (sourceHeight - sourceSize) / 2)
+  const canvas = document.createElement('canvas')
+  canvas.width = dimension
+  canvas.height = dimension
+  const context = canvas.getContext('2d')
+
+  if (!context) {
+    throw new Error('Unable to process that image in this browser.')
+  }
+
+  context.fillStyle = '#ffffff'
+  context.fillRect(0, 0, dimension, dimension)
+  context.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, dimension, dimension)
+
+  return canvas.toDataURL('image/jpeg', quality)
+}
+
+async function fileToProfileImageDataUrl(file: File): Promise<string> {
+  validateProfileImageFile(file)
+
+  const image = await loadImageFromFile(file)
+  let dimension = PROFILE_IMAGE_DIMENSION
+  let quality = PROFILE_IMAGE_QUALITY
+  let dataUrl = renderProfileImageDataUrl(image, dimension, quality)
+
+  while (dataUrl.length > MAX_PROFILE_IMAGE_DATA_URL_CHARS && (dimension > PROFILE_IMAGE_MIN_DIMENSION || quality > 0.55)) {
+    if (quality > 0.55) {
+      quality = Math.max(0.55, quality - 0.08)
+    } else {
+      dimension = Math.max(PROFILE_IMAGE_MIN_DIMENSION, Math.round(dimension * 0.75))
+      quality = PROFILE_IMAGE_QUALITY
+    }
+    dataUrl = renderProfileImageDataUrl(image, dimension, quality)
+  }
+
+  if (dataUrl.length > MAX_PROFILE_IMAGE_DATA_URL_CHARS) {
+    throw new Error('Profile picture is too large to save. Please choose a smaller image.')
+  }
+
+  return dataUrl
+}
+
 export async function updateUserProfile(
   uid: string,
   updates: ProfileUpdateInput,
@@ -257,18 +338,7 @@ export async function updateUserProfile(
     if (current) profilePictureUrl = current.profilePictureUrl
 
     if (avatarFile) {
-      if (!ACCEPTED_PROFILE_IMAGE_TYPES.has(avatarFile.type)) {
-        throw new Error('Choose a JPG, PNG, WebP, or GIF image.')
-      }
-      if (avatarFile.size > MAX_PROFILE_IMAGE_SIZE) {
-        throw new Error('Profile picture must be 5 MB or smaller.')
-      }
-
-      const extension = avatarFile.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
-      const filePath = `profile-pictures/${uid}/profile-${Date.now()}.${extension}`
-      const storageRef = ref(storage, filePath)
-      await uploadBytes(storageRef, avatarFile, { contentType: avatarFile.type })
-      profilePictureUrl = await getDownloadURL(storageRef)
+      profilePictureUrl = await fileToProfileImageDataUrl(avatarFile)
     }
 
     const updatePayload: Record<string, unknown> = {
@@ -295,5 +365,5 @@ export async function refreshUserProfile(uid: string): Promise<UserProfile | nul
   return getUserProfile(uid)
 }
 
-export { onAuthStateChanged, auth, db, storage }
+export { onAuthStateChanged, auth, db }
 export type { FirebaseUser }
