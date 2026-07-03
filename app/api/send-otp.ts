@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const RESEND_API_KEY = process.env.RESEND_API_KEY || ''
+const RESEND_API_KEY = process.env.RESEND_API_KEY || process.env.VITE_RESEND_API_KEY || ''
 const RESEND_FROM = process.env.RESEND_FROM || 'North Bridge Bank <onboarding@resend.dev>'
 const FIREBASE_WEB_API_KEY = process.env.FIREBASE_WEB_API_KEY || 'AIzaSyBtUtokjQfOvRlKaXioYz-4BevOSnj6h4w'
 
@@ -84,7 +84,12 @@ export default async function handler(req: any, res: any) {
   })
 
   if (!resendResponse.ok) {
-    sendJson(res, 502, { error: 'Unable to send verification email.' })
+    const resendBody = await resendResponse.json().catch(() => null)
+    const resendMessage = String(resendBody?.message || resendBody?.error || '').trim()
+    sendJson(res, 502, {
+      error: resendMessage || 'Unable to send verification email.',
+      providerStatus: resendResponse.status,
+    })
     return
   }
 

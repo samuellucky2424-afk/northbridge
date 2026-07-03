@@ -207,9 +207,16 @@ export async function generateAndSendOTP(email: string): Promise<boolean> {
     body: JSON.stringify({ email: normalizedEmail, code }),
   })
 
-  if (!response.ok) {
-    const body = await response.json().catch(() => null)
-    throw new Error(body?.error || 'Unable to send verification code.')
+  const responseText = await response.text()
+  let body: { ok?: boolean; error?: string } | null = null
+  try {
+    body = responseText ? JSON.parse(responseText) : null
+  } catch {
+    body = null
+  }
+
+  if (!response.ok || body?.ok !== true) {
+    throw new Error(body?.error || 'Unable to send verification code. Please check the OTP email service configuration.')
   }
 
   return true
