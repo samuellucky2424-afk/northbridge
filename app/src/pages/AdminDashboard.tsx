@@ -21,6 +21,12 @@ function toDateSafe(value: unknown): Date {
   return isNaN(d.getTime()) ? new Date() : d
 }
 
+function getLocalDatetimeString(dateInput?: any): string {
+  const d = dateInput ? toDateSafe(dateInput) : new Date()
+  const offset = d.getTimezoneOffset() * 60000
+  return new Date(d.getTime() - offset).toISOString().slice(0, 16)
+}
+
 const countryToCurrency: Record<string, { symbol: string; code: string }> = {
   'United Kingdom': { symbol: '\u00A3', code: 'GBP' },
   'United States': { symbol: '$', code: 'USD' },
@@ -401,7 +407,7 @@ function UsersPage() {
   const [targetWallet, setTargetWallet] = useState<'current' | 'savings'>('current')
   const [targetAccountNumber, setTargetAccountNumber] = useState('')
   const [fundDescription, setFundDescription] = useState('Deposit Funds')
-  const [fundDate, setFundDate] = useState(new Date().toISOString().slice(0, 16))
+  const [fundDate, setFundDate] = useState(getLocalDatetimeString())
 
   // Edit User Modal states
   const [editingUser, setEditingUser] = useState<any>(null)
@@ -712,7 +718,7 @@ function UsersPage() {
               setSelectedUser({ isManual: true, name: 'Manual Entry', balance: 0, savingsBalance: 0, country: 'United Kingdom' });
               setTargetAccountNumber('');
               setFundDescription('Salary Credit');
-              setFundDate(new Date().toISOString().slice(0, 16));
+              setFundDate(getLocalDatetimeString());
               setTargetWallet('current');
               setFundSuccess('');
               setFundAmount('');
@@ -774,7 +780,7 @@ function UsersPage() {
                           setSelectedUser(u);
                           setTargetAccountNumber(u.account_number);
                           setFundDescription('Salary Credit');
-                          setFundDate(new Date().toISOString().slice(0, 16));
+                          setFundDate(getLocalDatetimeString());
                           setTargetWallet('current');
                           setFundSuccess('');
                           setFundAmount('');
@@ -1241,7 +1247,7 @@ function TransactionsPage() {
       category: txn.category || 'Transfers',
       amount: Math.abs(txn.amount).toString(),
       status: txn.status,
-      date: toDateSafe(txn.date).toISOString().slice(0, 16) // datetime-local format
+      date: getLocalDatetimeString(txn.date) // datetime-local format
     })
     setEditSuccess('')
   }
