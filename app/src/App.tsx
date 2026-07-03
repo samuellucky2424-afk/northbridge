@@ -11,6 +11,7 @@ import {
   getCurrency,
   fullName,
   toNumber,
+  resetPassword as firebaseResetPassword,
   type UserRole,
   type UserProfile,
   type SignupProfileInput,
@@ -73,6 +74,7 @@ interface AuthContextType {
   currency: { symbol: string; code: string }
   login: (identifier: string, password: string, signupProfile?: SignupProfileInput, isAdminPortal?: boolean) => Promise<{ success: boolean; role?: UserRole; error?: string }>
   logout: () => Promise<void>
+  resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>
   checkSuspension: () => boolean
   refreshProfile: () => Promise<void>
   saveProfile: (updates: ProfileUpdateInput, avatarFile?: File | null) => Promise<{ success: boolean; error?: string; profilePictureUrl?: string }>
@@ -94,6 +96,7 @@ const AuthContext = createContext<AuthContextType>({
   currency: { symbol: '\u00A3', code: 'GBP' },
   login: async () => ({ success: false }),
   logout: async () => {},
+  resetPassword: async () => ({ success: false }),
   checkSuspension: () => false,
   refreshProfile: async () => {},
   saveProfile: async () => ({ success: false }),
@@ -211,9 +214,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           user = await firebaseSignIn(trimmedIdentifier, password)
         } catch (err) {
-          if ((err as { code?: string })?.code === 'auth/user-not-found') {
-            const cred = await createUserWithEmailAndPassword(auth, trimmedIdentifier, password)
-            user = cred.user
+          const code = (err as { code?: string })?.code
+          // Newer Firebase projects return auth/invalid-credential for missing users (email enumeration protection)
+          if (code === 'auth/user-not-found' || code === 'auth/invalid-credential') {
+            try {
+              const cred = await createUserWithEmailAndPassword(auth, trimmedIdentifier, password)
+              user = cred.user
+            } catch (createErr) {
+              if ((createErr as { code?: string })?.code === 'auth/email-already-in-use') {
+                return { success: false, error: 'Invalid email or password. Please try again.' }
+              }
+              throw createErr
+            }
           } else {
             throw err
           }
@@ -263,6 +275,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearAuthState()
   }, [clearAuthState])
 
+  const resetPassword = useCallback(async (email: string) => {
+    try {
+      await firebaseResetPassword(email.trim().toLowerCase())
+      return { success: true }
+    } catch (err) {
+      const message = getFirebaseAuthErrorMessage(err)
+      return { success: false, error: message }
+    }
+  }, [])
+
   const saveProfile = useCallback(async (updates: ProfileUpdateInput, avatarFile?: File | null) => {
     if (!firebaseUser) {
       return { success: false, error: 'Your session has expired. Please sign in again.' }
@@ -308,6 +330,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     currency: getCurrency(profile?.country || 'United Kingdom'),
     login,
     logout,
+    resetPassword,
     checkSuspension,
     refreshProfile,
     saveProfile,

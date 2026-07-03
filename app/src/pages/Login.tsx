@@ -11,7 +11,11 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
+  const [showReset, setShowReset] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetMessage, setResetMessage] = useState('')
+  const [resetLoading, setResetLoading] = useState(false)
+  const { login, resetPassword } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,6 +50,24 @@ export default function Login() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleReset = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setResetMessage('')
+    if (!resetEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resetEmail)) {
+      setResetMessage('Please enter a valid email address.')
+      return
+    }
+    setResetLoading(true)
+    const res = await resetPassword(resetEmail)
+    if (res.success) {
+      setResetMessage('Password reset email sent. Check your inbox.')
+      setResetEmail('')
+    } else {
+      setResetMessage(res.error || 'Unable to send reset email.')
+    }
+    setResetLoading(false)
   }
 
   return (
@@ -129,7 +151,13 @@ export default function Login() {
                   <input type="checkbox" className="w-4 h-4 rounded border-light text-[#610C04] focus:ring-[#610C04]" />
                   <span className="text-sm text-[#64748B]">Remember me</span>
                 </label>
-                <span className="text-sm text-[#610C04] hover:underline cursor-pointer">Forgot password?</span>
+                <button
+                  type="button"
+                  onClick={() => setShowReset(!showReset)}
+                  className="text-sm text-[#610C04] hover:underline cursor-pointer bg-transparent border-none p-0"
+                >
+                  Forgot password?
+                </button>
               </div>
 
               <button
@@ -147,6 +175,35 @@ export default function Login() {
                 )}
               </button>
             </form>
+
+            {showReset && (
+              <div className="mt-6 p-5 rounded-xl bg-[#F8FAFC] border border-light">
+                <h3 className="text-sm font-medium text-[#0A1628] mb-2">Reset your password</h3>
+                <p className="text-xs text-[#64748B] mb-4">Enter your email and we&apos;ll send you a reset link.</p>
+                <form onSubmit={handleReset} className="space-y-3">
+                  <input
+                    type="email"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] placeholder:text-[#64748B]/60 focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all"
+                    required
+                  />
+                  {resetMessage && (
+                    <div className={`text-xs p-3 rounded-lg ${resetMessage.includes('sent') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+                      {resetMessage}
+                    </div>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={resetLoading}
+                    className="w-full py-3 rounded-xl font-medium text-sm bg-[#0A1628] text-white hover:bg-[#0A1628]/90 transition-colors disabled:opacity-60"
+                  >
+                    {resetLoading ? 'Sending...' : 'Send reset email'}
+                  </button>
+                </form>
+              </div>
+            )}
 
             <p className="mt-8 text-center text-sm text-[#64748B]">
               Don&apos;t have an account?{' '}
