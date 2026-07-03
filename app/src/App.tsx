@@ -15,6 +15,7 @@ import {
   type UserProfile,
   type SignupProfileInput,
   type ProfileUpdateInput,
+  ADMIN_EMAIL,
 } from './lib/auth'
 import { seedUserTransactions } from './lib/db'
 import Home from './pages/Home'
@@ -205,7 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       // Admin login path (only accessible from the admin portal)
-      if (isAdminPortal && normalizedIdentifier === 'okohwiz888@gmail.com') {
+      if (isAdminPortal && normalizedIdentifier === ADMIN_EMAIL.toLowerCase()) {
         let user: FirebaseUser
         try {
           user = await firebaseSignIn(trimmedIdentifier, password)
@@ -227,7 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // Prevent admin email from signing in through the customer portal
-      if (normalizedIdentifier === 'okohwiz888@gmail.com') {
+      if (normalizedIdentifier === ADMIN_EMAIL.toLowerCase()) {
         return { success: false, error: 'Please use the admin portal to sign in as an administrator.' }
       }
 
@@ -240,7 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // Customer login path
-      const email = trimmedIdentifier.includes('@') ? trimmedIdentifier : `${trimmedIdentifier}@placeholder.nbb`
+      const email = trimmedIdentifier.includes('@') ? trimmedIdentifier.toLowerCase() : `${trimmedIdentifier.toLowerCase()}@placeholder.nbb`
       const user = await firebaseSignIn(email, password)
       const p = await getUserProfile(user.uid)
       if (!p) {

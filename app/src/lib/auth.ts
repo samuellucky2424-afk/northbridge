@@ -18,6 +18,8 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { auth, db, storage } from './firebase'
 
+export const ADMIN_EMAIL = 'okohwiz889@mail.com'
+
 export type UserRole = 'customer' | 'admin' | null
 
 export interface UserProfile {

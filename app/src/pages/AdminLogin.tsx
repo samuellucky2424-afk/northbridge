@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, ArrowRight, ShieldAlert } from 'lucide-react'
 import { useAuth } from '../App'
+import { ADMIN_EMAIL } from '../lib/auth'
 import Navbar from '../components/Navbar'
 
 export default function AdminLogin() {
@@ -19,7 +20,7 @@ export default function AdminLogin() {
     setLoading(true)
 
     // Enforce specific admin credentials constraint
-    if (email.toLowerCase() !== 'okohwiz888@gmail.com') {
+    if (email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
       setError('Unauthorized: Admin access only')
       setLoading(false)
       return
