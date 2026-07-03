@@ -13,14 +13,23 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { db } from '../lib/firebase'
 
 // Helper: convert Firestore Timestamp, string, number, or null to a JS Date
+function isValidDate(date: Date): boolean {
+  return !Number.isNaN(date.getTime())
+}
+
 function toDateSafe(value: unknown): Date {
   if (!value) return new Date()
-  if (value instanceof Date) return value
+  if (value instanceof Date) return isValidDate(value) ? value : new Date()
   if (typeof value === 'object' && value !== null && typeof (value as any).toDate === 'function') {
-    return (value as any).toDate()
+    const d = (value as any).toDate()
+    return d instanceof Date && isValidDate(d) ? d : new Date()
   }
   const d = new Date(value as any)
-  return isNaN(d.getTime()) ? new Date() : d
+  return isValidDate(d) ? d : new Date()
+}
+
+function toDateInputValue(value: unknown): string {
+  return toDateSafe(value).toISOString().slice(0, 10)
 }
 
 function getLocalDatetimeString(dateInput?: any): string {
@@ -202,7 +211,7 @@ function AdminOverview() {
     async function loadStats() {
       setErrorMsg('')
       if (!isSupabaseConfigured()) {
-        setErrorMsg('Supabase is not configured. Please check your environment variables (VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY).')
+        setErrorMsg('Firebase is not configured. Please check your environment variables.')
         return
       }
 
@@ -433,7 +442,7 @@ function UsersPage() {
   const loadUsers = async () => {
     setErrorMsg('')
     if (!isSupabaseConfigured()) {
-      setErrorMsg('Supabase is not configured. Please check your environment variables.')
+      setErrorMsg('Firebase is not configured. Please check your environment variables.')
       return
     }
 
@@ -462,14 +471,14 @@ function UsersPage() {
           status: u.status === 'suspended' ? 'Suspended' : 'Active',
           balance: parseFloat(u.balance || 0),
           savingsBalance: parseFloat(u.savings_balance || 0),
-          joined: toDateSafe(u.created_at).toISOString().slice(0, 10),
+          joined: toDateInputValue(u.created_at),
           kyc: 'Verified',
           account_number: u.account_number
         })))
       }
     } catch (err: any) {
-      console.error('Error fetching users from Supabase:', err)
-      setErrorMsg(`Failed to load users from Supabase: ${err.message}`)
+      console.error('Error fetching users from Firebase:', err)
+      setErrorMsg(`Failed to load users from Firebase: ${err.message}`)
     }
   }
 
@@ -553,7 +562,7 @@ function UsersPage() {
 
   const handleToggleSuspend = async (user: any) => {
     if (!isSupabaseConfigured()) {
-      alert('Error: Supabase is not configured.')
+      alert('Error: Firebase is not configured.')
       return
     }
 
@@ -574,7 +583,7 @@ function UsersPage() {
 
   const handleDeleteUser = async (userId: string) => {
     if (!isSupabaseConfigured()) {
-      alert('Error: Supabase is not configured.')
+      alert('Error: Firebase is not configured.')
       return
     }
 
@@ -597,7 +606,7 @@ function UsersPage() {
   const handleAddFundsSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!isSupabaseConfigured()) {
-      alert('Error: Supabase is not configured.')
+      alert('Error: Firebase is not configured.')
       return
     }
 
@@ -1125,7 +1134,7 @@ function TransactionsPage() {
 
   const handleApproveTransaction = async (txn: any) => {
     if (!isSupabaseConfigured()) {
-      alert('Error: Supabase is not configured.')
+      alert('Error: Firebase is not configured.')
       return
     }
 
@@ -1150,7 +1159,7 @@ function TransactionsPage() {
 
   const handleDeclineTransaction = async (txn: any) => {
     if (!isSupabaseConfigured()) {
-      alert('Error: Supabase is not configured.')
+      alert('Error: Firebase is not configured.')
       return
     }
 
@@ -1199,7 +1208,7 @@ function TransactionsPage() {
   const loadTransactions = async () => {
     setErrorMsg('')
     if (!isSupabaseConfigured()) {
-      setErrorMsg('Supabase is not configured. Please check your environment variables.')
+      setErrorMsg('Firebase is not configured. Please check your environment variables.')
       return
     }
 
@@ -1248,7 +1257,7 @@ function TransactionsPage() {
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     if (!isSupabaseConfigured()) {
-      alert('Error: Supabase is not configured.')
+      alert('Error: Firebase is not configured.')
       return
     }
 
@@ -1508,7 +1517,7 @@ function AnalyticsPage() {
   useEffect(() => {
     setErrorMsg('')
     if (!isSupabaseConfigured()) {
-      setErrorMsg('Supabase is not configured. Please check your environment variables.')
+      setErrorMsg('Firebase is not configured. Please check your environment variables.')
       setLoading(false)
       return
     }
@@ -1741,7 +1750,7 @@ export default function AdminDashboard() {
           {!configured && (
             <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm text-[#D97706] flex items-center space-x-2 font-medium">
               <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              <span>Warning: Supabase is not configured. The dashboard is running in local mock data mode. Please configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY on your hosting provider (e.g. Vercel) to connect to your database.</span>
+              <span>Warning: Firebase is not configured. The dashboard is running in local mock data mode. Please configure the Firebase environment variables on your hosting provider (e.g. Vercel) to connect to your database.</span>
             </div>
           )}
           <Routes>
