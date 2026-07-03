@@ -15,6 +15,7 @@ import {
   writeBatch,
 } from 'firebase/firestore'
 import { auth, db } from './firebase'
+import { getCurrency } from './currency'
 
 export interface FirestoreTransaction {
   id: string
@@ -55,9 +56,62 @@ function mapTransactionFromDoc(id: string, data: Record<string, unknown>): Fires
   }
 }
 
-export async function seedUserTransactions(userId: string, firstName: string) {
+const TRANSFER_OTP_STORAGE_KEY = 'nbb-transfer-otp'
+const TRANSFER_OTP_TTL_MS = 10 * 60 * 1000
+let inMemoryTransferOTP: StoredTransferOTP | null = null
+
+interface StoredTransferOTP {
+  uid: string
+  email: string
+  code: string
+  createdAt: number
+}
+
+function saveTransferOTP(otp: StoredTransferOTP) {
+  inMemoryTransferOTP = otp
+  if (typeof window === 'undefined') return
+  try {
+    sessionStorage.setItem(TRANSFER_OTP_STORAGE_KEY, JSON.stringify(otp))
+  } catch {
+    // The in-memory copy still covers the active verification flow.
+  }
+}
+
+function readTransferOTP(): StoredTransferOTP | null {
+  if (typeof window === 'undefined') return inMemoryTransferOTP
+  let raw: string | null = null
+  try {
+    raw = sessionStorage.getItem(TRANSFER_OTP_STORAGE_KEY)
+  } catch {
+    raw = null
+  }
+  if (!raw && inMemoryTransferOTP) return inMemoryTransferOTP
+  if (!raw) return null
+  try {
+    const parsed = JSON.parse(raw) as StoredTransferOTP
+    if (!parsed.uid || !parsed.email || !/^\d{8}$/.test(parsed.code) || !Number.isFinite(parsed.createdAt)) {
+      return null
+    }
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+function clearTransferOTP() {
+  inMemoryTransferOTP = null
+  if (typeof window === 'undefined') return
+  try {
+    sessionStorage.removeItem(TRANSFER_OTP_STORAGE_KEY)
+  } catch {
+    // Nothing else to clean up when browser storage is blocked.
+  }
+}
+
+export async function seedUserTransactions(userId: string, firstName: string, country = 'United Kingdom') {
   const batch = writeBatch(db)
   const txRef = collection(db, 'transactions_nbb')
+  const currencySymbol = getCurrency(country).symbol
   const seedTx = [
     { user_id: userId, description: 'Welcome Bonus', category: 'Income', amount: 2500, status: 'Completed', date: new Date() },
     { user_id: userId, description: 'Tesco Superstore', category: 'Groceries', amount: -47.32, status: 'Completed', date: new Date(Date.now() - 86_400_000) },
@@ -79,8 +133,12 @@ export async function seedUserTransactions(userId: string, firstName: string) {
     { user_id: userId, title: 'Security Alert', message: 'New login detected from London, UK', time: new Date(Date.now() - 3_600_000), read: false, type: 'warning' },
     { user_id: userId, title: 'Welcome', message: `Welcome to North Bridge Bank, ${firstName}`, time: new Date(), read: true, type: 'info' },
   ]
+  const localizedSeedNotifications = seedNotifications.map((n) => ({
+    ...n,
+    message: n.message.replace(/\u00C2?\u00A3/g, currencySymbol),
+  }))
 
-  seedNotifications.forEach((n) => {
+  localizedSeedNotifications.forEach((n) => {
     const ref = doc(notificationsRef)
     batch.set(ref, { ...n, time: serverTimestamp() })
   })
@@ -197,12 +255,6 @@ export async function generateAndSendOTP(email: string): Promise<boolean> {
   }
 
   const code = Math.floor(10000000 + Math.random() * 90000000).toString()
-
-  await updateDoc(doc(db, 'profiles_nbb', currentUser.uid), {
-    transfer_otp_code: code,
-    transfer_otp_created_at: serverTimestamp(),
-  })
-
   const idToken = await currentUser.getIdToken()
 
   const response = await fetch('/api/send-otp', {
@@ -226,6 +278,13 @@ export async function generateAndSendOTP(email: string): Promise<boolean> {
     throw new Error(body?.error || 'Unable to send verification code. Please check the OTP email service configuration.')
   }
 
+  saveTransferOTP({
+    uid: currentUser.uid,
+    email: normalizedEmail,
+    code,
+    createdAt: Date.now(),
+  })
+
   return true
 }
 
@@ -236,12 +295,28 @@ export async function verifyOTP(email: string, otpCode: string): Promise<boolean
 
   if (!currentUser || !currentEmail || currentEmail !== normalizedEmail) return false
 
+  const storedOtp = readTransferOTP()
+  if (storedOtp) {
+    const isExpired = Date.now() - storedOtp.createdAt > TRANSFER_OTP_TTL_MS
+    const isValid =
+      !isExpired &&
+      storedOtp.uid === currentUser.uid &&
+      storedOtp.email === normalizedEmail &&
+      storedOtp.code === otpCode
+
+    if (isValid || isExpired) {
+      clearTransferOTP()
+    }
+
+    if (isValid) return true
+  }
+
   const profileRef = doc(db, 'profiles_nbb', currentUser.uid)
   const snap = await getDoc(profileRef)
   if (!snap.exists()) return false
   const data = snap.data()
   const createdAt = data.transfer_otp_created_at instanceof Timestamp ? data.transfer_otp_created_at.toDate() : new Date(0)
-  const isExpired = Date.now() - createdAt.getTime() > 10 * 60 * 1000 // 10 minutes
+  const isExpired = Date.now() - createdAt.getTime() > TRANSFER_OTP_TTL_MS
   if (isExpired) return false
 
   const isValid = String(data.transfer_otp_code || '') === otpCode

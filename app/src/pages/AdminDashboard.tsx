@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { db } from '../lib/firebase'
+import { getCurrency } from '../lib/currency'
 
 // Helper: convert Firestore Timestamp, string, number, or null to a JS Date
 function isValidDate(date: Date): boolean {
@@ -36,33 +37,6 @@ function getLocalDatetimeString(dateInput?: any): string {
   const d = dateInput ? toDateSafe(dateInput) : new Date()
   const offset = d.getTimezoneOffset() * 60000
   return new Date(d.getTime() - offset).toISOString().slice(0, 16)
-}
-
-const countryToCurrency: Record<string, { symbol: string; code: string }> = {
-  'United Kingdom': { symbol: '\u00A3', code: 'GBP' },
-  'United States': { symbol: '$', code: 'USD' },
-  'Canada': { symbol: 'C$', code: 'CAD' },
-  'Germany': { symbol: '\u20AC', code: 'EUR' },
-  'France': { symbol: '\u20AC', code: 'EUR' },
-  'Spain': { symbol: '\u20AC', code: 'EUR' },
-  'Netherlands': { symbol: '\u20AC', code: 'EUR' },
-  'Italy': { symbol: '\u20AC', code: 'EUR' },
-  'Ireland': { symbol: '\u20AC', code: 'EUR' },
-  'Australia': { symbol: 'A$', code: 'AUD' },
-  'Nigeria': { symbol: '\u20A6', code: 'NGN' },
-  'India': { symbol: '\u20B9', code: 'INR' },
-  'China': { symbol: '\u00A5', code: 'CNY' },
-  'Japan': { symbol: '\u00A5', code: 'JPY' },
-  'Brazil': { symbol: 'R$', code: 'BRL' },
-  'South Africa': { symbol: 'R', code: 'ZAR' },
-  'UAE': { symbol: '\u062F.\u0625', code: 'AED' },
-  'Switzerland': { symbol: 'CHF', code: 'CHF' },
-  'Sweden': { symbol: 'kr', code: 'SEK' },
-  'Norway': { symbol: 'kr', code: 'NOK' },
-}
-
-function getCurrency(country: string) {
-  return countryToCurrency[country] || { symbol: '\u00A3', code: 'GBP' }
 }
 
 /* ─── Admin Nav ─── */
@@ -909,7 +883,7 @@ function UsersPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#0A1628] mb-1.5">Amount to Add (&pound;)</label>
+                <label className="block text-xs font-semibold text-[#0A1628] mb-1.5">Amount to Add ({getCurrency(selectedUser.country || 'United Kingdom').symbol})</label>
                 <input
                   type="number"
                   value={fundAmount}
@@ -1442,7 +1416,7 @@ function TransactionsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#0A1628] mb-1">Amount (&pound;)</label>
+                  <label className="block text-xs font-medium text-[#0A1628] mb-1">Amount ({selectedTxn?.currencySymbol || '\u00A3'})</label>
                   <input
                     type="number"
                     value={editForm.amount}

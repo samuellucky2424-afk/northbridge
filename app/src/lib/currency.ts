@@ -1,0 +1,61 @@
+export interface CurrencyInfo {
+  symbol: string
+  code: string
+}
+
+export const countryToCurrency: Record<string, CurrencyInfo> = {
+  'United Kingdom': { symbol: '\u00A3', code: 'GBP' },
+  'United States': { symbol: '$', code: 'USD' },
+  'Canada': { symbol: 'C$', code: 'CAD' },
+  'Germany': { symbol: '\u20AC', code: 'EUR' },
+  'France': { symbol: '\u20AC', code: 'EUR' },
+  'Spain': { symbol: '\u20AC', code: 'EUR' },
+  'Netherlands': { symbol: '\u20AC', code: 'EUR' },
+  'Italy': { symbol: '\u20AC', code: 'EUR' },
+  'Ireland': { symbol: '\u20AC', code: 'EUR' },
+  'Australia': { symbol: 'A$', code: 'AUD' },
+  'Nigeria': { symbol: '\u20A6', code: 'NGN' },
+  'India': { symbol: '\u20B9', code: 'INR' },
+  'China': { symbol: '\u00A5', code: 'CNY' },
+  'Japan': { symbol: '\u00A5', code: 'JPY' },
+  'Brazil': { symbol: 'R$', code: 'BRL' },
+  'South Africa': { symbol: 'R', code: 'ZAR' },
+  'UAE': { symbol: '\u062F.\u0625', code: 'AED' },
+  'Switzerland': { symbol: 'CHF', code: 'CHF' },
+  'Sweden': { symbol: 'kr', code: 'SEK' },
+  'Norway': { symbol: 'kr', code: 'NOK' },
+  'Turkey': { symbol: '\u20BA', code: 'TRY' },
+  'Denmark': { symbol: 'kr', code: 'DKK' },
+  'Finland': { symbol: '\u20AC', code: 'EUR' },
+  'Belgium': { symbol: '\u20AC', code: 'EUR' },
+  'Austria': { symbol: '\u20AC', code: 'EUR' },
+  'Portugal': { symbol: '\u20AC', code: 'EUR' },
+  'Greece': { symbol: '\u20AC', code: 'EUR' },
+  'Poland': { symbol: 'z\u0142', code: 'PLN' },
+  'Singapore': { symbol: 'S$', code: 'SGD' },
+  'Hong Kong': { symbol: 'HK$', code: 'HKD' },
+  'New Zealand': { symbol: 'NZ$', code: 'NZD' },
+  'Mexico': { symbol: 'MX$', code: 'MXN' },
+  'Argentina': { symbol: 'AR$', code: 'ARS' },
+  'Chile': { symbol: 'CLP$', code: 'CLP' },
+  'Colombia': { symbol: 'COL$', code: 'COP' },
+  'Egypt': { symbol: 'E\u00A3', code: 'EGP' },
+  'Kenya': { symbol: 'KSh', code: 'KES' },
+  'Ghana': { symbol: 'GH\u20B5', code: 'GHS' },
+  'Morocco': { symbol: 'DH', code: 'MAD' },
+  'Saudi Arabia': { symbol: 'SR', code: 'SAR' },
+  'Qatar': { symbol: 'QR', code: 'QAR' },
+  'Kuwait': { symbol: 'KD', code: 'KWD' },
+  'Malaysia': { symbol: 'RM', code: 'MYR' },
+  'Thailand': { symbol: '\u0E3F', code: 'THB' },
+  'Indonesia': { symbol: 'Rp', code: 'IDR' },
+  'Vietnam': { symbol: '\u20AB', code: 'VND' },
+  'South Korea': { symbol: '\u20A9', code: 'KRW' },
+  'Pakistan': { symbol: '\u20A8', code: 'PKR' },
+  'Bangladesh': { symbol: '\u09F3', code: 'BDT' },
+  'Philippines': { symbol: '\u20B1', code: 'PHP' },
+}
+
+export function getCurrency(country: string): CurrencyInfo {
+  return countryToCurrency[country] || countryToCurrency['United Kingdom']
+}

@@ -16,6 +16,7 @@ import {
   Timestamp,
 } from 'firebase/firestore'
 import { auth, db } from './firebase'
+export { getCurrency } from './currency'
 
 export const ADMIN_EMAIL = 'okohwiz889@mail.com'
 const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024
@@ -72,33 +73,6 @@ export interface SignupProfileInput {
   ssn: string
   occupation: string
   incomeSource: string
-}
-
-const countryToCurrency: Record<string, { symbol: string; code: string }> = {
-  'United Kingdom': { symbol: '\u00A3', code: 'GBP' },
-  'United States': { symbol: '$', code: 'USD' },
-  'Canada': { symbol: 'C$', code: 'CAD' },
-  'Germany': { symbol: '\u20AC', code: 'EUR' },
-  'France': { symbol: '\u20AC', code: 'EUR' },
-  'Spain': { symbol: '\u20AC', code: 'EUR' },
-  'Netherlands': { symbol: '\u20AC', code: 'EUR' },
-  'Italy': { symbol: '\u20AC', code: 'EUR' },
-  'Ireland': { symbol: '\u20AC', code: 'EUR' },
-  'Australia': { symbol: 'A$', code: 'AUD' },
-  'Nigeria': { symbol: '\u20A6', code: 'NGN' },
-  'India': { symbol: '\u20B9', code: 'INR' },
-  'China': { symbol: '\u00A5', code: 'CNY' },
-  'Japan': { symbol: '\u00A5', code: 'JPY' },
-  'Brazil': { symbol: 'R$', code: 'BRL' },
-  'South Africa': { symbol: 'R', code: 'ZAR' },
-  'UAE': { symbol: '\u062F.\u0625', code: 'AED' },
-  'Switzerland': { symbol: 'CHF', code: 'CHF' },
-  'Sweden': { symbol: 'kr', code: 'SEK' },
-  'Norway': { symbol: 'kr', code: 'NOK' },
-}
-
-export function getCurrency(country: string) {
-  return countryToCurrency[country] || { symbol: '\u00A3', code: 'GBP' }
 }
 
 export function fullName(firstName: string, lastName: string, email = '') {

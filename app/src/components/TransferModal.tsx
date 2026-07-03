@@ -44,6 +44,14 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
 
   const purposes = ['Personal', 'Business', 'Family Support', 'Education', 'Medical', 'Investment', 'Goods/Services', 'Other']
   const banks = ['Barclays', 'HSBC', 'Lloyds Bank', 'NatWest', 'Santander UK', 'Nationwide', 'Metro Bank', 'Monzo', 'Starling Bank', 'TSB']
+  const currencySymbol = currency.symbol
+  const currencyLabel = currency.code ? `${currency.symbol} ${currency.code}` : currency.symbol
+  const internationalTransferFee = 15
+
+  const formatMoney = (value: number) =>
+    `${currencySymbol}${value.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
+  const currentTransferAmount = parseFloat((transferType === 'domestic' ? domestic.amount : international.amount) || '0')
 
   const handleFieldChange = (field: string, value: string) => {
     if (transferType === 'domestic') {
@@ -242,8 +250,8 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
                 <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Pay From <span className="text-[#610C04]">*</span></label>
                   <select value={payFrom} onChange={(e) => setPayFrom(e.target.value as 'current' | 'savings')} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] bg-white">
-                    <option value="current">Everyday Current Account ({currency.symbol}{userBalance.toLocaleString('en-GB', { minimumFractionDigits: 2 })})</option>
-                    <option value="savings">Premier Savings Account ({currency.symbol}{savingsBalance.toLocaleString('en-GB', { minimumFractionDigits: 2 })})</option>
+                    <option value="current">Everyday Current Account ({formatMoney(userBalance)})</option>
+                    <option value="savings">Premier Savings Account ({formatMoney(savingsBalance)})</option>
                   </select>
                 </div>
                 <div className="sm:col-span-2">
@@ -262,7 +270,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
                   <input type="text" value={domestic.accountNumber} onChange={(e) => handleFieldChange('accountNumber', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="8 digit account number" maxLength={24} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Amount (&pound;) <span className="text-[#610C04]">*</span></label>
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Amount ({currencyLabel}) <span className="text-[#610C04]">*</span></label>
                   <input type="number" value={domestic.amount} onChange={(e) => handleFieldChange('amount', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="0.00" />
                 </div>
                 <div>
@@ -281,8 +289,8 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
                 <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Pay From <span className="text-[#610C04]">*</span></label>
                   <select value={payFrom} onChange={(e) => setPayFrom(e.target.value as 'current' | 'savings')} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] bg-white">
-                    <option value="current">Everyday Current Account ({currency.symbol}{userBalance.toLocaleString('en-GB', { minimumFractionDigits: 2 })})</option>
-                    <option value="savings">Premier Savings Account ({currency.symbol}{savingsBalance.toLocaleString('en-GB', { minimumFractionDigits: 2 })})</option>
+                    <option value="current">Everyday Current Account ({formatMoney(userBalance)})</option>
+                    <option value="savings">Premier Savings Account ({formatMoney(savingsBalance)})</option>
                   </select>
                 </div>
                 <div className="sm:col-span-2">
@@ -313,7 +321,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
                   <input type="text" value={international.swiftIban} onChange={(e) => handleFieldChange('swiftIban', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="e.g. CHASUS33 or GB29NWBK..." />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Amount (&pound;) <span className="text-[#610C04]">*</span></label>
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Amount ({currencyLabel}) <span className="text-[#610C04]">*</span></label>
                   <input type="number" value={international.amount} onChange={(e) => handleFieldChange('amount', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="0.00" />
                 </div>
                 <div>
@@ -367,13 +375,13 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
 
               <div className="flex justify-between items-center pt-2">
                 <span className="text-sm text-[#64748B]">Amount</span>
-                <span className="text-xl font-light text-[#610C04]">&pound;{parseFloat((transferType === 'domestic' ? domestic.amount : international.amount) || '0').toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span className="text-xl font-light text-[#610C04]">{formatMoney(currentTransferAmount)}</span>
               </div>
 
               {transferType === 'international' && (
                 <div className="flex justify-between items-center py-1">
                   <span className="text-sm text-[#64748B]">Transfer Fee</span>
-                  <span className="text-sm font-medium text-[#0A1628]">&pound;15.00</span>
+                  <span className="text-sm font-medium text-[#0A1628]">{formatMoney(internationalTransferFee)}</span>
                 </div>
               )}
             </div>
@@ -457,7 +465,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
               <div className="p-6 space-y-4 bg-slate-50/50">
                 <div className="text-center mb-4">
                   <p className="text-sm text-[#64748B]">Amount Transferred</p>
-                  <p className="font-display text-3xl text-[#0A1628]">&pound;{parseFloat((transferType === 'domestic' ? domestic.amount : international.amount) || '0').toLocaleString('en-GB', { minimumFractionDigits: 2 })}</p>
+                  <p className="font-display text-3xl text-[#0A1628]">{formatMoney(currentTransferAmount)}</p>
                 </div>
 
                 <div className="border-t border-light pt-4 space-y-3">
@@ -477,7 +485,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
                       <div className="flex justify-between"><span className="text-xs text-[#64748B]">To</span><span className="text-sm text-[#0A1628]">{international.receiverName}</span></div>
                       <div className="flex justify-between"><span className="text-xs text-[#64748B]">Country</span><span className="text-sm text-[#0A1628]">{international.country}</span></div>
                       <div className="flex justify-between"><span className="text-xs text-[#64748B]">SWIFT/IBAN</span><span className="text-sm font-mono text-[#0A1628]">{international.swiftIban.slice(0, 8)}****</span></div>
-                      <div className="flex justify-between"><span className="text-xs text-[#64748B]">Transfer Fee</span><span className="text-sm text-[#0A1628]">&pound;15.00</span></div>
+                      <div className="flex justify-between"><span className="text-xs text-[#64748B]">Transfer Fee</span><span className="text-sm text-[#0A1628]">{formatMoney(internationalTransferFee)}</span></div>
                     </>
                   )}
                   <div className="flex justify-between"><span className="text-xs text-[#64748B]">Purpose</span><span className="text-sm text-[#0A1628]">{transferType === 'domestic' ? domestic.purpose : international.purpose}</span></div>

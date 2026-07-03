@@ -804,14 +804,16 @@ function CardsPage() {
 
 /* ─── Support Page ─── */
 function SupportPage() {
+  const { currency } = useAuth()
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [chatOpen, setChatOpen] = useState(false)
   const [chatText, setChatText] = useState('')
+  const cs = currency.symbol
   const faqs = [
     { q: 'How do I reset my password?', a: 'Go to Settings > Security and select "Change password". You\'ll need to verify your identity via email or SMS.' },
-    { q: 'What are the transfer limits?', a: 'Daily transfer limit is \u00A325,000 for personal accounts and \u00A3100,000 for business accounts.' },
+    { q: 'What are the transfer limits?', a: `Daily transfer limit is ${cs}25,000 for personal accounts and ${cs}100,000 for business accounts.` },
     { q: 'How do I freeze my card?', a: 'Go to the Cards section and tap the "Freeze" button. You can unfreeze it at any time instantly.' },
-    { q: 'Is my money protected?', a: 'Yes, North Bridge Bank is FCA regulated and your deposits are protected up to \u00A385,000 by the FSCS.' },
+    { q: 'Is my money protected?', a: `Yes, North Bridge Bank is FCA regulated and your deposits are protected up to ${cs}85,000 by the FSCS.` },
     { q: 'How do I close my account?', a: 'Please contact our support team via live chat or call us on 0800 123 4567.' },
   ]
   return (
