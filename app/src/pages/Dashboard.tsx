@@ -88,7 +88,7 @@ import {
   TrendingUp, CreditCard, Wallet, HelpCircle,
   ChevronRight, Lock, Eye, ShieldCheck, RefreshCw, Settings,
   Bell, Menu, X, Phone, Mail, MapPin, Clock, Check, Globe, Coins,
-  Home, User, Sparkles, DollarSign
+  Home, User, Sparkles, DollarSign, Download
 } from 'lucide-react'
 import TransferModal from '../components/TransferModal'
 import AddMoneyModal from '../components/AddMoneyModal'
@@ -201,13 +201,71 @@ function MobileMenu({ onSettings, onClose }: { onSettings: () => void; onClose: 
 }
 
 /* ─── Transaction Receipt Modal ─── */
+function downloadReceiptHtml(txn: any, currencySymbol: string) {
+  const formattedDate = toDateSafe(txn.rawDate || txn.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
+  const formattedTime = toDateSafe(txn.rawDate || txn.date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  const isPending = txn.status === 'Pending'
+  const isReversed = txn.status === 'Reversed' || txn.status === 'Declined'
+  const color = isPending ? '#F59E0B' : isReversed ? '#EF4444' : '#10B981'
+  const statusText = isPending ? 'Transfer Pending Approval' : isReversed ? 'Transfer Declined/Reversed' : 'Sent Successfully'
+  const txnId = txn.id?.slice(0, 8).toUpperCase() || 'NBB-TXN'
+  const amount = `${txn.amount > 0 ? '+' : ''}${currencySymbol}${txn.amount.toLocaleString('en-GB', { minimumFractionDigits: 2 })}`
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Receipt ${txnId}</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,sans-serif;background:#f8fafc;display:flex;justify-content:center;padding:40px 20px}
+  .receipt{max-width:480px;width:100%;border:2px solid ${color};border-radius:16px;overflow:hidden;background:#fff}
+  .header{background:${color};color:#fff;padding:16px 24px;display:flex;justify-content:space-between;align-items:center}
+  .header .status{font-weight:600;font-size:14px}
+  .header .id{font-family:monospace;font-size:11px;opacity:.8}
+  .body{padding:24px}
+  .amount{text-align:center;margin-bottom:16px}
+  .amount .label{font-size:12px;color:#64748b}
+  .amount .value{font-size:28px;font-weight:700;color:#0A1628;margin-top:4px}
+  .details{border-top:1px solid #e2e8f0;padding-top:16px}
+  .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9}
+  .row .k{font-size:12px;color:#64748b}
+  .row .v{font-size:13px;color:#0A1628;font-weight:500}
+  .footer{text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:11px;color:#64748b}
+  @media print{body{padding:0;background:#fff}.receipt{border-radius:0;max-width:100%}}
+</style></head><body>
+<div class="receipt">
+  <div class="header"><span class="status">${statusText}</span><span class="id">${txnId}</span></div>
+  <div class="body">
+    <div class="amount"><div class="label">Amount</div><div class="value">${amount}</div></div>
+    <div class="details">
+      <div class="row"><span class="k">Status</span><span class="v" style="color:${color}">${txn.status || 'Completed'}</span></div>
+      <div class="row"><span class="k">Description</span><span class="v">${txn.desc}</span></div>
+      <div class="row"><span class="k">Category</span><span class="v">${txn.cat || 'Transfers'}</span></div>
+      <div class="row"><span class="k">Date</span><span class="v">${formattedDate}</span></div>
+      <div class="row"><span class="k">Time</span><span class="v">${formattedTime}</span></div>
+    </div>
+    <div class="footer">Verified by North Bridge Bank Security</div>
+  </div>
+</div>
+</body></html>`
+
+  const blob = new Blob([html], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `NBB-Receipt-${txnId}.html`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
 function TransactionReceiptModal({ txn, onClose, currencySymbol }: { txn: any; onClose: () => void; currencySymbol: string }) {
   if (!txn) return null
   const formattedDate = toDateSafe(txn.rawDate || txn.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
   const formattedTime = toDateSafe(txn.rawDate || txn.date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-  
+
   const isPending = txn.status === 'Pending'
   const isReversed = txn.status === 'Reversed' || txn.status === 'Declined'
+
+  const handleDownload = () => downloadReceiptHtml(txn, currencySymbol)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
@@ -216,7 +274,7 @@ function TransactionReceiptModal({ txn, onClose, currencySymbol }: { txn: any; o
           <h3 className="font-display text-lg text-[#0A1628]">Transaction Receipt</h3>
           <button onClick={onClose} className="p-1 hover:bg-[#F1F5F9] rounded-lg"><X size={20} className="text-[#64748B]" /></button>
         </div>
-        
+
         <div className="p-6">
           <div id="printable-receipt" className="border-2 rounded-2xl overflow-hidden shadow-soft bg-white" style={{ borderColor: isPending ? '#F59E0B' : isReversed ? '#EF4444' : '#10B981' }}>
             <div className="px-6 py-4 flex items-center justify-between text-white" style={{ backgroundColor: isPending ? '#F59E0B' : isReversed ? '#EF4444' : '#10B981' }}>
@@ -262,8 +320,9 @@ function TransactionReceiptModal({ txn, onClose, currencySymbol }: { txn: any; o
           </div>
 
           <div className="mt-6 space-y-3">
-            <button onClick={() => window.print()} className="w-full py-3 rounded-xl border border-light text-[#64748B] font-medium text-sm hover:bg-[#F1F5F9] transition-colors">
-              Print Receipt
+            <button onClick={handleDownload} className="w-full py-3 rounded-xl border border-light text-[#64748B] font-medium text-sm hover:bg-[#F1F5F9] transition-colors flex items-center justify-center space-x-2">
+              <Download size={16} />
+              <span>Download Receipt</span>
             </button>
             <button onClick={onClose} className="w-full btn-primary py-3.5">
               Close
