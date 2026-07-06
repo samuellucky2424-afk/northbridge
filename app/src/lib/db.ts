@@ -4,6 +4,7 @@ import {
   getDocs,
   getDoc,
   addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   query,
@@ -221,10 +222,17 @@ export async function getUsers(): Promise<Record<string, unknown>[]> {
 }
 
 export async function getUserByAccountNumber(accountNumber: string): Promise<Record<string, unknown> | null> {
-  const q = query(collection(db, 'profiles_nbb'), where('account_number', '==', accountNumber))
-  const snap = await getDocs(q)
-  if (snap.empty) return null
-  return { id: snap.docs[0].id, ...snap.docs[0].data() }
+  const snap = await getDoc(doc(db, 'account_lookup', accountNumber))
+  if (!snap.exists()) return null
+  const data = snap.data()
+  // Fetch the full profile
+  const profileSnap = await getDoc(doc(db, 'profiles_nbb', data.uid))
+  if (!profileSnap.exists()) return null
+  return { id: profileSnap.id, ...profileSnap.data() }
+}
+
+export async function createAccountLookup(accountNumber: string, uid: string, email: string) {
+  await setDoc(doc(db, 'account_lookup', accountNumber), { uid, email, created_at: serverTimestamp() })
 }
 
 export async function updateUserField(uid: string, field: string, value: unknown) {
@@ -331,8 +339,9 @@ export async function verifyOTP(email: string, otpCode: string): Promise<boolean
 }
 
 export async function getEmailByAccountNumber(accountNumber: string): Promise<string | null> {
-  const user = await getUserByAccountNumber(accountNumber)
-  return user ? String(user.email || '') : null
+  const snap = await getDoc(doc(db, 'account_lookup', accountNumber))
+  if (!snap.exists()) return null
+  return String(snap.data().email || '')
 }
 
 export function isSupabaseConfigured(): boolean {

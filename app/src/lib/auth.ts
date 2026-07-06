@@ -207,6 +207,9 @@ export async function signUp(email: string, password: string, profile: SignupPro
   const cred = await createUserWithEmailAndPassword(auth, email, password)
   await updateProfile(cred.user, { displayName: fullName(profile.firstName, profile.lastName, email) })
   const userProfile = await createUserProfile(cred.user.uid, { ...profile, role: 'customer' })
+  // Create account_lookup entry for account number login
+  const { createAccountLookup } = await import('./db')
+  await createAccountLookup(userProfile.accountNumber, cred.user.uid, email.toLowerCase())
   return { user: cred.user, profile: userProfile }
 }
 

@@ -38,5 +38,11 @@ service cloud.firestore {
     match /otps/{email} {
       allow read, write: if request.auth != null && request.auth.token.email == email;
     }
+
+    // Account lookup: allows unauthenticated email lookup by account number for login
+    match /account_lookup/{accountNumber} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
   }
 }
