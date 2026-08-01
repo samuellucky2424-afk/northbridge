@@ -85,7 +85,7 @@ export function toNumber(value: unknown): number {
 }
 
 function generateAccountNumber(): string {
-  return Math.floor(10000000 + Math.random() * 90000000).toString()
+  return Math.floor(1000000000 + Math.random() * 9000000000).toString()
 }
 
 export async function generateUniqueAccountNumber(): Promise<string> {

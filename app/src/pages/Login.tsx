@@ -6,7 +6,7 @@ import { getEmailByAccountNumber } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 
 export default function Login() {
-  const [email, setEmail] = useState('')
+  const [accountNumber, setAccountNumber] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
@@ -24,18 +24,21 @@ export default function Login() {
     setLoading(true)
 
     try {
-      let identifier = email.trim()
-      if (!identifier.includes('@')) {
-        const mappedEmail = await getEmailByAccountNumber(identifier)
-        if (!mappedEmail) {
-          setError('Account number not found')
-          setLoading(false)
-          return
-        }
-        identifier = mappedEmail
+      const identifier = accountNumber.trim()
+      if (identifier.includes('@')) {
+        setError('Please log in using your account number, not your email.')
+        setLoading(false)
+        return
       }
 
-      const res = await login(identifier, password)
+      const mappedEmail = await getEmailByAccountNumber(identifier)
+      if (!mappedEmail) {
+        setError('Account number not found')
+        setLoading(false)
+        return
+      }
+
+      const res = await login(mappedEmail, password)
       if (res.success) {
         if (res.role === 'admin') {
           navigate('/admin')
@@ -114,13 +117,13 @@ export default function Login() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-[#0A1628] mb-2">Account number or email</label>
+                <label className="block text-sm font-medium text-[#0A1628] mb-2">Account number</label>
                 <input
                   type="text"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={accountNumber}
+                  onChange={(e) => setAccountNumber(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] placeholder:text-[#64748B]/60 focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all"
-                  placeholder="e.g. 12345678 or you@example.com"
+                  placeholder="e.g. 1234567890"
                   required
                 />
               </div>

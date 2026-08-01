@@ -42,7 +42,8 @@ service cloud.firestore {
     // Account lookup: allows unauthenticated email lookup by account number for login
     match /account_lookup/{accountNumber} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow create: if request.auth != null;
+      allow update, delete: if isAdmin();
     }
   }
 }

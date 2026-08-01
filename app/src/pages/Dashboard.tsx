@@ -445,8 +445,8 @@ function Overview() {
               <span className="w-1.5 h-1.5 rounded-full bg-green-400 mr-1.5 animate-pulse" />
               Active Account
             </span>
-            <span className="text-xs font-mono tracking-widest text-white/60">
-              {accountNumber ? `**** ${accountNumber.slice(-4)}` : 'Account pending'}
+            <span className="text-sm font-mono tracking-wider text-white">
+              {accountNumber ? `Acc: ${accountNumber}` : 'Account pending'}
             </span>
           </div>
         </div>
@@ -642,7 +642,7 @@ function AccountsPage() {
     }
   }, [loadTransactions, refreshProfile])
 
-  const displayAcctNumber = accountNumber ? `****${accountNumber.slice(-4)}` : 'Account pending'
+  const displayAcctNumber = accountNumber ? accountNumber : 'Account pending'
   const currentIban = accountNumber ? `GB29 NWBK 2000 00${accountNumber} 11` : 'Pending'
   const linkedSavingsLabel = accountNumber ? `Linked to ${displayAcctNumber}` : 'Account pending'
 

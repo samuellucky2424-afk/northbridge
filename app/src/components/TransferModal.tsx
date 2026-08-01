@@ -267,7 +267,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Account Number / IBAN <span className="text-[#610C04]">*</span></label>
-                  <input type="text" value={domestic.accountNumber} onChange={(e) => handleFieldChange('accountNumber', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="8 digit account number" maxLength={24} />
+                  <input type="text" value={domestic.accountNumber} onChange={(e) => handleFieldChange('accountNumber', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="10 digit account number" maxLength={24} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Amount ({currencyLabel}) <span className="text-[#610C04]">*</span></label>
