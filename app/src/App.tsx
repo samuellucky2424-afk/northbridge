@@ -241,6 +241,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (p.role !== 'customer' && p.role !== 'admin') {
         return { success: false, error: 'Unauthorized account role.' }
       }
+
+      // Automatically create or heal the account_lookup entry if missing
+      try {
+        const { getEmailByAccountNumber, createAccountLookup } = await import('./lib/db')
+        const existingEmail = await getEmailByAccountNumber(p.accountNumber)
+        if (!existingEmail && user.email) {
+          await createAccountLookup(p.accountNumber, user.uid, user.email)
+        }
+      } catch (err) {
+        // Ignore failure to heal the account lookup so it doesn't break login
+      }
+
       applyProfile(p)
       return { success: true, role: p.role }
     } catch (err) {

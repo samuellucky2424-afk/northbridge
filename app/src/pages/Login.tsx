@@ -25,17 +25,16 @@ export default function Login() {
 
     try {
       const identifier = accountNumber.trim()
-      if (identifier.includes('@')) {
-        setError('Please log in using your account number, not your email.')
-        setLoading(false)
-        return
-      }
+      let mappedEmail = identifier
 
-      const mappedEmail = await getEmailByAccountNumber(identifier)
-      if (!mappedEmail) {
-        setError('Account number not found')
-        setLoading(false)
-        return
+      if (!identifier.includes('@')) {
+        const result = await getEmailByAccountNumber(identifier)
+        if (!result) {
+          setError('Account number not found')
+          setLoading(false)
+          return
+        }
+        mappedEmail = result
       }
 
       const res = await login(mappedEmail, password)
@@ -117,13 +116,13 @@ export default function Login() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-[#0A1628] mb-2">Account number</label>
+                <label className="block text-sm font-medium text-[#0A1628] mb-2">Account number or email</label>
                 <input
                   type="text"
                   value={accountNumber}
                   onChange={(e) => setAccountNumber(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] placeholder:text-[#64748B]/60 focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] transition-all"
-                  placeholder="e.g. 1234567890"
+                  placeholder="e.g. 1234567890 or you@example.com"
                   required
                 />
               </div>
