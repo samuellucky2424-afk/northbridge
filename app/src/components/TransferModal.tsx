@@ -207,8 +207,8 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
   const formattedTime = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto animate-in fade-in duration-300">
-      <div className="bg-white rounded-none sm:rounded-2xl shadow-xl w-full sm:max-w-xl overflow-hidden my-0 sm:my-8 min-h-screen sm:min-h-0 animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[60] flex items-start sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto animate-in fade-in duration-300">
+      <div className="bg-white rounded-none sm:rounded-2xl shadow-xl w-full sm:max-w-xl flex flex-col h-[100dvh] sm:h-auto sm:max-h-[90vh] my-0 sm:my-8 animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-light">
           <div className="flex items-center space-x-3">
@@ -231,7 +231,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
 
         {/* STEP 1: FORM */}
         {step === 'form' && (
-          <div className="p-6 space-y-5">
+          <div className="p-6 space-y-5 flex-1 overflow-y-auto min-h-0">
             {/* Transfer Type Toggle */}
             {!initialType && (
               <div className="flex rounded-xl bg-[#F1F5F9] p-1">
@@ -285,7 +285,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
 
             {/* INTERNATIONAL FORM */}
             {transferType === 'international' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Pay From <span className="text-[#610C04]">*</span></label>
                   <select value={payFrom} onChange={(e) => setPayFrom(e.target.value as 'current' | 'savings')} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] bg-white">
@@ -342,7 +342,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
 
         {/* STEP 2: PREVIEW */}
         {step === 'preview' && (
-          <div className="p-6 space-y-4">
+          <div className="p-6 space-y-4 flex-1 overflow-y-auto min-h-0">
             <div className="flex items-center space-x-2 mb-2">
               <Send size={18} className="text-[#610C04]" />
               <span className="text-sm font-medium text-[#0A1628] capitalize">{transferType} Transfer</span>
@@ -403,7 +403,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
 
         {/* STEP 3: OTP */}
         {step === 'otp' && (
-          <div className="p-6 space-y-6">
+          <div className="p-6 space-y-6 flex-1 overflow-y-auto min-h-0">
             <div className="text-center">
               <div className="w-16 h-16 rounded-full bg-[#FEE2E2] flex items-center justify-center mx-auto mb-4">
                 <Shield size={32} className="text-[#610C04]" />
@@ -449,7 +449,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
 
         {/* STEP 4: RECEIPT */}
         {step === 'receipt' && (
-          <div className="p-6">
+          <div className="p-6 flex-1 overflow-y-auto min-h-0">
             {/* Receipt Card */}
             <div id="printable-receipt" className="bg-white border-2 border-amber-500 rounded-2xl overflow-hidden shadow-soft">
               {/* Receipt Header */}

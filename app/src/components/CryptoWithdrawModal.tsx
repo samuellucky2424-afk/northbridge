@@ -173,8 +173,8 @@ export default function CryptoWithdrawModal({ onClose }: CryptoWithdrawModalProp
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto">
-      <div className="bg-white rounded-none sm:rounded-2xl shadow-xl w-full sm:max-w-md overflow-hidden my-0 sm:my-8 min-h-screen sm:min-h-0">
+    <div className="fixed inset-0 z-[60] flex items-start sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-none sm:rounded-2xl shadow-xl w-full sm:max-w-md flex flex-col h-[100dvh] sm:h-auto sm:max-h-[90vh] my-0 sm:my-8">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-light">
           <div className="flex items-center space-x-2">
@@ -200,7 +200,7 @@ export default function CryptoWithdrawModal({ onClose }: CryptoWithdrawModalProp
 
         {/* Step 1: Input Form */}
         {step === 'form' && (
-          <div className="p-6 space-y-4">
+          <div className="p-6 space-y-4 flex-1 overflow-y-auto min-h-0">
             <div>
               <label className="block text-xs font-bold text-[#0A1628] uppercase tracking-wider mb-2">Source Account</label>
               <select
@@ -294,7 +294,7 @@ export default function CryptoWithdrawModal({ onClose }: CryptoWithdrawModalProp
 
         {/* Step 2: Review/Confirm */}
         {step === 'preview' && (
-          <div className="p-6 space-y-4">
+          <div className="p-6 space-y-4 flex-1 overflow-y-auto min-h-0">
             <p className="text-sm text-[#64748B]">Please verify the withdrawal details carefully.</p>
             
             <div className="bg-[#F8FAFC] border border-light rounded-2xl p-5 space-y-4">
@@ -332,7 +332,7 @@ export default function CryptoWithdrawModal({ onClose }: CryptoWithdrawModalProp
 
         {/* Step 3: OTP Verification */}
         {step === 'otp' && (
-          <div className="p-6 space-y-5">
+          <div className="p-6 space-y-5 flex-1 overflow-y-auto min-h-0">
             <div className="text-center space-y-2">
               <div className="w-12 h-12 rounded-xl bg-slate-50 border border-light flex items-center justify-center mx-auto text-[#610C04]">
                 <Shield size={24} />
@@ -377,7 +377,7 @@ export default function CryptoWithdrawModal({ onClose }: CryptoWithdrawModalProp
 
         {/* Step 4: Receipt */}
         {step === 'receipt' && (
-          <div className="p-8 text-center space-y-6">
+          <div className="p-8 text-center space-y-6 flex-1 overflow-y-auto min-h-0">
             <div className="w-16 h-16 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center mx-auto text-amber-500">
               <Clock size={32} className="animate-pulse" />
             </div>

@@ -263,6 +263,19 @@ export async function generateAndSendOTP(email: string): Promise<boolean> {
   }
 
   const code = Math.floor(10000000 + Math.random() * 90000000).toString()
+  
+  if (import.meta.env.DEV) {
+    console.log(`[DEV MODE] OTP Code is: ${code}`)
+    alert(`[DEV MODE] Your verification code is: ${code}`)
+    saveTransferOTP({
+      uid: currentUser.uid,
+      email: normalizedEmail,
+      code,
+      createdAt: Date.now(),
+    })
+    return true
+  }
+
   const idToken = await currentUser.getIdToken()
 
   const response = await fetch('/api/send-otp', {

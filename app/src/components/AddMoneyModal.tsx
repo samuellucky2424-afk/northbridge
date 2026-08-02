@@ -71,8 +71,8 @@ export default function AddMoneyModal({ onClose, currencySymbol }: AddMoneyModal
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto">
-      <div className="bg-white rounded-none sm:rounded-2xl shadow-xl w-full sm:max-w-md overflow-hidden my-0 sm:my-8 min-h-screen sm:min-h-0">
+    <div className="fixed inset-0 z-[60] flex items-start sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-none sm:rounded-2xl shadow-xl w-full sm:max-w-md flex flex-col h-[100dvh] sm:h-auto sm:max-h-[90vh] my-0 sm:my-8">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-light">
           <h3 className="font-display text-lg text-[#0A1628]">
@@ -87,7 +87,7 @@ export default function AddMoneyModal({ onClose, currencySymbol }: AddMoneyModal
         </div>
 
         {step === 'amount' && (
-          <div className="p-6 space-y-5">
+          <div className="p-6 space-y-5 flex-1 overflow-y-auto min-h-0">
             <p className="text-sm text-[#64748B]">How much would you like to deposit?</p>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl text-[#64748B] font-light">{currencySymbol}</span>
@@ -122,7 +122,7 @@ export default function AddMoneyModal({ onClose, currencySymbol }: AddMoneyModal
         )}
 
         {step === 'method' && (
-          <div className="p-6 space-y-3">
+          <div className="p-6 space-y-3 flex-1 overflow-y-auto min-h-0">
             <p className="text-sm text-[#64748B] mb-2">Select how you want to add money:</p>
             {methods.map((m) => (
               <button
@@ -150,7 +150,7 @@ export default function AddMoneyModal({ onClose, currencySymbol }: AddMoneyModal
         )}
 
         {step === 'confirm' && (
-          <div className="p-6 space-y-4">
+          <div className="p-6 space-y-4 flex-1 overflow-y-auto min-h-0">
             <div className="bg-[#F8FAFC] rounded-xl p-5 space-y-3">
               <div className="flex justify-between py-2 border-b border-light/50">
                 <span className="text-sm text-[#64748B]">Amount</span>
@@ -194,7 +194,7 @@ export default function AddMoneyModal({ onClose, currencySymbol }: AddMoneyModal
         )}
 
         {step === 'success' && (
-          <div className="p-8 text-center space-y-5">
+          <div className="p-8 text-center space-y-5 flex-1 overflow-y-auto min-h-0">
             <div className="w-16 h-16 rounded-full bg-[#10B981]/10 flex items-center justify-center mx-auto">
               <Check size={32} className="text-[#10B981]" />
             </div>
