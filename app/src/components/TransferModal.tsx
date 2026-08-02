@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import html2canvas from 'html2canvas'
 import { X, Send, ArrowRight, Shield, ChevronLeft, Clock } from 'lucide-react'
 import { useAuth } from '../App'
 import { supabase, isSupabaseConfigured, generateAndSendOTP, verifyOTP } from '../lib/supabase'
@@ -201,10 +202,35 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
     return `${prefix}-${date}-${random}`
   }
 
-  const receiptId = generateReceiptId()
-  const now = new Date()
-  const formattedDate = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
-  const formattedTime = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  const { receiptId, formattedDate, formattedTime } = useMemo(() => {
+    const now = new Date()
+    return {
+      receiptId: generateReceiptId(),
+      formattedDate: now.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }),
+      formattedTime: now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transferType])
+
+  const [downloading, setDownloading] = useState(false)
+
+  const handleDownloadReceipt = async () => {
+    const element = document.getElementById('printable-receipt')
+    if (!element) return
+    setDownloading(true)
+    try {
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true })
+      const image = canvas.toDataURL('image/png')
+      const link = document.createElement('a')
+      link.href = image
+      link.download = `NBB-Transfer-Receipt-${receiptId}.png`
+      link.click()
+    } catch (err) {
+      console.error('Failed to download receipt', err)
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-[60] flex items-start sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto animate-in fade-in duration-300">
@@ -507,8 +533,12 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
 
             {/* Actions */}
             <div className="mt-6 space-y-3">
-              <button onClick={() => window.print()} className="w-full py-3 rounded-xl border border-light text-[#64748B] font-medium text-sm hover:bg-[#F1F5F9] transition-colors flex items-center justify-center space-x-2">
-                <span>Print Receipt</span>
+              <button onClick={handleDownloadReceipt} disabled={downloading} className="w-full py-3 rounded-xl border border-light text-[#64748B] font-medium text-sm hover:bg-[#F1F5F9] transition-colors flex items-center justify-center space-x-2">
+                {downloading ? (
+                  <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-500 rounded-full animate-spin" />
+                ) : (
+                  <span>Download Receipt</span>
+                )}
               </button>
               <button onClick={onClose} className="w-full btn-primary py-3.5">
                 Done
