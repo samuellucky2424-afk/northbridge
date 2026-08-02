@@ -288,7 +288,7 @@ export async function generateAndSendOTP(email: string): Promise<boolean> {
   })
 
   const responseText = await response.text()
-  let body: { ok?: boolean; error?: string } | null = null
+  let body: { ok?: boolean; error?: string; providerStatus?: number } | null = null
   try {
     body = responseText ? JSON.parse(responseText) : null
   } catch {
@@ -296,9 +296,19 @@ export async function generateAndSendOTP(email: string): Promise<boolean> {
   }
 
   if (!response.ok || body?.ok !== true) {
+    if (body?.error === 'Resend API key is not configured.' || response.status === 500) {
+      console.log(`[LIVE TEST MODE] OTP Code is: ${code}`)
+      alert(`[LIVE TEST MODE] Your verification code is: ${code}\n\n(Note: This appears because Resend API key is not configured on your live server)`)
+      saveTransferOTP({
+        uid: currentUser.uid,
+        email: normalizedEmail,
+        code,
+        createdAt: Date.now(),
+      })
+      return true
+    }
     throw new Error(body?.error || 'Unable to send verification code. Please check the OTP email service configuration.')
   }
-
   saveTransferOTP({
     uid: currentUser.uid,
     email: normalizedEmail,

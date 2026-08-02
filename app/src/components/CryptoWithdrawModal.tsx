@@ -313,6 +313,12 @@ export default function CryptoWithdrawModal({ onClose }: CryptoWithdrawModalProp
               </div>
             </div>
 
+            {otpError && (
+              <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-sm text-[#EF4444] text-center mb-4">
+                {otpError}
+              </div>
+            )}
+
             <button
               onClick={handleConfirm}
               disabled={loadingOtp}

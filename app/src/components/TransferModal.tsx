@@ -391,6 +391,12 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
               <p className="text-xs text-[#0A1628]">You will receive an 8-digit OTP code to verify this transfer. Please ensure all details are correct before confirming.</p>
             </div>
 
+            {otpError && (
+              <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-sm text-[#EF4444] text-center">
+                {otpError}
+              </div>
+            )}
+
             <button onClick={handleConfirm} disabled={loadingOtp} className="w-full btn-primary py-3.5 flex items-center justify-center space-x-2">
               {loadingOtp ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
