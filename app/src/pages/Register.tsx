@@ -144,7 +144,7 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-[#F1F5F9]">
       <Navbar />
-      <main className="pt-16 min-h-screen flex items-center justify-center px-4 py-12">
+      <main className="pt-16 min-h-screen flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-xl">
           {/* Progress */}
           <div className="mb-8">
