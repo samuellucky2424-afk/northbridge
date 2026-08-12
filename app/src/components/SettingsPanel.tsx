@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { X, Moon, Sun, User, Phone, MapPin, Mail, Check, Upload, Loader2 } from 'lucide-react'
 import { useAuth } from '../App'
+import { countryToCurrency, currencyOptions, getCurrency } from '../lib/currency'
 
 const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024
 const ACCEPTED_PROFILE_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
@@ -32,15 +33,29 @@ export default function SettingsPanel({ onClose, userName }: SettingsPanelProps)
     saveProfile,
   } = useAuth()
   const displayName = userName || 'Customer'
-  const nameParts = splitName(displayName)
-  const profileDefaults = {
-    firstName: profileDetails.firstName || nameParts.firstName,
-    lastName: profileDetails.lastName || nameParts.lastName,
-    phone: profileDetails.phone || '',
-    houseAddress: profileDetails.houseAddress || '',
-    city: profileDetails.city || '',
-    postcode: profileDetails.postcode || '',
-  }
+  const profileDefaults = useMemo(() => {
+    const nameParts = splitName(displayName)
+    return {
+      firstName: profileDetails.firstName || nameParts.firstName,
+      lastName: profileDetails.lastName || nameParts.lastName,
+      phone: profileDetails.phone || '',
+      houseAddress: profileDetails.houseAddress || '',
+      city: profileDetails.city || '',
+      country: profileDetails.country || 'United Kingdom',
+      currencyCode: profileDetails.currencyCode || getCurrency(profileDetails.country || 'United Kingdom').code,
+      postcode: profileDetails.postcode || '',
+    }
+  }, [
+    displayName,
+    profileDetails.firstName,
+    profileDetails.lastName,
+    profileDetails.phone,
+    profileDetails.houseAddress,
+    profileDetails.city,
+    profileDetails.country,
+    profileDetails.currencyCode,
+    profileDetails.postcode,
+  ])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [activeTab, setActiveTab] = useState<'profile' | 'appearance'>('profile')
   const [darkMode, setDarkMode] = useState(() => {
@@ -56,14 +71,7 @@ export default function SettingsPanel({ onClose, userName }: SettingsPanelProps)
 
   useEffect(() => {
     setProfile(profileDefaults)
-  }, [
-    profileDefaults.firstName,
-    profileDefaults.lastName,
-    profileDefaults.phone,
-    profileDefaults.houseAddress,
-    profileDefaults.city,
-    profileDefaults.postcode,
-  ])
+  }, [profileDefaults])
 
   useEffect(() => {
     if (selectedAvatarFile) return
@@ -137,6 +145,15 @@ export default function SettingsPanel({ onClose, userName }: SettingsPanelProps)
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleCountryChange = (country: string) => {
+    setProfile((current) => ({
+      ...current,
+      country,
+      currencyCode: getCurrency(country).code,
+    }))
+    setSaved(false)
   }
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -262,6 +279,41 @@ export default function SettingsPanel({ onClose, userName }: SettingsPanelProps)
                 <input type="text" value={profile.postcode}
                   onChange={(e) => setProfile({ ...profile, postcode: e.target.value })}
                   className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]" />
+              </div>
+            </div>
+
+            <div className="border-t border-light pt-6 space-y-4">
+              <div>
+                <h4 className="font-medium text-[#0A1628]">Account preferences</h4>
+                <p className="text-sm text-[#64748B] mt-1">Set the country and currency shown for this account.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Country</label>
+                <select
+                  value={profile.country}
+                  onChange={(e) => handleCountryChange(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]"
+                >
+                  {Object.keys(countryToCurrency).map((country) => (
+                    <option key={country} value={country}>{country}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Account currency</label>
+                <select
+                  value={profile.currencyCode}
+                  onChange={(e) => {
+                    setProfile((current) => ({ ...current, currencyCode: e.target.value }))
+                    setSaved(false)
+                  }}
+                  className="w-full px-4 py-3 rounded-xl border border-light bg-white text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]"
+                >
+                  {currencyOptions.map((currency) => (
+                    <option key={currency.code} value={currency.code}>{currency.symbol} — {currency.code}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-[#64748B] mt-1.5">Your selected symbol is used across account balances and transaction amounts. Changing it does not convert existing balances.</p>
               </div>
             </div>
 

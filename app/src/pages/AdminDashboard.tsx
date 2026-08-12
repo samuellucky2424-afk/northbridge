@@ -231,7 +231,7 @@ function AdminOverview() {
             desc: t.description,
             amount: parseFloat(t.amount),
             status: t.status,
-            currencySymbol: t.profiles_nbb ? getCurrency(t.profiles_nbb.country || 'United Kingdom').symbol : '\u00A3',
+            currencySymbol: t.profiles_nbb ? getCurrency(t.profiles_nbb.country || 'United Kingdom', t.profiles_nbb.currency_code).symbol : '\u00A3',
             date: toDateSafe(t.date).toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })
           })))
         }
@@ -449,6 +449,7 @@ function UsersPage() {
           houseAddress: u.house_address,
           city: u.city,
           country: u.country || 'United Kingdom',
+          currencyCode: u.currency_code || '',
           postcode: u.postcode,
           occupation: u.occupation,
           incomeSource: u.income_source,
@@ -635,7 +636,7 @@ function UsersPage() {
 
       await batch.commit()
 
-      const currencySymbol = getCurrency(profile.country || 'United Kingdom').symbol
+      const currencySymbol = getCurrency(profile.country || 'United Kingdom', profile.currency_code).symbol
       setFundSuccess(`Successfully credited ${currencySymbol}${amount.toFixed(2)} to ${profile.first_name} ${profile.last_name || ''}'s ${isSavings ? 'Savings' : 'Current'} wallet`)
       setFundAmount('')
       setFundDescription('Deposit Funds')
@@ -681,7 +682,7 @@ function UsersPage() {
       const currentBalance = parseFloat(profile[balanceColumn] || 0)
 
       if (currentBalance < amount) {
-        throw new Error(`Insufficient funds in user's ${isSavings ? 'Savings' : 'Current'} account. Current balance is ${getCurrency(profile.country || 'United Kingdom').symbol}${currentBalance.toFixed(2)}`)
+        throw new Error(`Insufficient funds in user's ${isSavings ? 'Savings' : 'Current'} account. Current balance is ${getCurrency(profile.country || 'United Kingdom', profile.currency_code).symbol}${currentBalance.toFixed(2)}`)
       }
 
       const batch = writeBatch(db)
@@ -704,7 +705,7 @@ function UsersPage() {
 
       await batch.commit()
 
-      const currencySymbol = getCurrency(profile.country || 'United Kingdom').symbol
+      const currencySymbol = getCurrency(profile.country || 'United Kingdom', profile.currency_code).symbol
       setDebitSuccess(`Successfully debited ${currencySymbol}${amount.toFixed(2)} from ${profile.first_name} ${profile.last_name || ''}'s ${isSavings ? 'Savings' : 'Current'} wallet`)
       setDebitAmount('')
       setDebitDescription('Service Charge')
@@ -838,10 +839,10 @@ function UsersPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm font-bold text-[#0A1628] text-right">
-                    {getCurrency(u.country).symbol}{u.balance.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
+                    {getCurrency(u.country, u.currencyCode).symbol}{u.balance.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4 text-sm font-semibold text-[#64748B] text-right">
-                    {getCurrency(u.country).symbol}{(u.savingsBalance || 0).toLocaleString('en-GB', { minimumFractionDigits: 2 })}
+                    {getCurrency(u.country, u.currencyCode).symbol}{(u.savingsBalance || 0).toLocaleString('en-GB', { minimumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4 text-sm text-[#64748B]">{u.joined}</td>
                   <td className="px-6 py-4">
@@ -958,8 +959,8 @@ function UsersPage() {
                   <p className="text-xs text-[#64748B]">Crediting user account:</p>
                   <p className="text-sm font-bold text-[#0A1628]">{selectedUser.name}</p>
                   <p className="text-xs text-[#64748B]">Account Number: <span className="font-mono">{selectedUser.account_number}</span></p>
-                  <p className="text-xs text-[#64748B]">Current Balance: <span className="font-semibold">{getCurrency(selectedUser.country || 'United Kingdom').symbol}{selectedUser.balance.toFixed(2)}</span></p>
-                  <p className="text-xs text-[#64748B]">Savings Balance: <span className="font-semibold">{getCurrency(selectedUser.country || 'United Kingdom').symbol}{(selectedUser.savingsBalance || 0).toFixed(2)}</span></p>
+                  <p className="text-xs text-[#64748B]">Current Balance: <span className="font-semibold">{getCurrency(selectedUser.country || 'United Kingdom', selectedUser.currencyCode).symbol}{selectedUser.balance.toFixed(2)}</span></p>
+                  <p className="text-xs text-[#64748B]">Savings Balance: <span className="font-semibold">{getCurrency(selectedUser.country || 'United Kingdom', selectedUser.currencyCode).symbol}{(selectedUser.savingsBalance || 0).toFixed(2)}</span></p>
                 </div>
               )}
 
@@ -992,7 +993,7 @@ function UsersPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#0A1628] mb-1.5">Amount to Add ({getCurrency(selectedUser.country || 'United Kingdom').symbol})</label>
+                <label className="block text-xs font-semibold text-[#0A1628] mb-1.5">Amount to Add ({getCurrency(selectedUser.country || 'United Kingdom', selectedUser.currencyCode).symbol})</label>
                 <input
                   type="number"
                   value={fundAmount}
@@ -1076,8 +1077,8 @@ function UsersPage() {
                   <p className="text-xs text-[#64748B]">Debiting user account:</p>
                   <p className="text-sm font-bold text-[#0A1628]">{debitUser.name}</p>
                   <p className="text-xs text-[#64748B]">Account Number: <span className="font-mono">{debitUser.account_number}</span></p>
-                  <p className="text-xs text-[#64748B]">Current Balance: <span className="font-semibold">{getCurrency(debitUser.country || 'United Kingdom').symbol}{debitUser.balance.toFixed(2)}</span></p>
-                  <p className="text-xs text-[#64748B]">Savings Balance: <span className="font-semibold">{getCurrency(debitUser.country || 'United Kingdom').symbol}{(debitUser.savingsBalance || 0).toFixed(2)}</span></p>
+                  <p className="text-xs text-[#64748B]">Current Balance: <span className="font-semibold">{getCurrency(debitUser.country || 'United Kingdom', debitUser.currencyCode).symbol}{debitUser.balance.toFixed(2)}</span></p>
+                  <p className="text-xs text-[#64748B]">Savings Balance: <span className="font-semibold">{getCurrency(debitUser.country || 'United Kingdom', debitUser.currencyCode).symbol}{(debitUser.savingsBalance || 0).toFixed(2)}</span></p>
                 </div>
               )}
 
@@ -1110,7 +1111,7 @@ function UsersPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#0A1628] mb-1.5">Amount to Debit ({getCurrency(debitUser.country || 'United Kingdom').symbol})</label>
+                <label className="block text-xs font-semibold text-[#0A1628] mb-1.5">Amount to Debit ({getCurrency(debitUser.country || 'United Kingdom', debitUser.currencyCode).symbol})</label>
                 <input
                   type="number"
                   value={debitAmount}
@@ -1429,7 +1430,7 @@ function TransactionsPage() {
           desc: t.description,
           amount: parseFloat(t.amount),
           status: t.status,
-          currencySymbol: t.profiles_nbb ? getCurrency(t.profiles_nbb.country || 'United Kingdom').symbol : '\u00A3',
+          currencySymbol: t.profiles_nbb ? getCurrency(t.profiles_nbb.country || 'United Kingdom', t.profiles_nbb.currency_code).symbol : '\u00A3',
           date: t.date,
           category: t.category
         })))

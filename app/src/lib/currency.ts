@@ -56,6 +56,13 @@ export const countryToCurrency: Record<string, CurrencyInfo> = {
   'Philippines': { symbol: '\u20B1', code: 'PHP' },
 }
 
-export function getCurrency(country: string): CurrencyInfo {
+export const currencyOptions: CurrencyInfo[] = Array.from(
+  new Map(Object.values(countryToCurrency).map((currency) => [currency.code, currency])).values()
+).sort((a, b) => a.code.localeCompare(b.code))
+
+export function getCurrency(country: string, currencyCode?: string): CurrencyInfo {
+  const selectedCurrency = currencyOptions.find((currency) => currency.code === currencyCode)
+  if (selectedCurrency) return selectedCurrency
+
   return countryToCurrency[country] || countryToCurrency['United Kingdom']
 }

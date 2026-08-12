@@ -45,6 +45,7 @@ interface ProfileDetails {
   city: string
   postcode: string
   country: string
+  currencyCode: string
 }
 
 const defaultProfileDetails: ProfileDetails = {
@@ -55,6 +56,7 @@ const defaultProfileDetails: ProfileDetails = {
   city: '',
   postcode: '',
   country: 'United Kingdom',
+  currencyCode: 'GBP',
 }
 
 interface AuthContextType {
@@ -249,7 +251,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!existingEmail && user.email) {
           await createAccountLookup(p.accountNumber, user.uid, user.email)
         }
-      } catch (err) {
+      } catch {
         // Ignore failure to heal the account lookup so it doesn't break login
       }
 
@@ -309,6 +311,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           city: profile.city || '',
           postcode: profile.postcode || '',
           country: profile.country || 'United Kingdom',
+          currencyCode: profile.currencyCode || getCurrency(profile.country || 'United Kingdom').code,
         }
       : defaultProfileDetails,
     userCountry: profile?.country || 'United Kingdom',
@@ -318,7 +321,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     accountNumber: profile?.accountNumber || '',
     userBalance: toNumber(profile?.balance),
     savingsBalance: toNumber(profile?.savingsBalance),
-    currency: getCurrency(profile?.country || 'United Kingdom'),
+    currency: getCurrency(profile?.country || 'United Kingdom', profile?.currencyCode),
     login,
     logout,
     resetPassword,

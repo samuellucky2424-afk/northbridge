@@ -16,6 +16,7 @@ import {
   Timestamp,
 } from 'firebase/firestore'
 import { auth, db } from './firebase'
+import { getCurrency } from './currency'
 export { getCurrency } from './currency'
 
 export const ADMIN_EMAIL = 'okohwiz889@mail.com'
@@ -37,6 +38,7 @@ export interface UserProfile {
   houseAddress: string
   city: string
   country: string
+  currencyCode: string
   postcode: string
   dateOfBirth: string
   ssn: string
@@ -57,6 +59,8 @@ export interface ProfileUpdateInput {
   phone: string
   houseAddress: string
   city: string
+  country: string
+  currencyCode: string
   postcode: string
 }
 
@@ -102,6 +106,7 @@ export function mapProfileFromDoc(uid: string, data: Record<string, unknown>): U
     houseAddress: String(data.house_address || data.houseAddress || ''),
     city: String(data.city || ''),
     country: String(data.country || 'United Kingdom'),
+    currencyCode: String(data.currency_code || data.currencyCode || ''),
     postcode: String(data.postcode || ''),
     dateOfBirth: String(data.date_of_birth || data.dateOfBirth || ''),
     ssn: String(data.ssn || ''),
@@ -126,6 +131,7 @@ export function mapProfileToDoc(profile: Partial<UserProfile>): Record<string, u
     house_address: profile.houseAddress || '',
     city: profile.city || '',
     country: profile.country || 'United Kingdom',
+    currency_code: profile.currencyCode || getCurrency(profile.country || 'United Kingdom').code,
     postcode: profile.postcode || '',
     date_of_birth: profile.dateOfBirth || '',
     ssn: profile.ssn || '',
@@ -160,6 +166,7 @@ export async function createUserProfile(
     houseAddress: input.houseAddress,
     city: input.city,
     country: input.country || 'United Kingdom',
+    currencyCode: getCurrency(input.country || 'United Kingdom').code,
     postcode: input.postcode,
     dateOfBirth: input.dateOfBirth,
     ssn: input.ssn,
@@ -318,12 +325,16 @@ export async function updateUserProfile(
       profilePictureUrl = await fileToProfileImageDataUrl(avatarFile)
     }
 
+    const country = updates.country.trim() || 'United Kingdom'
+    const currency = getCurrency(country, updates.currencyCode)
     const updatePayload: Record<string, unknown> = {
       first_name: updates.firstName.trim(),
       last_name: updates.lastName.trim(),
       phone: updates.phone.trim(),
       house_address: updates.houseAddress.trim(),
       city: updates.city.trim(),
+      country,
+      currency_code: currency.code,
       postcode: updates.postcode.trim(),
     }
     if (profilePictureUrl) {
