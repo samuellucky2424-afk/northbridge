@@ -31,7 +31,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
 
   // International form
   const [international, setInternational] = useState({
-    receiverName: '', phone: '', email: '', address: '', amount: '', country: '', purpose: '', swiftIban: '', accountNumber: '',
+    receiverName: '', phone: '', email: '', address: '', amount: '', country: '', purpose: '', swiftIban: '', accountNumber: '', bankName: '',
   })
 
   const countries = [
@@ -67,7 +67,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
     if (transferType === 'domestic') {
       return domestic.accountNumber && domestic.bankName && domestic.accountHolder && domestic.amount && domestic.purpose
     }
-    return international.receiverName && international.phone && international.email && international.address && international.amount && international.country && international.purpose && international.swiftIban && international.accountNumber
+    return international.receiverName && international.phone && international.email && international.address && international.amount && international.country && international.purpose && international.swiftIban && international.accountNumber && international.bankName
   }
 
   const handleContinue = () => {
@@ -383,6 +383,10 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
                   <input type="text" value={international.swiftIban} onChange={(e) => handleFieldChange('swiftIban', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="e.g. CHASUS33 or GB29NWBK..." />
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Recipient Bank Name <span className="text-[#610C04]">*</span></label>
+                  <input type="text" value={international.bankName} onChange={(e) => handleFieldChange('bankName', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="e.g. Chase Bank, Barclays..." />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Receiver Account Number <span className="text-[#610C04]">*</span></label>
                   <input type="text" value={international.accountNumber} onChange={(e) => handleFieldChange('accountNumber', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="Account number" maxLength={24} />
                 </div>
@@ -430,6 +434,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
               ) : (
                 <>
                   <div className="flex justify-between items-center py-2 border-b border-light/50"><span className="text-sm text-[#64748B]">Receiver</span><span className="text-sm font-medium text-[#0A1628]">{international.receiverName}</span></div>
+                  <div className="flex justify-between items-center py-2 border-b border-light/50"><span className="text-sm text-[#64748B]">Recipient Bank</span><span className="text-sm font-medium text-[#0A1628]">{international.bankName}</span></div>
                   <div className="flex justify-between items-center py-2 border-b border-light/50"><span className="text-sm text-[#64748B]">Country</span><span className="text-sm font-medium text-[#0A1628]">{international.country}</span></div>
                   <div className="flex justify-between items-center py-2 border-b border-light/50"><span className="text-sm text-[#64748B]">Phone</span><span className="text-sm font-medium text-[#0A1628]">{international.phone}</span></div>
                   <div className="flex justify-between items-center py-2 border-b border-light/50"><span className="text-sm text-[#64748B]">Email</span><span className="text-sm font-medium text-[#0A1628]">{international.email}</span></div>
@@ -556,6 +561,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
                   ) : (
                     <>
                       <div className="flex justify-between"><span className="text-xs text-[#64748B]">To</span><span className="text-sm text-[#0A1628]">{international.receiverName}</span></div>
+                      <div className="flex justify-between"><span className="text-xs text-[#64748B]">Recipient Bank</span><span className="text-sm text-[#0A1628]">{international.bankName}</span></div>
                       <div className="flex justify-between"><span className="text-xs text-[#64748B]">Country</span><span className="text-sm text-[#0A1628]">{international.country}</span></div>
                       <div className="flex justify-between"><span className="text-xs text-[#64748B]">SWIFT/IBAN</span><span className="text-sm font-mono text-[#0A1628]">{international.swiftIban.slice(0, 8)}****</span></div>
                       <div className="flex justify-between"><span className="text-xs text-[#64748B]">Account Number</span><span className="text-sm font-mono text-[#0A1628]">{international.accountNumber}</span></div>
