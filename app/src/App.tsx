@@ -230,6 +230,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (signupProfile) {
         const { profile: newProfile } = await firebaseSignUp(signupProfile.email, password, signupProfile)
         applyProfile(newProfile)
+        // Send welcome notification and seed demo data
+        try {
+          const { seedUserTransactions } = await import('./lib/db')
+          await seedUserTransactions(newProfile.uid, newProfile.firstName, newProfile.country)
+        } catch (seedErr) {
+          console.error('Failed to seed user transactions/notifications:', seedErr)
+        }
+        // Send welcome email
+        try {
+          await fetch('/api/send-notification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: newProfile.uid,
+              type: 'signup',
+              firstName: newProfile.firstName,
+            }),
+          })
+        } catch (emailErr) {
+          console.error('Failed to send welcome email:', emailErr)
+        }
         return { success: true, role: 'customer' as UserRole }
       }
 

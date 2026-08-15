@@ -4,6 +4,7 @@ import html2canvas from 'html2canvas'
 import { X, Send, ArrowRight, Shield, ChevronLeft, Clock } from 'lucide-react'
 import { useAuth } from '../App'
 import { supabase, isSupabaseConfigured, generateAndSendOTP, verifyOTP } from '../lib/supabase'
+import { addNotification } from '../lib/db'
 
 interface TransferModalProps {
   onClose: () => void
@@ -30,7 +31,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
 
   // International form
   const [international, setInternational] = useState({
-    receiverName: '', phone: '', email: '', address: '', amount: '', country: '', purpose: '', swiftIban: '',
+    receiverName: '', phone: '', email: '', address: '', amount: '', country: '', purpose: '', swiftIban: '', accountNumber: '',
   })
 
   const countries = [
@@ -66,7 +67,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
     if (transferType === 'domestic') {
       return domestic.accountNumber && domestic.bankName && domestic.accountHolder && domestic.amount && domestic.purpose
     }
-    return international.receiverName && international.phone && international.email && international.address && international.amount && international.country && international.purpose && international.swiftIban
+    return international.receiverName && international.phone && international.email && international.address && international.amount && international.country && international.purpose && international.swiftIban && international.accountNumber
   }
 
   const handleContinue = () => {
@@ -161,6 +162,41 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
 
           // Refresh context balance
           await refreshProfile()
+        }
+
+        // Send notification for the transfer
+        try {
+          const transferAmount = parseFloat(transferType === 'domestic' ? domestic.amount : international.amount)
+          const recipient = transferType === 'domestic' ? domestic.accountHolder : international.receiverName
+          await addNotification({
+            user_id: userId || '',
+            title: 'Transfer Sent',
+            message: `${currencySymbol}${transferAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })} transferred to ${recipient}`,
+            read: false,
+            type: 'success',
+          })
+        } catch (notifErr) {
+          console.error('Failed to send notification:', notifErr)
+        }
+
+        // Send email notification for the transfer
+        try {
+          const transferAmount = parseFloat(transferType === 'domestic' ? domestic.amount : international.amount)
+          const recipient = transferType === 'domestic' ? domestic.accountHolder : international.receiverName
+          await fetch('/api/send-notification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId,
+              type: 'transfer',
+              amount: transferAmount,
+              currencySymbol,
+              recipient,
+              transferType,
+            }),
+          })
+        } catch (emailErr) {
+          console.error('Failed to send email notification:', emailErr)
         }
 
         setStep('receipt')
@@ -347,6 +383,10 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
                   <input type="text" value={international.swiftIban} onChange={(e) => handleFieldChange('swiftIban', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="e.g. CHASUS33 or GB29NWBK..." />
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Receiver Account Number <span className="text-[#610C04]">*</span></label>
+                  <input type="text" value={international.accountNumber} onChange={(e) => handleFieldChange('accountNumber', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="Account number" maxLength={24} />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Amount ({currencyLabel}) <span className="text-[#610C04]">*</span></label>
                   <input type="number" value={international.amount} onChange={(e) => handleFieldChange('amount', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04]" placeholder="0.00" />
                 </div>
@@ -396,6 +436,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
                   <div className="flex justify-between items-center py-2 border-b border-light/50"><span className="text-sm text-[#64748B]">Address</span><span className="text-sm font-medium text-[#0A1628] text-right max-w-[200px]">{international.address}</span></div>
                   <div className="flex justify-between items-center py-2 border-b border-light/50"><span className="text-sm text-[#64748B]">Purpose</span><span className="text-sm font-medium text-[#0A1628]">{international.purpose}</span></div>
                   <div className="flex justify-between items-center py-2 border-b border-light/50"><span className="text-sm text-[#64748B]">SWIFT/IBAN</span><span className="text-sm font-medium text-[#0A1628] font-mono">{international.swiftIban}</span></div>
+                  <div className="flex justify-between items-center py-2 border-b border-light/50"><span className="text-sm text-[#64748B]">Account Number</span><span className="text-sm font-medium text-[#0A1628] font-mono">{international.accountNumber}</span></div>
                 </>
               )}
 
@@ -517,6 +558,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
                       <div className="flex justify-between"><span className="text-xs text-[#64748B]">To</span><span className="text-sm text-[#0A1628]">{international.receiverName}</span></div>
                       <div className="flex justify-between"><span className="text-xs text-[#64748B]">Country</span><span className="text-sm text-[#0A1628]">{international.country}</span></div>
                       <div className="flex justify-between"><span className="text-xs text-[#64748B]">SWIFT/IBAN</span><span className="text-sm font-mono text-[#0A1628]">{international.swiftIban.slice(0, 8)}****</span></div>
+                      <div className="flex justify-between"><span className="text-xs text-[#64748B]">Account Number</span><span className="text-sm font-mono text-[#0A1628]">{international.accountNumber}</span></div>
                       <div className="flex justify-between"><span className="text-xs text-[#64748B]">Transfer Fee</span><span className="text-sm text-[#0A1628]">{formatMoney(internationalTransferFee)}</span></div>
                     </>
                   )}

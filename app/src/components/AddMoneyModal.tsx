@@ -3,6 +3,7 @@ import { X, ArrowRight, Check, CreditCard, Landmark, Wallet } from 'lucide-react
 import { collection, doc, increment, serverTimestamp, writeBatch } from 'firebase/firestore'
 import { useAuth } from '../App'
 import { db } from '../lib/firebase'
+import { addNotification } from '../lib/db'
 
 interface AddMoneyModalProps {
   onClose: () => void
@@ -59,6 +60,36 @@ export default function AddMoneyModal({ onClose, currencySymbol }: AddMoneyModal
       })
 
       await batch.commit()
+
+      // Send credit alert notification
+      try {
+        await addNotification({
+          user_id: userId,
+          title: 'Credit Alert',
+          message: `${currencySymbol}${depositAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })} has been credited to your account via ${selectedMethodLabel}`,
+          read: false,
+          type: 'success',
+        })
+      } catch (notifErr) {
+        console.error('Failed to send notification:', notifErr)
+      }
+
+      // Send email notification
+      try {
+        await fetch('/api/send-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            type: 'deposit',
+            amount: depositAmount,
+            currencySymbol,
+            method: selectedMethodLabel,
+          }),
+        })
+      } catch (emailErr) {
+        console.error('Failed to send email notification:', emailErr)
+      }
 
       await refreshProfile()
       setStep('success')
