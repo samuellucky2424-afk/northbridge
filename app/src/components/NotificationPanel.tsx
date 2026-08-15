@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, Bell, Check, Trash2 } from 'lucide-react'
+import { X, Bell, Check } from 'lucide-react'
 import { useAuth } from '../App'
 import { getNotifications, markNotificationRead, type Notification } from '../lib/db'
 
