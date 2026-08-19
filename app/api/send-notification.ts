@@ -55,25 +55,53 @@ function generateDepositEmail(amount: number, currencySymbol: string, method: st
   }
 }
 
-function generateTransferEmail(amount: number, currencySymbol: string, recipient: string, transferType: string): { subject: string; html: string } {
+function generateDebitAlertEmail(amount: number, currencySymbol: string, recipient: string, transferType: string): { subject: string; html: string } {
   return {
-    subject: `Transfer Confirmation: ${currencySymbol}${amount.toFixed(2)} sent to ${recipient}`,
+    subject: `Debit Alert: ${currencySymbol}${amount.toFixed(2)} sent to ${recipient}`,
     html: `
       <div style="font-family:Arial,sans-serif;line-height:1.6;color:#0A1628;max-width:600px;margin:0 auto">
         <div style="background:#610C04;padding:20px;text-align:center">
           <h1 style="color:white;margin:0;font-size:24px">North Bridge Bank</h1>
         </div>
         <div style="padding:30px;background:#f8fafc">
-          <h2 style="color:#0A1628;margin-top:0">Transfer Confirmation</h2>
-          <p>Your ${transferType} transfer has been submitted for approval.</p>
+          <h2 style="color:#D31111;margin-top:0">Debit Alert</h2>
+          <p>A transfer has been sent from your account.</p>
           <div style="background:white;padding:20px;border-radius:12px;margin:20px 0;border:1px solid #e2e8f0">
-            <p style="margin:5px 0"><strong>Amount:</strong> <span style="color:#D31111;font-size:20px;font-weight:bold">${currencySymbol}${amount.toFixed(2)}</span></p>
+            <p style="margin:5px 0"><strong>Amount:</strong> <span style="color:#D31111;font-size:20px;font-weight:bold">-${currencySymbol}${amount.toFixed(2)}</span></p>
             <p style="margin:5px 0"><strong>Recipient:</strong> ${recipient}</p>
             <p style="margin:5px 0"><strong>Transfer Type:</strong> ${transferType.charAt(0).toUpperCase() + transferType.slice(1)}</p>
             <p style="margin:5px 0"><strong>Status:</strong> <span style="color:#F59E0B">Pending Approval</span></p>
             <p style="margin:5px 0"><strong>Date:</strong> ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
           </div>
-          <p style="color:#64748B;font-size:14px">You will receive another notification once your transfer is approved.</p>
+          <p style="color:#64748B;font-size:14px">If you did not authorize this transfer, please contact our support team immediately.</p>
+        </div>
+        <div style="background:#0A1628;padding:15px;text-align:center">
+          <p style="color:#94A3B8;margin:0;font-size:12px">North Bridge Bank is authorised by the Prudential Regulation Authority and regulated by the Financial Conduct Authority.</p>
+        </div>
+      </div>
+    `,
+  }
+}
+
+function generateCreditAlertEmail(amount: number, currencySymbol: string, sender: string, transferType: string): { subject: string; html: string } {
+  return {
+    subject: `Credit Alert: ${currencySymbol}${amount.toFixed(2)} received from ${sender}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#0A1628;max-width:600px;margin:0 auto">
+        <div style="background:#610C04;padding:20px;text-align:center">
+          <h1 style="color:white;margin:0;font-size:24px">North Bridge Bank</h1>
+        </div>
+        <div style="padding:30px;background:#f8fafc">
+          <h2 style="color:#10B981;margin-top:0">Credit Alert</h2>
+          <p>A transfer has been received into your account.</p>
+          <div style="background:white;padding:20px;border-radius:12px;margin:20px 0;border:1px solid #e2e8f0">
+            <p style="margin:5px 0"><strong>Amount:</strong> <span style="color:#10B981;font-size:20px;font-weight:bold">+${currencySymbol}${amount.toFixed(2)}</span></p>
+            <p style="margin:5px 0"><strong>From:</strong> ${sender}</p>
+            <p style="margin:5px 0"><strong>Transfer Type:</strong> ${transferType.charAt(0).toUpperCase() + transferType.slice(1)}</p>
+            <p style="margin:5px 0"><strong>Status:</strong> <span style="color:#10B981">Completed</span></p>
+            <p style="margin:5px 0"><strong>Date:</strong> ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+          </div>
+          <p style="color:#64748B;font-size:14px">If you did not expect this transfer, please contact our support team immediately.</p>
         </div>
         <div style="background:#0A1628;padding:15px;text-align:center">
           <p style="color:#94A3B8;margin:0;font-size:12px">North Bridge Bank is authorised by the Prudential Regulation Authority and regulated by the Financial Conduct Authority.</p>
@@ -166,61 +194,85 @@ export default async function handler(req: any, res: any) {
     return
   }
 
-  let emailContent: { subject: string; html: string }
+  // Handle multiple email types (debit + credit for transfers)
+  const emailsToSend: Array<{ to: string; subject: string; html: string; category: string }> = []
 
   switch (type) {
     case 'deposit':
-      emailContent = generateDepositEmail(
+      const depositEmail = generateDepositEmail(
         Number(body.amount || 0),
         String(body.currencySymbol || '£'),
         String(body.method || 'Deposit')
       )
+      emailsToSend.push({ to: userEmail, ...depositEmail, category: 'notification_deposit' })
       break
-    case 'transfer':
-      emailContent = generateTransferEmail(
+    case 'transfer_debit':
+      const debitEmail = generateDebitAlertEmail(
         Number(body.amount || 0),
         String(body.currencySymbol || '£'),
         String(body.recipient || 'Recipient'),
         String(body.transferType || 'domestic')
       )
+      emailsToSend.push({ to: userEmail, ...debitEmail, category: 'notification_debit' })
+      break
+    case 'transfer_credit':
+      const creditEmail = generateCreditAlertEmail(
+        Number(body.amount || 0),
+        String(body.currencySymbol || '£'),
+        String(body.sender || 'Sender'),
+        String(body.transferType || 'domestic')
+      )
+      emailsToSend.push({ to: userEmail, ...creditEmail, category: 'notification_credit' })
+      break
+    case 'transfer':
+      // Legacy support - send debit alert to sender
+      const transferDebitEmail = generateDebitAlertEmail(
+        Number(body.amount || 0),
+        String(body.currencySymbol || '£'),
+        String(body.recipient || 'Recipient'),
+        String(body.transferType || 'domestic')
+      )
+      emailsToSend.push({ to: userEmail, ...transferDebitEmail, category: 'notification_debit' })
       break
     case 'signup':
-      emailContent = generateSignupEmail(String(body.firstName || 'Customer'))
+      const signupEmail = generateSignupEmail(String(body.firstName || 'Customer'))
+      emailsToSend.push({ to: userEmail, ...signupEmail, category: 'notification_signup' })
       break
     default:
       sendJson(res, 400, { error: 'Unknown notification type.' })
       return
   }
 
-  try {
-    const resendResponse = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: RESEND_FROM,
-        to: [userEmail],
-        subject: emailContent.subject,
-        html: emailContent.html,
-        tags: [{ name: 'category', value: `notification_${type}` }],
-      }),
-    })
+  // Send all emails
+  let allSent = true
+  for (const emailData of emailsToSend) {
+    try {
+      const resendResponse = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: RESEND_FROM,
+          to: [emailData.to],
+          subject: emailData.subject,
+          html: emailData.html,
+          tags: [{ name: 'category', value: emailData.category }],
+        }),
+      })
 
-    if (!resendResponse.ok) {
-      const resendBody = await resendResponse.json().catch(() => null)
-      const resendMessage = String(resendBody?.message || resendBody?.error || '').trim()
-      console.error('Resend API error:', resendMessage)
-      // Don't fail the request if email fails - notification is already saved
-      sendJson(res, 200, { ok: true, emailSent: false, error: resendMessage })
-      return
+      if (!resendResponse.ok) {
+        const resendBody = await resendResponse.json().catch(() => null)
+        const resendMessage = String(resendBody?.message || resendBody?.error || '').trim()
+        console.error('Resend API error:', resendMessage)
+        allSent = false
+      }
+    } catch (err) {
+      console.error('Failed to send email notification:', err)
+      allSent = false
     }
-
-    sendJson(res, 200, { ok: true, emailSent: true })
-  } catch (err) {
-    console.error('Failed to send email notification:', err)
-    // Don't fail the request if email fails
-    sendJson(res, 200, { ok: true, emailSent: false })
   }
+
+  sendJson(res, 200, { ok: true, emailSent: allSent })
 }

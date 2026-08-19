@@ -41,7 +41,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
     'Austria', 'Portugal', 'Greece', 'Poland', 'Singapore', 'Hong Kong', 'New Zealand', 'Mexico',
     'Argentina', 'Chile', 'Colombia', 'Egypt', 'Kenya', 'Ghana', 'Morocco', 'Saudi Arabia',
     'Qatar', 'Kuwait', 'Malaysia', 'Thailand', 'Indonesia', 'Vietnam', 'South Korea', 'Pakistan',
-    'Bangladesh', 'Philippines'
+    'Bangladesh', 'Philippines', 'Iran'
   ]
 
   const purposes = ['Personal', 'Business', 'Family Support', 'Education', 'Medical', 'Investment', 'Goods/Services', 'Other']
@@ -164,22 +164,22 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
           await refreshProfile()
         }
 
-        // Send notification for the transfer
+        // Send debit alert notification for the sender
         try {
           const transferAmount = parseFloat(transferType === 'domestic' ? domestic.amount : international.amount)
           const recipient = transferType === 'domestic' ? domestic.accountHolder : international.receiverName
           await addNotification({
             user_id: userId || '',
-            title: 'Transfer Sent',
-            message: `${currencySymbol}${transferAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })} transferred to ${recipient}`,
+            title: 'Debit Alert',
+            message: `${currencySymbol}${transferAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })} sent to ${recipient}`,
             read: false,
-            type: 'success',
+            type: 'warning',
           })
         } catch (notifErr) {
           console.error('Failed to send notification:', notifErr)
         }
 
-        // Send email notification for the transfer
+        // Send debit alert email to the sender
         try {
           const transferAmount = parseFloat(transferType === 'domestic' ? domestic.amount : international.amount)
           const recipient = transferType === 'domestic' ? domestic.accountHolder : international.receiverName
@@ -188,7 +188,8 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               userId,
-              type: 'transfer',
+              email: userEmail,
+              type: 'transfer_debit',
               amount: transferAmount,
               currencySymbol,
               recipient,
@@ -196,7 +197,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
             }),
           })
         } catch (emailErr) {
-          console.error('Failed to send email notification:', emailErr)
+          console.error('Failed to send debit alert email:', emailErr)
         }
 
         setStep('receipt')

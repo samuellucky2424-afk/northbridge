@@ -11,7 +11,7 @@ interface AddMoneyModalProps {
 }
 
 export default function AddMoneyModal({ onClose, currencySymbol }: AddMoneyModalProps) {
-  const { checkSuspension, userId, refreshProfile } = useAuth()
+  const { checkSuspension, userId, refreshProfile, userEmail } = useAuth()
   const [step, setStep] = useState<'amount' | 'method' | 'confirm' | 'success'>('amount')
   const [amount, setAmount] = useState('')
   const [method, setMethod] = useState('')
@@ -81,6 +81,7 @@ export default function AddMoneyModal({ onClose, currencySymbol }: AddMoneyModal
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userId,
+            email: userEmail,
             type: 'deposit',
             amount: depositAmount,
             currencySymbol,
