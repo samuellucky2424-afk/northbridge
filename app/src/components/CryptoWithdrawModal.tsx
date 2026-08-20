@@ -46,10 +46,36 @@ export default function CryptoWithdrawModal({ onClose }: CryptoWithdrawModalProp
     setNetwork(selectedAsset === 'BTC' ? 'BTC Network' : 'Tron (TRC20)')
   }
 
-  const isFormValid = () => {
-    const numAmount = parseFloat(amount)
-    return address.trim().length >= 26 && numAmount > 0 && numAmount <= activeBalance
+  const getAddressValidationError = () => {
+    const recipient = address.trim()
+
+    if (!recipient) return 'Recipient address is required.'
+
+    if (network === 'Tron (TRC20)' && !/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(recipient)) {
+      return 'Enter a valid TRC20 address (starts with T and is 34 characters long).'
+    }
+
+    if ((network === 'Ethereum (ERC20)' || network === 'BSC (BEP20)') && !/^0x[a-fA-F0-9]{40}$/.test(recipient)) {
+      return `Enter a valid ${network === 'Ethereum (ERC20)' ? 'ERC20' : 'BEP20'} address (0x followed by 40 hexadecimal characters).`
+    }
+
+    if (network === 'BTC Network' && !/^(bc1[ac-hj-np-z02-9]{11,71}|[13][a-km-zA-HJ-NP-Z1-9]{25,34})$/i.test(recipient)) {
+      return 'Enter a valid Bitcoin address.'
+    }
+
+    if (network === 'Lightning Network' && !/^ln(?:bc|tb|bcrt)[0-9a-z]{10,}$/i.test(recipient)) {
+      return 'Enter a valid Lightning invoice.'
+    }
+
+    return null
   }
+
+  const isFormValid = () => {
+    const numAmount = Number(amount)
+    return !getAddressValidationError() && Number.isFinite(numAmount) && numAmount > 0 && numAmount <= activeBalance
+  }
+
+  const addressError = getAddressValidationError()
 
   const handleContinue = () => {
     if (isFormValid()) setStep('preview')
@@ -253,9 +279,18 @@ export default function CryptoWithdrawModal({ onClose }: CryptoWithdrawModalProp
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder={asset === 'BTC' ? 'e.g. 1A1zP1eP5QGefi2DMPTfTL5...' : 'e.g. TXx1... or 0x71C...' }
-                className="w-full px-4 py-3 rounded-xl border border-light text-sm text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] font-mono"
+                aria-invalid={Boolean(address && addressError)}
+                aria-describedby="recipient-address-help"
+                className={`w-full px-4 py-3 rounded-xl border text-sm text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] font-mono ${
+                  address && addressError ? 'border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]/20' : 'border-light'
+                }`}
               />
-              <span className="text-[10px] text-[#64748B] mt-1 block">Ensure the address matches the selected network to avoid permanent loss of funds.</span>
+              <span
+                id="recipient-address-help"
+                className={`text-[10px] mt-1 block ${address && addressError ? 'text-[#EF4444]' : 'text-[#64748B]'}`}
+              >
+                {address && addressError ? addressError : 'Ensure the address matches the selected network to avoid permanent loss of funds.'}
+              </span>
             </div>
 
             <div>
