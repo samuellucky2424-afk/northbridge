@@ -117,7 +117,7 @@ export function mapProfileFromDoc(uid: string, data: Record<string, unknown>): U
     savingsBalance: toNumber(data.savings_balance || data.savingsBalance),
     profilePictureUrl: String(data.profile_picture_url || data.profilePictureUrl || ''),
     role: (data.role as UserRole) || 'customer',
-    status: data.status === 'suspended' ? 'suspended' : 'active',
+    status: String(data.status || '').trim().toLowerCase() === 'suspended' ? 'suspended' : 'active',
     createdAt: data.created_at instanceof Timestamp ? data.created_at.toDate() : undefined,
   }
 }

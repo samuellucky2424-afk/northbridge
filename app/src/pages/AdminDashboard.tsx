@@ -453,7 +453,7 @@ function UsersPage() {
           postcode: u.postcode,
           occupation: u.occupation,
           incomeSource: u.income_source,
-          status: u.status === 'suspended' ? 'Suspended' : 'Active',
+          status: String(u.status || '').trim().toLowerCase() === 'suspended' ? 'Suspended' : 'Active',
           balance: parseFloat(u.balance || 0),
           savingsBalance: parseFloat(u.savings_balance || 0),
           joined: toDateInputValue(u.created_at),

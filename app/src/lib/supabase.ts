@@ -179,6 +179,9 @@ class QueryBuilder {
             const searchField = field === 'id' ? documentId() : field
             const q = query(collection(db, this.table), where(searchField, '==', value))
             const snap = await getDocs(q)
+            if (snap.empty) {
+              throw new Error(`No matching ${this.table} record was found.`)
+            }
             const batch = writeBatch(db)
             snap.docs.forEach((d) => batch.update(d.ref, { ...payload, updated_at: serverTimestamp() }))
             await batch.commit()
@@ -264,7 +267,9 @@ class QueryBuilder {
     }
 
     const snap = await getDocs(q)
-    let results: any[] = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    // The Firestore document ID is authoritative. Some migrated documents may
+    // contain a legacy `id` field that must not replace the real document ID.
+    let results: any[] = snap.docs.map((d) => ({ ...d.data(), id: d.id }))
 
     // Client-side ordering and limit to avoid Firestore composite index requirements
     if (hasConstraints && this.orderField) {
