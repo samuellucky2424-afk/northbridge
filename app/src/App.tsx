@@ -210,6 +210,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [applyProfile])
 
+  useEffect(() => {
+    // Show the warning as soon as a suspended profile is loaded at login or
+    // changes to suspended while the customer already has the dashboard open.
+    setShowSuspensionModal(profile?.status === 'suspended')
+  }, [firebaseUser?.uid, profile?.status])
+
   const refreshProfile = useCallback(async () => {
     if (firebaseUser) {
       const p = await getUserProfile(firebaseUser.uid)
