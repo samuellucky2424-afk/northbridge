@@ -1,12 +1,14 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import { onAuthStateChanged, signOut as firebaseSignOut, type User as FirebaseUser } from 'firebase/auth'
+import { doc, onSnapshot } from 'firebase/firestore'
 import {
   auth,
   signIn as firebaseSignIn,
   signUp as firebaseSignUp,
   ensureAdminRole,
   getUserProfile,
+  mapProfileFromDoc,
   updateUserProfile,
   getCurrency,
   fullName,
@@ -18,6 +20,7 @@ import {
   type ProfileUpdateInput,
   ADMIN_EMAIL,
 } from './lib/auth'
+import { db } from './lib/firebase'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -180,16 +183,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    let unsubscribeProfile: (() => void) | undefined
+
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      unsubscribeProfile?.()
       setFirebaseUser(user)
       if (user) {
-        const p = await getUserProfile(user.uid)
-        applyProfile(p)
+        unsubscribeProfile = onSnapshot(
+          doc(db, 'profiles_nbb', user.uid),
+          (profileSnapshot) => {
+            applyProfile(profileSnapshot.exists() ? mapProfileFromDoc(profileSnapshot.id, profileSnapshot.data()) : null)
+          },
+          async (error) => {
+            console.error('Unable to keep the user profile in sync:', error)
+            applyProfile(await getUserProfile(user.uid))
+          },
+        )
       } else {
         applyProfile(null)
       }
     })
-    return unsubscribe
+
+    return () => {
+      unsubscribeAuth()
+      unsubscribeProfile?.()
+    }
   }, [applyProfile])
 
   const refreshProfile = useCallback(async () => {

@@ -337,7 +337,7 @@ function TransactionReceiptModal({ txn, onClose, currencySymbol }: { txn: any; o
 /* ─── Overview Page ─── */
 /* ─── Overview Page ─── */
 function Overview() {
-  const { userName, profilePictureUrl, currency, userId, userBalance, savingsBalance, accountNumber, refreshProfile } = useAuth()
+  const { userName, profilePictureUrl, currency, userId, userBalance, savingsBalance, accountNumber, refreshProfile, userStatus } = useAuth()
   const cs = currency.symbol
   const [showTransfer, setShowTransfer] = useState(false)
   const [transferTypeToOpen, setTransferTypeToOpen] = useState<'domestic' | 'international' | undefined>(undefined)
@@ -442,8 +442,8 @@ function Overview() {
 
           <div className="flex items-center justify-between">
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-[10px] font-semibold text-white">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 mr-1.5 animate-pulse" />
-              Active Account
+              <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${userStatus === 'suspended' ? 'bg-red-300' : 'bg-green-400 animate-pulse'}`} />
+              {userStatus === 'suspended' ? 'Suspended Account' : 'Active Account'}
             </span>
             <span className="text-sm font-mono tracking-wider text-white">
               {accountNumber ? `Acc: ${accountNumber}` : 'Account pending'}
