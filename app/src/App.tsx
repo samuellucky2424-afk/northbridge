@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react'
 import { onAuthStateChanged, signOut as firebaseSignOut, type User as FirebaseUser } from 'firebase/auth'
 import { doc, onSnapshot } from 'firebase/firestore'
 import {
@@ -177,6 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [showSuspensionModal, setShowSuspensionModal] = useState(false)
+  const hasExplicitlyLoggedIn = useRef(false)
 
   const applyProfile = useCallback((p: UserProfile | null) => {
     setProfile(p)
@@ -211,9 +212,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [applyProfile])
 
   useEffect(() => {
-    // Show the warning as soon as a suspended profile is loaded at login or
-    // changes to suspended while the customer already has the dashboard open.
-    setShowSuspensionModal(profile?.status === 'suspended')
+    // Only show the suspension warning when the user has actively logged in
+    // during this session.  Do NOT show it on passive Firebase session
+    // restoration so the modal doesn't pop up before the user interacts.
+    if (hasExplicitlyLoggedIn.current && profile?.status === 'suspended') {
+      setShowSuspensionModal(true)
+    }
   }, [firebaseUser?.uid, profile?.status])
 
   const refreshProfile = useCallback(async () => {
@@ -233,6 +237,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const normalizedIdentifier = trimmedIdentifier.toLowerCase()
 
     try {
+      // Mark that the user is actively logging in so the suspension modal
+      // can distinguish this from an auto-restored Firebase session.
+      hasExplicitlyLoggedIn.current = true
+
       // Admin login path (only accessible from the admin portal)
       if (isAdminPortal && normalizedIdentifier === ADMIN_EMAIL.toLowerCase()) {
         const user = await firebaseSignIn(trimmedIdentifier, password)
@@ -310,6 +318,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     await firebaseSignOut(auth)
+    hasExplicitlyLoggedIn.current = false
     clearAuthState()
   }, [clearAuthState])
 
