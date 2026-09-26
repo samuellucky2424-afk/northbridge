@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test:admin-email": "node --test tests/admin-change-email.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -44,6 +45,7 @@
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
     "firebase": "^12.15.0",
+    "firebase-admin": "^14.5.0",
     "gsap": "^3.15.0",
     "html2canvas": "^1.4.1",
     "input-otp": "^1.4.2",

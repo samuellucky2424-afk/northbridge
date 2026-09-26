@@ -12,6 +12,8 @@ import {
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { db } from '../lib/firebase'
 import { getCurrency } from '../lib/currency'
+import { changeUserEmail } from '../lib/admin'
+import { ADMIN_EMAIL } from '../lib/auth'
 
 // Helper: convert Firestore Timestamp, string, number, or null to a JS Date
 function isValidDate(date: Date): boolean {
@@ -486,18 +488,25 @@ function UsersPage() {
 
   const handleEditUserSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!editingUser) return
+    if (!editingUser || savingUser) return
     setSavingUser(true)
     setEditUserSuccess('')
 
+    let emailUpdated = false
     if (isSupabaseConfigured()) {
       try {
+        const email = editUserForm.email.trim().toLowerCase()
+        if (email !== editingUser.email) {
+          const savedEmail = await changeUserEmail(editingUser.id, email, editingUser.email)
+          emailUpdated = true
+          setEditingUser((current: any) => current ? { ...current, email: savedEmail } : current)
+          setEditUserForm((current) => ({ ...current, email: savedEmail }))
+        }
         const { error } = await supabase
           .from('profiles_nbb')
           .update({
             first_name: editUserForm.firstName,
             last_name: editUserForm.lastName,
-            email: editUserForm.email,
             phone: editUserForm.phone,
             house_address: editUserForm.houseAddress,
             city: editUserForm.city,
@@ -510,11 +519,10 @@ function UsersPage() {
 
         if (error) throw error
 
-        setEditUserSuccess('User profile updated successfully!')
-        setTimeout(() => setEditingUser(null), 1500)
+        setEditUserSuccess(emailUpdated ? 'Profile saved. The user can now sign in with the new email and their existing password.' : 'User profile updated successfully!')
       } catch (err: any) {
         console.error('Update user profile failed:', err.message)
-        setEditUserSuccess(`Error: ${err.message}`)
+        setEditUserSuccess(`Error: ${emailUpdated ? 'The email was changed, but the other profile changes could not be saved. ' : ''}${err.message}`)
       } finally {
         setSavingUser(false)
         loadUsers()
@@ -1165,11 +1173,11 @@ function UsersPage() {
           <div className="bg-white rounded-2xl border border-light shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 my-8">
             <div className="flex items-center justify-between px-6 py-4 border-b border-light">
               <h3 className="font-display text-lg text-[#0A1628]">Edit User Profile</h3>
-              <button onClick={() => setEditingUser(null)} className="p-1 hover:bg-[#F1F5F9] rounded-lg"><X size={20} className="text-[#64748B]" /></button>
+              <button disabled={savingUser} aria-label="Close edit profile" onClick={() => setEditingUser(null)} className="p-1 hover:bg-[#F1F5F9] rounded-lg"><X size={20} className="text-[#64748B]" /></button>
             </div>
             <form onSubmit={handleEditUserSubmit} className="p-6 space-y-4">
               {editUserSuccess && (
-                <div className={`p-3 border text-sm rounded-xl text-center ${
+                <div role="status" aria-live="polite" className={`p-3 border text-sm rounded-xl text-center ${
                   editUserSuccess.startsWith('Error:') 
                     ? 'bg-red-50 border-red-100 text-[#EF4444]' 
                     : 'bg-green-50 border-green-100 text-[#10B981]'
@@ -1178,6 +1186,7 @@ function UsersPage() {
                 </div>
               )}
 
+              <fieldset disabled={savingUser} className="space-y-4 disabled:opacity-70">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-[#0A1628] mb-1">First Name</label>
@@ -1203,14 +1212,20 @@ function UsersPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#0A1628] mb-1">Email</label>
+                  <label htmlFor="admin-user-email" className="block text-xs font-semibold text-[#0A1628] mb-1">Email</label>
                   <input
+                    id="admin-user-email"
                     type="email"
+                    disabled={editingUser.email === ADMIN_EMAIL}
+                    aria-describedby="admin-email-help"
                     value={editUserForm.email}
                     onChange={(e) => setEditUserForm({ ...editUserForm, email: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg border border-light text-sm focus:outline-none focus:ring-2 focus:ring-[#D31111]/20 focus:border-[#D31111]"
                     required
                   />
+                  <p id="admin-email-help" className="mt-1 text-xs text-[#64748B]">
+                    {editingUser.email === ADMIN_EMAIL ? 'The administrator login email is managed separately.' : 'Changes the user’s sign-in and contact email. Their password stays the same.'}
+                  </p>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-[#0A1628] mb-1">Phone</label>
@@ -1311,9 +1326,10 @@ function UsersPage() {
                   Cancel
                 </button>
                 <button type="submit" disabled={savingUser} className="flex-1 btn-primary py-2.5 flex items-center justify-center text-sm">
-                  {savingUser ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Save Profile'}
+                  {savingUser ? 'Saving profile…' : 'Save Profile'}
                 </button>
               </div>
+              </fieldset>
             </form>
           </div>
         </div>

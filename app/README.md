@@ -1,3 +1,36 @@
+# Admin email changes
+
+In **Admin → Users → Edit User Profile**, change the email and save. The server
+updates Firebase Authentication, `profiles_nbb`, and every account-number lookup
+for that user. Their UID, password, balances, and transactions stay the same.
+The new email is marked unverified; this action does not send email messages.
+The fixed administrator login cannot be changed through this form.
+
+## Deployment
+
+1. Configure `FIREBASE_SERVICE_ACCOUNT_JSON` in the server hosting environment
+   with service-account JSON for Firebase project `smokescreen-2bc84`. It needs
+   Firebase Authentication user-management and Firestore read/write permissions.
+   Keep the credential server-only; never use a `VITE_` prefix or commit it.
+2. Deploy the `app` directory with its Vercel `api` functions. Plain static
+   hosting and `vite dev` alone do not serve `/api/admin-change-email`; use
+   `vercel dev` for local integration checks.
+3. Deploy the included rules from `app` with
+   `firebase deploy --only firestore:rules --project smokescreen-2bc84`.
+
+The endpoint verifies the caller's Firebase token (including revocation) and
+current administrator email. It does not trust editable profile roles. Rules
+reserve email writes for the server so client changes cannot bypass Auth.
+Concurrent changes to the same user are serialized with a short server-only
+Firestore lease. Profile and lookup writes are atomic. If they fail after Auth
+changes, the endpoint attempts to restore the previous login email and reports
+any incomplete recovery with instructions to retry the same address.
+
+Validate in a non-production environment: change a customer email, sign in
+with the new email and the existing password, then sign in by account number.
+Check that the old email no longer signs in and that duplicate emails and
+non-admin requests are rejected. No live account is changed by the local tests.
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

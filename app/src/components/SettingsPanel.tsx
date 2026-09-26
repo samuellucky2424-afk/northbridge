@@ -226,7 +226,7 @@ export default function SettingsPanel({ onClose, userName }: SettingsPanelProps)
                 <input type="text" value={userEmail || 'Not available'} disabled
                   className="w-full pl-10 pr-4 py-3 rounded-xl border border-light bg-[#F1F5F9] text-[#64748B] cursor-not-allowed" />
               </div>
-              <p className="text-xs text-[#64748B] mt-1">Email address cannot be changed</p>
+              <p className="text-xs text-[#64748B] mt-1">Contact an administrator to change your email address.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
