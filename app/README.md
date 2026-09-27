@@ -33,6 +33,12 @@ Firestore lease. Profile and lookup writes are atomic. If they fail after Auth
 changes, the endpoint attempts to restore the previous login email and reports
 any incomplete recovery with instructions to retry the same address.
 
+Vercel compiles API functions using the root `tsconfig.json`. Keep its
+`module: ESNext` setting aligned with `package.json`'s `type: module`; the
+referenced Vite TypeScript configuration alone does not configure function
+compilation. Run `npm run test:api-startup` to check that the emitted function
+loads in Node with the real Firebase Admin dependencies, without credentials.
+
 Validate in a non-production environment: change a customer email, sign in
 with the new email and the existing password, then sign in by account number.
 Check that the old email no longer signs in and that duplicate emails and

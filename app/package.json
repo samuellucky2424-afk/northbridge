@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "test:admin-email": "node --test tests/admin-change-email.test.mjs",
     "test:transfer-session": "node --test tests/transfer-session.test.mjs",
+    "test:api-startup": "node --test tests/api-startup.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
