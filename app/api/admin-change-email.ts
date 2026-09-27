@@ -59,7 +59,7 @@ export default async function handler(req: Request, res: Response) {
     try { body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body } catch {
       throw new HttpError(400, 'Invalid request.')
     }
-    const { uid, email, expectedEmail } = (body || {}) as Record<string, unknown>
+    const { uid, email, expectedEmail, syncLoginEmail } = (body || {}) as Record<string, unknown>
     if (typeof uid !== 'string' || !uid || uid.length > 128 || uid.includes('/') ||
         typeof email !== 'string' || typeof expectedEmail !== 'string') {
       throw new HttpError(400, 'A user and email address are required.')
@@ -95,7 +95,14 @@ export default async function handler(req: Request, res: Response) {
       if (user.email === ADMIN_EMAIL) throw new HttpError(403, 'The administrator login email cannot be changed here.')
       const currentEmail = (user.email || '').toLowerCase()
       const profileEmail = String(profile.data()?.email || '').toLowerCase()
-      if (![previousEmail, nextEmail].includes(currentEmail) || ![previousEmail, nextEmail].includes(profileEmail)) {
+      // Explicit admin repair for legacy profile-only edits. The destination
+      // must still be the profile email the admin reviewed, never a stale value.
+      const repairRequested = syncLoginEmail === true
+      const repairAllowed = repairRequested && profileEmail === previousEmail && previousEmail === nextEmail
+      if (repairRequested && !repairAllowed) {
+        throw new HttpError(409, 'The profile email changed. Reopen the profile before synchronizing the login email.')
+      }
+      if (!repairAllowed && (![previousEmail, nextEmail].includes(currentEmail) || ![previousEmail, nextEmail].includes(profileEmail))) {
         throw new HttpError(409, 'This user’s email has changed. Reopen the profile and try again.')
       }
       const accountNumber = String(profile.data()?.account_number || '')

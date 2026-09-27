@@ -6,6 +6,13 @@ for that user. Their UID, password, balances, and transactions stay the same.
 The new email is marked unverified; this action does not send email messages.
 The fixed administrator login cannot be changed through this form.
 
+If a previous edit changed only the profile email, open the customer under
+**Admin → Users → Edit User Profile** and click **Sync login email**. This
+explicitly applies the saved profile email to Firebase Authentication and the
+account-number lookups, even when the form email has not changed. After success,
+the customer must sign out and sign in with that email and their existing
+password. This action also requires the server credential described below.
+
 ## Deployment
 
 1. Configure `FIREBASE_SERVICE_ACCOUNT_JSON` in the server hosting environment

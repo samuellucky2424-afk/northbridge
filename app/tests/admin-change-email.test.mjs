@@ -151,3 +151,44 @@ test('repairs a missing lookup and rejects an account owned by another user', as
   assert.equal((await conflict.request()).statusCode, 409)
   assert.equal(conflict.authWrites.length, 0)
 })
+
+test('explicitly repairs an unchanged profile email when Auth still has the old email', async () => {
+  const state = setup()
+  state.records.get('profiles_nbb/customer').email = newEmail
+  const body = { uid: 'customer', email: newEmail, expectedEmail: newEmail }
+  assert.equal((await state.request({ body })).statusCode, 409)
+  assert.equal(state.authWrites.length, 0)
+  assert.equal((await state.request({ body: { ...body, syncLoginEmail: true } })).statusCode, 200)
+  assert.equal(state.user.email, newEmail)
+  assert.equal(state.records.get('account_lookup/123').email, newEmail)
+  assert.equal(state.records.get('account_lookup/legacy').email, newEmail)
+  assert.equal(state.records.get('profiles_nbb/customer').balance, 100)
+})
+
+test('sync rejects stale profile emails and a different destination', async () => {
+  const state = setup()
+  const body = { uid: 'customer', email: newEmail, expectedEmail: newEmail, syncLoginEmail: true }
+  assert.equal((await state.request({ body })).statusCode, 409)
+  assert.equal((await state.request({ body: { ...body, expectedEmail: oldEmail } })).statusCode, 409)
+  assert.equal(state.authWrites.length, 0)
+})
+
+test('sync still requires administrator access and rejects duplicate emails', async () => {
+  const body = { uid: 'customer', email: newEmail, expectedEmail: newEmail, syncLoginEmail: true }
+  const denied = setup({ nonAdmin: true })
+  assert.equal((await denied.request({ body })).statusCode, 403)
+  const duplicate = setup({ duplicate: true })
+  duplicate.records.get('profiles_nbb/customer').email = newEmail
+  assert.equal((await duplicate.request({ body })).statusCode, 409)
+  assert.equal(duplicate.user.email, oldEmail)
+})
+
+test('sync restores the actual previous Auth email if lookup writes fail', async () => {
+  const state = setup({ batchFails: true })
+  state.records.get('profiles_nbb/customer').email = newEmail
+  assert.equal((await state.request({ body: {
+    uid: 'customer', email: newEmail, expectedEmail: newEmail, syncLoginEmail: true,
+  } })).statusCode, 503)
+  assert.equal(state.user.email, oldEmail)
+  assert.equal(state.records.get('account_lookup/123').email, oldEmail)
+})

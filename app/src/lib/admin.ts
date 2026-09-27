@@ -1,6 +1,6 @@
 import { auth } from './firebase'
 
-export async function changeUserEmail(uid: string, email: string, expectedEmail: string): Promise<string> {
+export async function changeUserEmail(uid: string, email: string, expectedEmail: string, syncLoginEmail = false): Promise<string> {
   const user = auth.currentUser
   if (!user) throw new Error('Sign in as an administrator to change email addresses.')
   const response = await fetch('/api/admin-change-email', {
@@ -9,7 +9,7 @@ export async function changeUserEmail(uid: string, email: string, expectedEmail:
       'Content-Type': 'application/json',
       Authorization: `Bearer ${await user.getIdToken()}`,
     },
-    body: JSON.stringify({ uid, email, expectedEmail }),
+    body: JSON.stringify({ uid, email, expectedEmail, syncLoginEmail }),
   })
   const result = await response.json().catch(() => null)
   if (!response.ok || typeof result?.email !== 'string') {

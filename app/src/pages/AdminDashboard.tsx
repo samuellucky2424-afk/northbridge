@@ -486,6 +486,23 @@ function UsersPage() {
     setEditUserSuccess('')
   }
 
+  const handleSyncLoginEmail = async () => {
+    if (!editingUser || savingUser) return
+    setSavingUser(true)
+    setEditUserSuccess('')
+    try {
+      const savedEmail = await changeUserEmail(editingUser.id, editingUser.email, editingUser.email, true)
+      setEditingUser((current: any) => current ? { ...current, email: savedEmail } : current)
+      setEditUserForm((current) => ({ ...current, email: savedEmail }))
+      setEditUserSuccess(`Login email synchronized to ${savedEmail}. Ask the user to sign out and sign in again with this email and their existing password.`)
+      await loadUsers()
+    } catch (error) {
+      setEditUserSuccess(`Error: ${error instanceof Error ? error.message : 'Unable to synchronize the login email.'}`)
+    } finally {
+      setSavingUser(false)
+    }
+  }
+
   const handleEditUserSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editingUser || savingUser) return
@@ -1237,6 +1254,26 @@ function UsersPage() {
                   />
                 </div>
               </div>
+
+              {editingUser.email !== ADMIN_EMAIL && (
+                <div className="rounded-lg border border-light bg-slate-50 p-3">
+                  <p id="sync-email-help" className="text-xs text-[#64748B]">
+                    If transfers report an email mismatch, use Sync login email to make the login match this saved profile email: <span className="font-medium break-all">{editingUser.email}</span>.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleSyncLoginEmail}
+                    disabled={savingUser || editUserForm.email.trim().toLowerCase() !== String(editingUser.email).trim().toLowerCase()}
+                    aria-describedby="sync-email-help"
+                    className="mt-2 min-h-11 rounded-lg border border-[#610C04] px-3 py-2 text-sm font-medium text-[#610C04] hover:bg-[#FEE2E2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#610C04] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Sync login email
+                  </button>
+                  {editUserForm.email.trim().toLowerCase() !== String(editingUser.email).trim().toLowerCase() && (
+                    <p className="mt-1 text-xs text-[#64748B]">Save or undo your email edit before synchronizing.</p>
+                  )}
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
