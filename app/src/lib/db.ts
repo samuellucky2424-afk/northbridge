@@ -17,6 +17,7 @@ import {
 } from 'firebase/firestore'
 import { auth, db } from './firebase'
 import { getCurrency } from './currency'
+import { getTransferSession } from './transfer-session'
 
 export interface FirestoreTransaction {
   id: string
@@ -251,16 +252,8 @@ export async function deleteUserProfile(uid: string) {
 }
 
 export async function generateAndSendOTP(email: string): Promise<boolean> {
-  const normalizedEmail = email.trim().toLowerCase()
-  const currentUser = auth.currentUser
-  const currentEmail = currentUser?.email?.trim().toLowerCase() || ''
-
-  if (!currentUser || !currentEmail) {
-    throw new Error('Your session expired. Please sign in again.')
-  }
-  if (currentEmail !== normalizedEmail) {
-    throw new Error('Your registered email address could not be verified. Please sign in again.')
-  }
+  clearTransferOTP()
+  const { uid, email: normalizedEmail, idToken } = await getTransferSession(email)
 
   const code = Math.floor(10000000 + Math.random() * 90000000).toString()
   
@@ -268,15 +261,13 @@ export async function generateAndSendOTP(email: string): Promise<boolean> {
     console.log(`[DEV MODE] OTP Code is: ${code}`)
     alert(`[DEV MODE] Your verification code is: ${code}`)
     saveTransferOTP({
-      uid: currentUser.uid,
+      uid,
       email: normalizedEmail,
       code,
       createdAt: Date.now(),
     })
     return true
   }
-
-  const idToken = await currentUser.getIdToken()
 
   const response = await fetch('/api/send-otp', {
     method: 'POST',
@@ -300,7 +291,7 @@ export async function generateAndSendOTP(email: string): Promise<boolean> {
       console.log(`[LIVE TEST MODE] OTP Code is: ${code}`)
       alert(`[LIVE TEST MODE] Your verification code is: ${code}\n\n(Note: This appears because Resend API key is not configured on your live server)`)
       saveTransferOTP({
-        uid: currentUser.uid,
+        uid,
         email: normalizedEmail,
         code,
         createdAt: Date.now(),
@@ -310,7 +301,7 @@ export async function generateAndSendOTP(email: string): Promise<boolean> {
     throw new Error(body?.error || 'Unable to send verification code. Please check the OTP email service configuration.')
   }
   saveTransferOTP({
-    uid: currentUser.uid,
+    uid,
     email: normalizedEmail,
     code,
     createdAt: Date.now(),
