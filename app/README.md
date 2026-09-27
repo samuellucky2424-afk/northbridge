@@ -39,6 +39,14 @@ referenced Vite TypeScript configuration alone does not configure function
 compilation. Run `npm run test:api-startup` to check that the emitted function
 loads in Node with the real Firebase Admin dependencies, without credentials.
 
+The Firebase Admin dependency chain (`jwks-rsa` → `jose`) requires Node's
+`require(esm)` support. Vercel disables that support by default. `vercel.json`
+therefore sets the non-secret runtime option
+`NODE_OPTIONS=--experimental-require-module`, and `package.json` selects Node 22.
+The startup test reproduces Vercel's disabled default, applies this runtime
+option, and loads the real endpoint in a separate Node process. See
+[Vercel's runtime guidance](https://vercel.com/docs/functions/runtimes/node-js/advanced-node-configuration#experimental-nodejs-require-of-es-module).
+
 Validate in a non-production environment: change a customer email, sign in
 with the new email and the existing password, then sign in by account number.
 Check that the old email no longer signs in and that duplicate emails and

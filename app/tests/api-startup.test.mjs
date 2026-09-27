@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { spawnSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -26,6 +27,27 @@ test('admin email function starts using root compiler settings and real Firebase
     const emitted = ts.transpileModule(source, { compilerOptions: options }).outputText
     const outputPath = join(tempDir, 'admin-change-email.js')
     writeFileSync(outputPath, emitted)
+    const deployment = JSON.parse(readFileSync(join(projectRoot, 'vercel.json'), 'utf8'))
+    const probe = spawnSync(process.execPath, ['--input-type=module', '-e', `
+      const { default: handler } = await import(${JSON.stringify(pathToFileURL(outputPath).href)});
+      const response = { statusCode: 0, body: null, status(code) { this.statusCode = code; return this }, json(body) { this.body = body } };
+      await handler({ method: 'GET', headers: {} }, response);
+      if (response.statusCode !== 405) throw new Error('Expected 405 from running handler');
+      await handler({ method: 'POST', headers: {}, body: {} }, response);
+      if (response.statusCode !== 401) throw new Error('Expected 401 from running handler');
+      console.log('API startup OK');
+    `], {
+      cwd: projectRoot,
+      encoding: 'utf8',
+      timeout: 30_000,
+      env: {
+        ...process.env,
+        // Reproduce Vercel's default, then apply the checked-in runtime setting.
+        NODE_OPTIONS: `--no-experimental-require-module ${deployment.env?.NODE_OPTIONS || ''}`,
+      },
+    })
+    assert.equal(probe.status, 0, probe.error?.message || probe.stderr)
+    assert.match(probe.stdout, /API startup OK/)
     const { default: handler } = await import(pathToFileURL(outputPath).href)
     const response = { statusCode: 0, body: null, status(code) { this.statusCode = code; return this }, json(body) { this.body = body } }
     await handler({ method: 'GET', headers: {} }, response)
