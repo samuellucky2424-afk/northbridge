@@ -12,6 +12,8 @@
     "lint": "eslint .",
     "test:admin-email": "node --test tests/admin-change-email.test.mjs",
     "test:transfer-session": "node --test tests/transfer-session.test.mjs",
+    "test:transfer-countries": "node --test tests/transfer-countries.test.mjs",
+    "test:suspension": "node --test tests/suspension.test.mjs",
     "test:api-startup": "node --test tests/api-startup.test.mjs",
     "preview": "vite preview"
   },
@@ -82,6 +84,7 @@
     "globals": "^16.5.0",
     "kimi-plugin-inspect-react": "^1.0.3",
     "postcss": "^8.5.6",
+    "react-test-renderer": "^19.2.3",
     "tailwindcss": "^3.4.19",
     "tailwindcss-animate": "^1.0.7",
     "tw-animate-css": "^1.4.0",

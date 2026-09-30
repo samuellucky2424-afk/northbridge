@@ -1,5 +1,5 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
-import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import { onAuthStateChanged, signOut as firebaseSignOut, type User as FirebaseUser } from 'firebase/auth'
 import { doc, onSnapshot } from 'firebase/firestore'
 import {
@@ -63,6 +63,7 @@ const defaultProfileDetails: ProfileDetails = {
 }
 
 interface AuthContextType {
+  authLoading: boolean
   isAuthenticated: boolean
   userRole: UserRole
   userName: string
@@ -85,6 +86,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType>({
+  authLoading: true,
   isAuthenticated: false,
   userRole: null,
   userName: '',
@@ -174,10 +176,13 @@ function SuspensionWarningModal({ isOpen, onClose }: { isOpen: boolean; onClose:
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation()
+  const isCustomerPage = pathname === '/dashboard' || pathname.startsWith('/dashboard/')
+  const [authLoading, setAuthLoading] = useState(true)
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [showSuspensionModal, setShowSuspensionModal] = useState(false)
-  const hasExplicitlyLoggedIn = useRef(false)
+  const [explicitLoginUid, setExplicitLoginUid] = useState<string | null>(null)
 
   const applyProfile = useCallback((p: UserProfile | null) => {
     setProfile(p)
@@ -189,19 +194,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       unsubscribeProfile?.()
       setFirebaseUser(user)
+      setProfile(null)
+      setShowSuspensionModal(false)
+      setExplicitLoginUid((previous) => previous === user?.uid ? previous : null)
       if (user) {
+        setAuthLoading(true)
         unsubscribeProfile = onSnapshot(
           doc(db, 'profiles_nbb', user.uid),
           (profileSnapshot) => {
+            if (auth.currentUser?.uid !== user.uid) return
             applyProfile(profileSnapshot.exists() ? mapProfileFromDoc(profileSnapshot.id, profileSnapshot.data()) : null)
+            setAuthLoading(false)
           },
           async (error) => {
             console.error('Unable to keep the user profile in sync:', error)
-            applyProfile(await getUserProfile(user.uid))
+            try {
+              const loaded = await getUserProfile(user.uid)
+              if (auth.currentUser?.uid === user.uid) applyProfile(loaded)
+            } catch (profileError) {
+              console.error('Unable to load the user profile:', profileError)
+              if (auth.currentUser?.uid === user.uid) applyProfile(null)
+            } finally {
+              if (auth.currentUser?.uid === user.uid) setAuthLoading(false)
+            }
           },
         )
       } else {
         applyProfile(null)
+        setExplicitLoginUid(null)
+        setShowSuspensionModal(false)
+        setAuthLoading(false)
       }
     })
 
@@ -212,13 +234,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [applyProfile])
 
   useEffect(() => {
-    // Only show the suspension warning when the user has actively logged in
-    // during this session.  Do NOT show it on passive Firebase session
-    // restoration so the modal doesn't pop up before the user interacts.
-    if (hasExplicitlyLoggedIn.current && profile?.status === 'suspended') {
+    // A restored session must never open a warning on public pages.
+    // Bind a successful, explicit login to its UID rather than a login attempt.
+    if (!isCustomerPage || !firebaseUser || profile?.status !== 'suspended') {
+      setShowSuspensionModal(false)
+    } else if (explicitLoginUid === firebaseUser.uid && profile.uid === firebaseUser.uid) {
       setShowSuspensionModal(true)
     }
-  }, [firebaseUser?.uid, profile?.status])
+  }, [firebaseUser, profile?.uid, profile?.status, explicitLoginUid, isCustomerPage])
 
   const refreshProfile = useCallback(async () => {
     if (firebaseUser) {
@@ -230,6 +253,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const clearAuthState = useCallback(() => {
     setFirebaseUser(null)
     setProfile(null)
+    setExplicitLoginUid(null)
+    setShowSuspensionModal(false)
   }, [])
 
   const login = useCallback(async (identifier: string, password: string, signupProfile?: SignupProfileInput, isAdminPortal = false) => {
@@ -237,9 +262,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const normalizedIdentifier = trimmedIdentifier.toLowerCase()
 
     try {
-      // Mark that the user is actively logging in so the suspension modal
-      // can distinguish this from an auto-restored Firebase session.
-      hasExplicitlyLoggedIn.current = true
+      setExplicitLoginUid(null)
+      setShowSuspensionModal(false)
 
       // Admin login path (only accessible from the admin portal)
       if (isAdminPortal && normalizedIdentifier === ADMIN_EMAIL.toLowerCase()) {
@@ -309,6 +333,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       applyProfile(p)
+      setExplicitLoginUid(user.uid)
       return { success: true, role: p.role }
     } catch (err) {
       const message = getFirebaseAuthErrorMessage(err)
@@ -318,7 +343,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     await firebaseSignOut(auth)
-    hasExplicitlyLoggedIn.current = false
     clearAuthState()
   }, [clearAuthState])
 
@@ -345,14 +369,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkSuspension = useCallback(() => {
     if (profile?.status === 'suspended') {
-      setShowSuspensionModal(true)
+      if (isCustomerPage) setShowSuspensionModal(true)
       return true
     }
     return false
-  }, [profile])
+  }, [profile, isCustomerPage])
 
   const contextValue: AuthContextType = {
-    isAuthenticated: !!firebaseUser && !!profile,
+    authLoading,
+    isAuthenticated: !!firebaseUser && profile?.uid === firebaseUser.uid,
     userRole: profile?.role || null,
     userName: profile ? fullName(profile.firstName, profile.lastName, profile.email) : '',
     profilePictureUrl: profile?.profilePictureUrl || '',
@@ -387,13 +412,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={contextValue}>
       {children}
-      <SuspensionWarningModal isOpen={showSuspensionModal} onClose={() => setShowSuspensionModal(false)} />
+      <SuspensionWarningModal isOpen={showSuspensionModal && isCustomerPage && !!firebaseUser && profile?.uid === firebaseUser.uid && profile.status === 'suspended'} onClose={() => setShowSuspensionModal(false)} />
     </AuthContext.Provider>
   )
 }
 
 function ProtectedRoute({ children, requiredRole }: { children: ReactNode; requiredRole?: UserRole }) {
-  const { isAuthenticated, userRole } = useAuth()
+  const { isAuthenticated, userRole, authLoading } = useAuth()
+  if (authLoading) return <div role="status" className="min-h-screen flex items-center justify-center">Loading your account…</div>
   if (!isAuthenticated) {
     return <Navigate to={requiredRole === 'admin' ? '/admin/login' : '/login'} replace />
   }

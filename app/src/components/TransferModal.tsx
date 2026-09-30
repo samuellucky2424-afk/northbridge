@@ -5,6 +5,7 @@ import { X, Send, ArrowRight, Shield, ChevronLeft, Clock } from 'lucide-react'
 import { useAuth } from '../App'
 import { supabase, isSupabaseConfigured, generateAndSendOTP, verifyOTP } from '../lib/supabase'
 import { addNotification } from '../lib/db'
+import { useTransferCountries } from '../hooks/use-transfer-countries'
 
 interface TransferModalProps {
   onClose: () => void
@@ -34,15 +35,7 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
     receiverName: '', phone: '', email: '', address: '', amount: '', country: '', purpose: '', swiftIban: '', accountNumber: '', bankName: '',
   })
 
-  const countries = [
-    'Turkey', 'United Kingdom', 'United States', 'Canada', 'Germany', 'France', 'Spain', 'Netherlands',
-    'Australia', 'UAE', 'Nigeria', 'India', 'China', 'Japan', 'Brazil', 'South Africa',
-    'Italy', 'Ireland', 'Switzerland', 'Sweden', 'Norway', 'Denmark', 'Finland', 'Belgium',
-    'Austria', 'Portugal', 'Greece', 'Poland', 'Singapore', 'Hong Kong', 'New Zealand', 'Mexico',
-    'Argentina', 'Chile', 'Colombia', 'Egypt', 'Kenya', 'Ghana', 'Morocco', 'Saudi Arabia',
-    'Qatar', 'Kuwait', 'Malaysia', 'Thailand', 'Indonesia', 'Vietnam', 'South Korea', 'Pakistan',
-    'Bangladesh', 'Philippines', 'Iran'
-  ]
+  const { countries, error: countriesError } = useTransferCountries()
 
   const purposes = ['Personal', 'Business', 'Family Support', 'Education', 'Medical', 'Investment', 'Goods/Services', 'Other']
   const banks = ['Barclays', 'HSBC', 'Lloyds Bank', 'NatWest', 'Santander UK', 'Nationwide', 'Metro Bank', 'Monzo', 'Starling Bank', 'TSB']
@@ -374,10 +367,11 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#0A1628] mb-1.5">Country <span className="text-[#610C04]">*</span></label>
-                  <select value={international.country} onChange={(e) => handleFieldChange('country', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] bg-white">
+                  <select aria-label="Recipient country" value={international.country} onChange={(e) => handleFieldChange('country', e.target.value)} className="w-full px-4 py-3 rounded-xl border border-light text-[#0A1628] focus:outline-none focus:ring-2 focus:ring-[#610C04]/20 focus:border-[#610C04] bg-white">
                     <option value="">Select country</option>
                     {countries.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
+                  {countriesError && <p role="status" className="mt-2 text-xs text-amber-700">{countriesError} The standard destinations are still available.</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#0A1628] mb-1.5">SWIFT / IBAN / Routing Number <span className="text-[#610C04]">*</span></label>

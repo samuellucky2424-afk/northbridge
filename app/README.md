@@ -1,3 +1,25 @@
+# International transfer countries
+
+Open **Admin → Countries** to add any country name. The customer transfer form
+combines the original destinations with saved entries from `transfer_countries`
+and updates through a Firestore subscription. Names are trimmed and checked for
+case-insensitive duplicates; transactions prevent simultaneous duplicate additions.
+The existing destinations remain available if loading additions fails.
+
+Deploy `firestore.rules` together with the app. The new collection allows signed-in
+users to read destinations and only the configured administrator to create them.
+No seed or migration is required. Without the updated rules, additions cannot be
+loaded or saved. Run `npm run test:transfer-countries` for the local service tests.
+
+# Suspension warnings
+
+The warning appears in the customer dashboard after a successful explicit login
+or a restricted action. Restoring Firebase authentication on a public page does
+not open it. Sign-out resets both the warning and explicit-login state, and
+protected routes wait for initial authentication/profile loading before redirecting.
+Run `npm run test:suspension` for login, restored-session, navigation and logout
+regressions. These tests use mocked Firebase and do not modify live accounts.
+
 # Admin email changes
 
 In **Admin → Users → Edit User Profile**, change the email and save. The server

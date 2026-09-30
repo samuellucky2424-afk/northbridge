@@ -7,13 +7,14 @@ import {
   LayoutDashboard, Users, Receipt, BarChart3,
   Search, ChevronLeft, ChevronRight, Bell, LogOut,
   ArrowUpRight, ArrowDownRight, UserCheck,
-  Clock, AlertTriangle, Download, Ban, Plus, Minus, Edit, Trash2, X, Menu
+  Clock, AlertTriangle, Download, Ban, Plus, Minus, Edit, Trash2, X, Menu, Globe
 } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { db } from '../lib/firebase'
 import { getCurrency } from '../lib/currency'
 import { changeUserEmail } from '../lib/admin'
 import { ADMIN_EMAIL } from '../lib/auth'
+import AdminTransferCountries from './AdminTransferCountries'
 
 // Helper: convert Firestore Timestamp, string, number, or null to a JS Date
 function isValidDate(date: Date): boolean {
@@ -51,12 +52,13 @@ function AdminMobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
     { path: '/admin/users', label: 'Users', icon: Users },
     { path: '/admin/transactions', label: 'Transactions', icon: Receipt },
     { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+    { path: '/admin/countries', label: 'Countries', icon: Globe },
   ]
 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-40 md:hidden animate-in fade-in duration-200" style={{ top: '64px' }}>
+    <div className="fixed inset-0 z-40 lg:hidden animate-in fade-in duration-200" style={{ top: '64px' }}>
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="absolute left-0 top-0 bottom-0 w-64 bg-white shadow-xl p-4 space-y-1">
         {navItems.map((item) => {
@@ -105,6 +107,7 @@ function AdminNav() {
     { path: '/admin/users', label: 'Users', icon: Users },
     { path: '/admin/transactions', label: 'Transactions', icon: Receipt },
     { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+    { path: '/admin/countries', label: 'Countries', icon: Globe },
   ]
 
   return (
@@ -116,7 +119,7 @@ function AdminNav() {
               {/* Mobile hamburger menu toggle */}
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="p-2 rounded-lg hover:bg-[#F1F5F9] transition-colors md:hidden text-[#64748B]"
+                className="p-2 rounded-lg hover:bg-[#F1F5F9] transition-colors lg:hidden text-[#64748B]"
                 title="Toggle Menu"
               >
                 {menuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -131,7 +134,7 @@ function AdminNav() {
               </Link>
             </div>
 
-            <div className="hidden md:flex items-center space-x-1">
+            <div className="hidden lg:flex items-center space-x-1">
               {navItems.map((item) => {
                 const isActive = location.pathname === item.path
                 return (
@@ -2013,6 +2016,7 @@ export default function AdminDashboard() {
             <Route path="users" element={<UsersPage />} />
             <Route path="transactions" element={<TransactionsPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
+            <Route path="countries" element={<AdminTransferCountries />} />
             <Route path="*" element={<Navigate to="/admin" replace />} />
           </Routes>
         </div>
