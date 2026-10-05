@@ -190,9 +190,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let unsubscribeProfile: (() => void) | undefined
+    let subscribedUid: string | null = null
 
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      // reload() during OTP requests can notify Auth again for the same user.
+      // Keep the profile and mounted transfer flow while that session refreshes.
+      if (user && subscribedUid === user.uid) {
+        setFirebaseUser(user)
+        return
+      }
       unsubscribeProfile?.()
+      subscribedUid = user?.uid ?? null
       setFirebaseUser(user)
       setProfile(null)
       setShowSuspensionModal(false)

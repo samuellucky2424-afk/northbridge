@@ -90,117 +90,117 @@ export default function TransferModal({ onClose, initialType }: TransferModalPro
   }
 
   const handleOtpVerify = async () => {
+    if (verifying) return
     if (checkSuspension()) return
     const code = otp.join('')
     setVerifying(true)
     setOtpError('')
 
-    if (!userEmail) {
-      setOtpError('Your registered email address is missing. Please sign in again.')
-      setVerifying(false)
-      return
-    }
-    const isValid = await verifyOTP(userEmail, code)
+    try {
+      if (!userEmail) {
+        setOtpError('Your registered email address is missing. Please sign in again.')
+        return
+      }
+      const isValid = await verifyOTP(userEmail, code)
 
-    if (isValid) {
+      if (!isValid) {
+        setOtpError('Invalid OTP code. Please try again.')
+        return
+      }
+
+      const transferAmount = parseFloat(transferType === 'domestic' ? domestic.amount : international.amount)
+
+      if (isSupabaseConfigured() && userId) {
+        // Fetch current profile balance based on source account
+        const balanceColumn = payFrom === 'savings' ? 'savings_balance' : 'balance'
+        const { data: profile } = await supabase
+           .from('profiles_nbb')
+           .select(balanceColumn)
+           .eq('id', userId)
+           .single()
+
+        const currentBal = parseFloat((profile as any)?.[balanceColumn] || '0')
+        if (currentBal < transferAmount) {
+          setOtpError('Insufficient funds to complete this transfer.')
+          return
+        }
+
+        const newBal = currentBal - transferAmount
+
+        // 1. Deduct balance from profiles_nbb
+        const { error: balanceError } = await supabase
+          .from('profiles_nbb')
+          .update({ [balanceColumn]: newBal })
+          .eq('id', userId)
+
+        if (balanceError) {
+          setOtpError(balanceError.message)
+          return
+        }
+
+        // 2. Insert transaction log into transactions_nbb
+        const { error: txnError } = await supabase
+          .from('transactions_nbb')
+          .insert([{
+            user_id: userId,
+            description: transferType === 'domestic' 
+              ? `Transfer to ${domestic.accountHolder} (${domestic.bankName})${payFrom === 'savings' ? ' (from Savings)' : ''}`
+              : `Intl Transfer to ${international.receiverName}${payFrom === 'savings' ? ' (from Savings)' : ''}`,
+            category: 'Transfers',
+            amount: -transferAmount,
+            status: 'Pending'
+          }])
+
+        if (txnError) {
+          console.error('Failed to log transaction in database:', txnError)
+        }
+
+        // Refresh context balance
+        await refreshProfile()
+      }
+
+      // Send debit alert notification for the sender
       try {
         const transferAmount = parseFloat(transferType === 'domestic' ? domestic.amount : international.amount)
-
-        if (isSupabaseConfigured() && userId) {
-          // Fetch current profile balance based on source account
-          const balanceColumn = payFrom === 'savings' ? 'savings_balance' : 'balance'
-          const { data: profile } = await supabase
-             .from('profiles_nbb')
-             .select(balanceColumn)
-             .eq('id', userId)
-             .single()
-
-          const currentBal = parseFloat((profile as any)?.[balanceColumn] || '0')
-          if (currentBal < transferAmount) {
-            setOtpError('Insufficient funds to complete this transfer.')
-            setVerifying(false)
-            return
-          }
-
-          const newBal = currentBal - transferAmount
-
-          // 1. Deduct balance from profiles_nbb
-          const { error: balanceError } = await supabase
-            .from('profiles_nbb')
-            .update({ [balanceColumn]: newBal })
-            .eq('id', userId)
-
-          if (balanceError) {
-            setOtpError(balanceError.message)
-            setVerifying(false)
-            return
-          }
-
-          // 2. Insert transaction log into transactions_nbb
-          const { error: txnError } = await supabase
-            .from('transactions_nbb')
-            .insert([{
-              user_id: userId,
-              description: transferType === 'domestic' 
-                ? `Transfer to ${domestic.accountHolder} (${domestic.bankName})${payFrom === 'savings' ? ' (from Savings)' : ''}`
-                : `Intl Transfer to ${international.receiverName}${payFrom === 'savings' ? ' (from Savings)' : ''}`,
-              category: 'Transfers',
-              amount: -transferAmount,
-              status: 'Pending'
-            }])
-
-          if (txnError) {
-            console.error('Failed to log transaction in database:', txnError)
-          }
-
-          // Refresh context balance
-          await refreshProfile()
-        }
-
-        // Send debit alert notification for the sender
-        try {
-          const transferAmount = parseFloat(transferType === 'domestic' ? domestic.amount : international.amount)
-          const recipient = transferType === 'domestic' ? domestic.accountHolder : international.receiverName
-          await addNotification({
-            user_id: userId || '',
-            title: 'Debit Alert',
-            message: `${currencySymbol}${transferAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })} sent to ${recipient}`,
-            read: false,
-            type: 'warning',
-          })
-        } catch (notifErr) {
-          console.error('Failed to send notification:', notifErr)
-        }
-
-        // Send debit alert email to the sender
-        try {
-          const transferAmount = parseFloat(transferType === 'domestic' ? domestic.amount : international.amount)
-          const recipient = transferType === 'domestic' ? domestic.accountHolder : international.receiverName
-          await fetch('/api/send-notification', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId,
-              email: userEmail,
-              type: 'transfer_debit',
-              amount: transferAmount,
-              currencySymbol,
-              recipient,
-              transferType,
-            }),
-          })
-        } catch (emailErr) {
-          console.error('Failed to send debit alert email:', emailErr)
-        }
-
-        setStep('receipt')
-      } catch (err: any) {
-        setOtpError(err.message || 'An error occurred during transfer verification.')
+        const recipient = transferType === 'domestic' ? domestic.accountHolder : international.receiverName
+        await addNotification({
+          user_id: userId || '',
+          title: 'Debit Alert',
+          message: `${currencySymbol}${transferAmount.toLocaleString('en-GB', { minimumFractionDigits: 2 })} sent to ${recipient}`,
+          read: false,
+          type: 'warning',
+        })
+      } catch (notifErr) {
+        console.error('Failed to send notification:', notifErr)
       }
-    } else {
-      setOtpError('Invalid OTP code. Please try again.')
+
+      // Send debit alert email to the sender
+      try {
+        const transferAmount = parseFloat(transferType === 'domestic' ? domestic.amount : international.amount)
+        const recipient = transferType === 'domestic' ? domestic.accountHolder : international.receiverName
+        await fetch('/api/send-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            email: userEmail,
+            type: 'transfer_debit',
+            amount: transferAmount,
+            currencySymbol,
+            recipient,
+            transferType,
+          }),
+        })
+      } catch (emailErr) {
+        console.error('Failed to send debit alert email:', emailErr)
+      }
+
+      setStep('receipt')
+    } catch (err) {
+      setOtpError(err instanceof Error ? err.message : 'Unable to verify this transfer. Please try again.')
+    } finally {
+      setVerifying(false)
     }
-    setVerifying(false)
   }
 
   const handleOtpChange = (index: number, value: string) => {

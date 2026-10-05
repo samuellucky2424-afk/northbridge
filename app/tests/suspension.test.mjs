@@ -63,6 +63,7 @@ async function setup(path = '/') {
       profileChanged({ exists: () => true, id: user.uid, data: () => profile })
     }),
     go: async (path) => act(async () => navigate(path)),
+    refreshSession: async () => act(async () => authChanged({ ...user })),
     switchAccount: async () => act(async () => {
       const other = { uid: 'customer-2', email: 'other@example.com' }
       auth.currentUser = other
@@ -82,6 +83,20 @@ async function setup(path = '/') {
     dismiss: async () => act(async () => renderer.root.findByType('button').props.onClick()),
   }
 }
+
+test('OTP session refresh keeps the authenticated profile without waiting for another snapshot', async () => {
+  const app = await setup('/dashboard')
+  try {
+    await app.restore()
+    await app.refreshSession()
+    assert.equal(app.value.authLoading, false)
+    assert.equal(app.value.isAuthenticated, true)
+    assert.equal(app.value.userRole, 'customer')
+    assert.equal(app.value.userEmail, 'customer@example.com')
+    await act(async () => app.value.logout())
+    assert.equal(app.value.isAuthenticated, false)
+  } finally { await app.close() }
+})
 
 test('restoring a suspended session never opens the warning on the homepage', async () => {
   const app = await setup()
